@@ -1,6 +1,16 @@
 from fastapi import FastAPI
 from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Use a service account
+cred = credentials.Certificate('./serviceAccount.json')
+
+app = firebase_admin.initialize_app(cred)
+
+# Usar este objeto para acceder a la firestore
+db = firestore.client()
 
 origins = [
   "http://localhost:5173"
