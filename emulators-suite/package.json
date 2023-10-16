@@ -1,0 +1,13 @@
+{
+  "name": "emulators-suite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "firebase emulators:start --only firestore,auth"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

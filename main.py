@@ -1,8 +1,14 @@
+import os
+
+import uvicorn
 from fastapi import FastAPI
 from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
+
+os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
+os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 
 # Use a service account
 cred = credentials.Certificate('./serviceAccount.json')
@@ -28,11 +34,28 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-  return {"Hello": "World"}
+    user = auth.create_user(email='pandex@outlook.es', password='Aprendoletras-987AZ')
+    return {"Hello": "World"}
+
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
-  return {"item_id": item_id, "q": q}
+    city_ref = db.collection("cities").document("kmweqd")
+    city_ref.set({"capital": True}, merge=True)
+    return {"item_id": item_id, "q": q}
+
+
+@app.get("/models/{modelId}")
+def update_model():
+
+    return {"message": "Update correcto"}
+
+
+if __name__ == '__main__':
+    uvicorn.run(
+        "main:app",
+        reload=True
+    )
 
 
 

@@ -42,6 +42,18 @@ $ pip install -r requirements.txt
 $ uvicorn main:app --reload
 ```
 
+## Running the emulators
+```bash
+# navigate to emulators-suit
+$ cd emulators-suite/
+
+# install dependencies
+$ npm install
+
+# run emulators
+$ npm run dev
+```
+
 ## Support
 
 FastAPI is a modern, high-performance web framework for building APIs with Python 3.7+ based on standard Python type hints. If you'd like to learn more, please check the github [read more here](https://github.com/tiangolo/fastapi).

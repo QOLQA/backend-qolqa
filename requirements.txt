@@ -1,3 +1,5 @@
 fastapi
 uvicorn[standard]
 firebase_admin
+wheel
+pydantic

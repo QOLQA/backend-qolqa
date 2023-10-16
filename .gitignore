@@ -1,6 +1,7 @@
 # Archivos y carpetas generados por Python
 __pycache__/
 *.pyc
+*/__pycache__/
 
 # Archivos de registro y registros de errores
 *.log
@@ -28,3 +29,5 @@ Thumbs.db
 build/
 dist/
 *.egg-info/
+
+emulators-suite/node_modules
