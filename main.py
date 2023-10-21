@@ -5,18 +5,15 @@ from fastapi import FastAPI
 from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
 import firebase_admin
-from firebase_admin import credentials, firestore, auth
+from firebase_admin import credentials, firestore
+
+from routers.documents import router as dogs_router
 
 os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 
 # Use a service account
 cred = credentials.Certificate('./serviceAccount.json')
-
-app = firebase_admin.initialize_app(cred)
-
-# Usar este objeto para acceder a la firestore
-db = firestore.client()
 
 origins = [
   "http://localhost:5173"
@@ -32,16 +29,21 @@ app.add_middleware(
   allow_headers=["*"]
 )
 
+
+@app.on_event('startup')
+def startup_db_client():
+    app.firebase_app = firebase_admin.initialize_app(cred)
+    # Usar este objeto para acceder a la firestore
+    app.db = firestore.client()
+
+
 @app.get("/")
 def read_root():
-    user = auth.create_user(email='pandex@outlook.es', password='Aprendoletras-987AZ')
     return {"Hello": "World"}
 
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
-    city_ref = db.collection("cities").document("kmweqd")
-    city_ref.set({"capital": True}, merge=True)
     return {"item_id": item_id, "q": q}
 
 
