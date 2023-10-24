@@ -2,7 +2,7 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.documents import router as docs_router
+from routers.models import router as models_router
 from interfaces.db_firebase import Firebase
 from interfaces.database import Database
 
@@ -27,7 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(
-    docs_router, prefix='/docs'
+    models_router, prefix='/models'
 )
 
 

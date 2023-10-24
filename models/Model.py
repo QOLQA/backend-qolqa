@@ -20,6 +20,11 @@ class Document(BaseModel):
 	relations: Relations | None = None
 
 
-
+class SubModel(BaseModel):
+  documents: List[Document]
+  
+  
+class Model(BaseModel):
+  submodels: List[SubModel]
 
 

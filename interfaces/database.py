@@ -1,18 +1,18 @@
-from models.Document import Document
+from models.Model import Model
 
 class Database:
-  def create(self, document: Document):
+  def create(self, model: Model):
     pass
   
-  def read(self, document_id: str):
+  def read(self, model_id: str):
     pass
   
   def read(self):
     pass
   
-  def update(self, document_id: str, document: Document):
+  def update(self, model_id: str, model: Model):
     pass
   
-  def delete(self, document_id: str):
+  def delete(self, model_id: str):
     pass
   
