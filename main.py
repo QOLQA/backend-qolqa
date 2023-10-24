@@ -2,15 +2,12 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import firebase_admin
 from routers.documents import router as docs_router
-from firebase_admin import credentials, firestore
+from interfaces.db_firebase import Firebase
+from interfaces.database import Database
 
 os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
 os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
-
-# Use a service account
-cred = credentials.Certificate('./serviceAccount.json')
 
 origins = [
     "http://localhost:5173",
@@ -36,9 +33,7 @@ app.include_router(
 
 @app.on_event('startup')
 def startup_db_client():
-    app.firebase_app = firebase_admin.initialize_app(cred)
-    # Usar este objeto para acceder a firestore
-    app.db = firestore.client()
+    app.database: Database = Firebase()
 
 
 @app.get("/")
