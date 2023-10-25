@@ -8,6 +8,8 @@ service_account_path = Path(__file__).parent / "serviceAccount.json"
 
 cred = credentials.Certificate(service_account_path)
 
+MODELS_COLLECTION_NAME = 'models'
+
 class Firebase(Database):
   def __init__(self) -> None:
     self.app = initialize_app(cred)
@@ -15,7 +17,7 @@ class Firebase(Database):
 
   def update(self, model_id: str, model: Model):
     super().update(model_id, model)
-    doc_ref = self.db.collection('documents').document(model_id)
+    doc_ref = self.db.collection(MODELS_COLLECTION_NAME).document(model_id)
     update_data = model.model_dump(exclude_unset=True)
     doc_ref.update(update_data)
     doc = doc_ref.get()
@@ -23,6 +25,6 @@ class Firebase(Database):
     
   def create(self, model: Model):
     super().create(model)
-    ref = self.db.collection('documents').add(model.model_dump())
+    ref = self.db.collection(MODELS_COLLECTION_NAME).add(model.model_dump())
     # doc = ref.get()
     return model
