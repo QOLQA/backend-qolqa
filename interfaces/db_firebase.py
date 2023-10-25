@@ -1,10 +1,12 @@
 from interfaces.database import Database
 from firebase_admin import credentials, firestore, initialize_app
-
+from pathlib import Path
 from models.Model import Model
 
+# Obtén la ruta absoluta al archivo serviceAccount.json
+service_account_path = Path(__file__).parent / "serviceAccount.json"
 
-cred = credentials.Certificate('./serviceAccount.json')
+cred = credentials.Certificate(service_account_path)
 
 class Firebase(Database):
   def __init__(self) -> None:
