@@ -11,7 +11,7 @@ class NestedDoc(BaseModel):
 
 class Relations(BaseModel):
 	inner_relations: List[NestedDoc] | None = None
-outer_relations: List[Dict[str, bool]] | None = None
+	outer_relations: List[dict] | None = None
 
 
 class Document(BaseModel):
