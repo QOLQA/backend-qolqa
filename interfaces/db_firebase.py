@@ -28,3 +28,8 @@ class Firebase(Database):
     ref = self.db.collection(MODELS_COLLECTION_NAME).add(model.model_dump())
     # doc = ref.get()
     return model
+  
+  def read(self):
+    models_ref = self.db.collection(MODELS_COLLECTION_NAME)
+    models = [{"model_id": model.id, **model.to_dict()} for model in models_ref.stream()]
+    return models
