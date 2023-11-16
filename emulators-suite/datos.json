@@ -1,915 +1,935 @@
 [
-  { 
-    "model_id": "str", 
-    "submodel": [
+  {
+    "model_id": "09oB7PWFLvOZHkoI9OTS",
+    "submodels": [
       {
         "documents": [
           {
-            "name": "Empleado",
             "fields": [
-              {"id": "string"},
-              {"nombre": "string"},
-              {"edad": "int"},
-              {"salario": "double"},
-              {"casado": "bool"},
-              {"fechaContrato": "date"}
+              {
+                "id": "string"
+              },
+              {
+                "título": "string"
+              },
+              {
+                "autor": "string"
+              },
+              {
+                "publicado": "date"
+              },
+              {
+                "páginas": "int"
+              },
+              {
+                "precio": "double"
+              }
             ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
             "relations": {
-              "inner_relations": [],
               "outer_relations": [
                 {
-                  "name": "Departamento",
-                  "source": true
+                  "source": false,
+                  "name": "Biblioteca"
                 }
-              ]
-            }
+              ],
+              "inner_relations": []
+            },
+            "name": "Libro"
           },
           {
-            "name": "Departamento",
             "fields": [
-              {"id": "string"},
-              {"nombre": "string"},
-              {"ubicación": "string"},
-              {"empleados": "int"}
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "ubicación": "string"
+              },
+              {
+                "estantes": "int"
+              }
             ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
             "relations": {
-              "inner_relations": [],
               "outer_relations": [
                 {
-                  "name": "Empleado",
-                  "source": false
+                  "source": true,
+                  "name": "Libro"
                 }
-              ]
-            }
+              ],
+              "inner_relations": []
+            },
+            "name": "Biblioteca"
           }
         ]
       }
     ]
   },
   {
-    "model_id": "str", 
-    "submodel": [
+    "model_id": "AzPL4xIek2OacnCfpZXe",
+    "submodels": [
       {
         "documents": [
           {
-            "name": "Empleado",
             "fields": [
-              {"id": "string"},
-              {"nombre": "string"},
-              {"edad": "int"},
-              {"salario": "double"},
-              {"casado": "bool"},
-              {"fechaContrato": "date"}
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "precio": "double"
+              },
+              {
+                "enStock": "bool"
+              }
             ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
             "relations": {
-              "inner_relations": [],
-              "outer_relations": [
-                {
-                  "name": "Departamento",
-                  "source": true
-                }
-              ]
-            }
-          },
+              "outer_relations": [],
+              "inner_relations": []
+            },
+            "name": "Producto"
+          }
+        ]
+      },
+      {
+        "documents": [
           {
-            "name": "Departamento",
             "fields": [
-              {"id": "string"},
-              {"nombre": "string"},
-              {"ubicación": "string"},
-              {"empleados": "int"}
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              }
             ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
             "relations": {
-              "inner_relations": [],
-              "outer_relations": [
-                {
-                  "name": "Empleado",
-                  "source": false
-                }
-              ]
-            }
+              "outer_relations": [],
+              "inner_relations": []
+            },
+            "name": "Categoría"
           }
         ]
       }
     ]
   },
-
-
-  [
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "título": "string"
-                },
-                {
-                  "autor": "string"
-                },
-                {
-                  "publicado": "date"
-                },
-                {
-                  "páginas": "int"
-                },
-                {
-                  "precio": "double"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Biblioteca"
-                  }
-                ],
-                "inner_relations": []
+  {
+    "model_id": "BMjaLJ0A3aK9tg2CMsRi",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Libro"
+              {
+                "nombre": "string"
+              },
+              {
+                "carrera": "string"
+              },
+              {
+                "edad": "int"
+              },
+              {
+                "promedio": "double"
+              },
+              {
+                "activo": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
             },
-            {
-              "fields": [
+            "relations": {
+              "outer_relations": [
                 {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "ubicación": "string"
-                },
-                {
-                  "estantes": "int"
+                  "source": true,
+                  "name": "Profesor"
                 }
               ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Libro"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Biblioteca"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "precio": "double"
-                },
-                {
-                  "enStock": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [],
-                "inner_relations": []
-              },
-              "name": "Producto"
-            }
-          ]
-        },
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                }
-              ],
-              "relations": {
-                "outer_relations": [],
-                "inner_relations": []
-              },
-              "name": "Categoría"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "carrera": "string"
-                },
-                {
-                  "edad": "int"
-                },
-                {
-                  "promedio": "double"
-                },
-                {
-                  "activo": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Profesor"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Estudiante"
+              "inner_relations": []
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "departamento": "string"
-                },
-                {
-                  "experiencia": "int"
-                },
-                {
-                  "activo": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Estudiante"
-                  }
-                ],
-                "inner_relations": []
+            "name": "Estudiante"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Profesor"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "fechaInicio": "date"
-                },
-                {
-                  "prioridad": "int"
-                },
-                {
-                  "descripcion": "string"
-                },
-                {
-                  "activo": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "TareaRelacionada"
-                  }
-                ],
-                "inner_relations": [
-                  {
-                    "fields": [
-                      {
-                        "id": "string"
-                      },
-                      {
-                        "nombre": "string"
-                      },
-                      {
-                        "completada": "bool"
-                      }
-                    ],
-                    "nested_docs": [],
-                    "name": "TareaRelacionada"
-                  }
-                ]
+              {
+                "nombre": "string"
               },
-              "name": "Proyecto"
+              {
+                "departamento": "string"
+              },
+              {
+                "experiencia": "int"
+              },
+              {
+                "activo": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
             },
-            {
-              "fields": [
+            "relations": {
+              "outer_relations": [
                 {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "descripcion": "string"
+                  "source": false,
+                  "name": "Estudiante"
                 }
               ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Proyecto"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "TareaRelacionada"
-            }
-          ]
-        },
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "descripcion": "string"
-                },
-                {
-                  "prioridad": "int"
-                }
-              ],
-              "relations": {
-                "outer_relations": [],
-                "inner_relations": []
-              },
-              "name": "Tarea"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "correo": "string"
-                },
-                {
-                  "activo": "bool"
-                },
-                {
-                  "ultimaCompra": "date"
-                },
-                {
-                  "puntos": "int"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Pedido"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Cliente"
+              "inner_relations": []
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "fechaPedido": "date"
-                },
-                {
-                  "entregado": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Cliente"
-                  },
-                  {
-                    "source": false,
-                    "name": "ProductoPedido"
-                  }
-                ],
-                "inner_relations": []
+            "name": "Profesor"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "NNlddlWAN3v9gEYG2sdM",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Pedido"
+              {
+                "nombre": "string"
+              },
+              {
+                "fechaInicio": "date"
+              },
+              {
+                "prioridad": "int"
+              },
+              {
+                "descripcion": "string"
+              },
+              {
+                "activo": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
             },
-            {
-              "fields": [
+            "relations": {
+              "outer_relations": [
                 {
-                  "id": "string"
-                },
-                {
-                  "cantidad": "int"
-                },
-                {
-                  "enStock": "bool"
+                  "source": true,
+                  "name": "TareaRelacionada"
                 }
               ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Pedido"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "ProductoPedido"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
+              "inner_relations": [
                 {
-                  "id": "string"
-                },
-                {
-                  "título": "string"
-                },
-                {
-                  "autor": "string"
-                },
-                {
-                  "añoPublicación": "int"
-                },
-                {
-                  "precio": "double"
+                  "fields": [
+                    {
+                      "id": "string"
+                    },
+                    {
+                      "nombre": "string"
+                    },
+                    {
+                      "completada": "bool"
+                    }
+                  ],
+                  "nested_docs": [],
+                  "name": "TareaRelacionada"
                 }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Autor"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Libro"
+              ]
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "nacionalidad": "string"
-                },
-                {
-                  "nacimiento": "date"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Libro"
-                  }
-                ],
-                "inner_relations": []
+            "name": "Proyecto"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Autor"
-            }
-          ]
-        },
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "título": "string"
-                },
-                {
-                  "director": "string"
-                },
-                {
-                  "añoEstreno": "int"
-                },
-                {
-                  "precioEntrada": "double"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Director"
-                  }
-                ],
-                "inner_relations": []
+              {
+                "nombre": "string"
               },
-              "name": "Película"
+              {
+                "descripcion": "string"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "50"
             },
-            {
-              "fields": [
+            "relations": {
+              "outer_relations": [
                 {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "nacionalidad": "string"
-                },
-                {
-                  "nacimiento": "date"
+                  "source": false,
+                  "name": "Proyecto"
                 }
               ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Película"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Director"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "instrumento": "string"
-                },
-                {
-                  "edad": "int"
-                },
-                {
-                  "salario": "double"
-                },
-                {
-                  "activo": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Banda"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Músico"
+              "inner_relations": []
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "género": "string"
-                },
-                {
-                  "añoFormación": "int"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Músico"
-                  }
-                ],
-                "inner_relations": []
+            "name": "TareaRelacionada"
+          }
+        ]
+      },
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Banda"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "puesto": "string"
-                },
-                {
-                  "edad": "int"
-                },
-                {
-                  "salario": "double"
-                },
-                {
-                  "activo": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Departamento"
-                  }
-                ],
-                "inner_relations": []
+              {
+                "nombre": "string"
               },
-              "name": "Empleado"
+              {
+                "descripcion": "string"
+              },
+              {
+                "prioridad": "int"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "ubicación": "string"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Empleado"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Departamento"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "precio": "double"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Revisión"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Producto"
+            "relations": {
+              "outer_relations": [],
+              "inner_relations": []
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "calificación": "integer"
-                },
-                {
-                  "comentario": "string"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "ProductoRelacionado"
-                  },
-                  {
-                    "source": true,
-                    "name": "Producto"
-                  }
-                ],
-                "inner_relations": []
+            "name": "Tarea"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "UzDuVDkdhxfRVQyO5LCc",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Revisión"
+              {
+                "nombre": "string"
+              },
+              {
+                "correo": "string"
+              },
+              {
+                "activo": "bool"
+              },
+              {
+                "ultimaCompra": "date"
+              },
+              {
+                "puntos": "int"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
             },
-            {
-              "fields": [
+            "relations": {
+              "outer_relations": [
                 {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
+                  "source": false,
+                  "name": "Pedido"
                 }
               ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Revisión"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "ProductoRelacionado"
-            }
-          ]
-        },
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                }
-              ],
-              "relations": {
-                "outer_relations": [],
-                "inner_relations": []
-              },
-              "name": "Categoría"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "submodels": [
-        {
-          "documents": [
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "nombre": "string"
-                },
-                {
-                  "correo": "string"
-                },
-                {
-                  "activo": "bool"
-                },
-                {
-                  "últimaCompra": "date"
-                },
-                {
-                  "puntos": "int"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": false,
-                    "name": "Pedido"
-                  }
-                ],
-                "inner_relations": []
-              },
-              "name": "Cliente"
+              "inner_relations": []
             },
-            {
-              "fields": [
-                {
-                  "id": "string"
-                },
-                {
-                  "fechaPedido": "date"
-                },
-                {
-                  "entregado": "bool"
-                }
-              ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Cliente"
-                  },
-                  {
-                    "source": false,
-                    "name": "ProductoPedido"
-                  }
-                ],
-                "inner_relations": []
+            "name": "Cliente"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "Pedido"
+              {
+                "fechaPedido": "date"
+              },
+              {
+                "entregado": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
             },
-            {
-              "fields": [
+            "relations": {
+              "outer_relations": [
                 {
-                  "id": "string"
+                  "source": true,
+                  "name": "Cliente"
                 },
                 {
-                  "cantidad": "int"
-                },
-                {
-                  "enStock": "bool"
+                  "source": false,
+                  "name": "ProductoPedido"
                 }
               ],
-              "relations": {
-                "outer_relations": [
-                  {
-                    "source": true,
-                    "name": "Pedido"
-                  }
-                ],
-                "inner_relations": []
+              "inner_relations": []
+            },
+            "name": "Pedido"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
               },
-              "name": "ProductoPedido"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+              {
+                "cantidad": "int"
+              },
+              {
+                "enStock": "bool"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Pedido"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "ProductoPedido"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "WD9JtxqNxqTxR0Hmn0mG",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "título": "string"
+              },
+              {
+                "autor": "string"
+              },
+              {
+                "añoPublicación": "int"
+              },
+              {
+                "precio": "double"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Autor"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Libro"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "nacionalidad": "string"
+              },
+              {
+                "nacimiento": "date"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "Libro"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Autor"
+          }
+        ]
+      },
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "título": "string"
+              },
+              {
+                "director": "string"
+              },
+              {
+                "añoEstreno": "int"
+              },
+              {
+                "precioEntrada": "double"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Director"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Película"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "nacionalidad": "string"
+              },
+              {
+                "nacimiento": "date"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "Película"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Director"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "beBglUCMScBSr9D1ovfk",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "instrumento": "string"
+              },
+              {
+                "edad": "int"
+              },
+              {
+                "salario": "double"
+              },
+              {
+                "activo": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "Banda"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Músico"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "género": "string"
+              },
+              {
+                "añoFormación": "int"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Músico"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Banda"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "dCknc5TEa5XFrVFT2iyg",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "puesto": "string"
+              },
+              {
+                "edad": "int"
+              },
+              {
+                "salario": "double"
+              },
+              {
+                "activo": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Departamento"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Empleado"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "ubicación": "string"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "Empleado"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Departamento"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "fT5hboc3xR9Gg1DCy3J0",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "precio": "double"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "Revisión"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Producto"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "calificación": "integer"
+              },
+              {
+                "comentario": "string"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "ProductoRelacionado"
+                },
+                {
+                  "source": true,
+                  "name": "Producto"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Revisión"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Revisión"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "ProductoRelacionado"
+          }
+        ]
+      },
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [],
+              "inner_relations": []
+            },
+            "name": "Categoría"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "model_id": "swvudL2eKOt6SgJx7ElJ",
+    "submodels": [
+      {
+        "documents": [
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "nombre": "string"
+              },
+              {
+                "correo": "string"
+              },
+              {
+                "activo": "bool"
+              },
+              {
+                "últimaCompra": "date"
+              },
+              {
+                "puntos": "int"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": false,
+                  "name": "Pedido"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Cliente"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "fechaPedido": "date"
+              },
+              {
+                "entregado": "bool"
+              }
+            ],
+            "position": {
+              "y": "130",
+              "x": "330"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Cliente"
+                },
+                {
+                  "source": false,
+                  "name": "ProductoPedido"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "Pedido"
+          },
+          {
+            "fields": [
+              {
+                "id": "string"
+              },
+              {
+                "cantidad": "int"
+              },
+              {
+                "enStock": "bool"
+              }
+            ],
+            "position": {
+              "y": "550",
+              "x": "50"
+            },
+            "relations": {
+              "outer_relations": [
+                {
+                  "source": true,
+                  "name": "Pedido"
+                }
+              ],
+              "inner_relations": []
+            },
+            "name": "ProductoPedido"
+          }
+        ]
+      }
+    ]
+  }
 ]
