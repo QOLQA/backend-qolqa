@@ -31,5 +31,5 @@ class Firebase(Database):
   
   def read(self):
     models_ref = self.db.collection(MODELS_COLLECTION_NAME)
-    models = [{"model_id": model.id, **model.to_dict()} for model in models_ref.stream()]
+    models = [{"model_id": model.id} for model in models_ref.stream()]
     return models
