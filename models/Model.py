@@ -17,6 +17,7 @@ class Relations(BaseModel):
 class Document(BaseModel):
 	name: str | None = None
 	fields: List[Dict[str, str]] | None = None
+	position: Dict[str, str]
 	relations: Relations | None = None
 
 
