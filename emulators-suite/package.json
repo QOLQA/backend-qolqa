@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx firebase emulators:start --only firestore,auth --import data"
+    "dev": "npx firebase emulators:start --only firestore,auth"
   },
   "keywords": [],
   "author": "",
