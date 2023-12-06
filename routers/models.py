@@ -21,7 +21,7 @@ def create_document(
   return request.app.database.create(model)
 
 
-@router.get('/')
+@router.get('')
 def get_all_models(
   request: Request
 ):

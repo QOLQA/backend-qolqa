@@ -1,28 +1,28 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 from typing import List, Dict
 
 
 class NestedDoc(BaseModel):
 	name: str | None = None
-	fields: List[Dict[str, str]] | None = None
+	fields: Dict[str, str] | None = None
 	nested_docs: List['NestedDoc'] | None = None
 
-
-class Relations(BaseModel):
-	inner_relations: List[NestedDoc] | None = None
-	outer_relations: List[dict] | None = None
-
+class Position(BaseModel):
+    x: int
+    y: int
 
 class Document(BaseModel):
 	name: str | None = None
-	fields: List[Dict[str, str]] | None = None
-	position: Dict[str, str]
-	relations: Relations | None = None
+	id: str
+	fields: Dict[str, str] | None = None
+	position: Position
+	nested_docs: List[NestedDoc]
 
 
 class SubModel(BaseModel):
   documents: List[Document]
+  relations: Dict[str, str]
   
   
 class Model(BaseModel):
