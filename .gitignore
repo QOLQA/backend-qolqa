@@ -1,0 +1,33 @@
+# Archivos y carpetas generados por Python
+__pycache__/
+*.pyc
+*/__pycache__/
+
+# Archivos de registro y registros de errores
+*.log
+logs/
+
+# Entorno virtual (si usas uno)
+venv/
+env/
+
+# Carpetas y archivos específicos de IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Configuraciones específicas del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de caché y configuraciones temporales
+*.cache
+*.swp
+*.swo
+
+# Archivos generados en la construcción
+build/
+dist/
+*.egg-info/
+
+emulators-suite/node_modules
