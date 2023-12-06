@@ -7,15 +7,8 @@ from routers.fake import router as fake_router
 from interfaces.db_firebase import Firebase
 from interfaces.database import Database
 
-os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
-os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
-
-origins = [
-    "http://localhost:5173",
-    "http://localhost:8080",
-    "http://localhost:9099",
-    "http://localhost:53288"
-]
+# os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
+# os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 
 app = FastAPI()
 
