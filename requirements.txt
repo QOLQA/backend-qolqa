@@ -3,3 +3,4 @@ uvicorn[standard]
 firebase_admin
 wheel
 pydantic
+faker
