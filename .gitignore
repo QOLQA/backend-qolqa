@@ -31,3 +31,6 @@ dist/
 *.egg-info/
 
 emulators-suite/node_modules
+
+
+.env
