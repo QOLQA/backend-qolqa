@@ -34,3 +34,7 @@ emulators-suite/node_modules
 
 
 .env
+
+interfaces/serviceAccount.json
+
+**/serviceAccount.json
