@@ -4,7 +4,7 @@ from pathlib import Path
 from models.Model import Model
 
 # Obtén la ruta absoluta al archivo serviceAccount.json
-service_account_path = Path(__file__).parent / "serviceAccount.json"
+service_account_path = Path(__file__).parent.parent / "serviceAccount.json"
 
 cred = credentials.Certificate(service_account_path)
 
