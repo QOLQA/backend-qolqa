@@ -17,12 +17,12 @@ class Document(BaseModel):
 	id: str
 	fields: Dict[str, str] | None = None
 	position: Position
-	nested_docs: List[NestedDoc]
+	nested_docs: List[NestedDoc] | None
 
 
 class SubModel(BaseModel):
   documents: List[Document]
-  relations: Dict[str, str]
+  relations: Dict[str, str] | None
   
   
 class Model(BaseModel):
