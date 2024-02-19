@@ -6,14 +6,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.models import router as models_router
 from routers.fake import router as fake_router
+from routers.thumbnails import router as thumbnails_router
 from interfaces.db_firebase import Firebase
 from interfaces.database import Database
+from interfaces.storage_firebase import FirebaseStorage
 
 load_dotenv()
 
 is_local = os.environ.get("IS_LOCAL")
-
-print('is local', is_local)
 
 if is_local == 'true':
     os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
@@ -35,6 +35,10 @@ app.include_router(
 
 app.include_router(
     fake_router, prefix='/fake'
+)
+
+app.include_router(
+    thumbnails_router, prefix='/thumbnails'
 )
 
 @app.on_event('startup')
