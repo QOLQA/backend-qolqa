@@ -2,6 +2,7 @@ from interfaces.database import Database
 from firebase_admin import credentials, firestore, initialize_app
 from pathlib import Path
 from models.Model import Model
+from interfaces.storage_firebase import FirebaseStorage
 
 # Obtén la ruta absoluta al archivo serviceAccount.json
 service_account_path = Path(__file__).parent.parent / "serviceAccount.json"
@@ -12,8 +13,11 @@ MODELS_COLLECTION_NAME = 'models'
 
 class Firebase(Database):
   def __init__(self) -> None:
-    self.app = initialize_app(cred)
+    self.app = initialize_app(cred, {
+      'storageBucket': 'developqolqa.appspot.com'
+    })
     self.db = firestore.client()
+    self.storage = FirebaseStorage()
 
   def update(self, model_id: str, model: Model):
     super().update(model_id, model)
