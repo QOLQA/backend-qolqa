@@ -1,6 +1,7 @@
 
 from fastapi import APIRouter, Request, Body
 from models.Model import Model
+from utils.graph import crear_grafo
 
 router = APIRouter()
 
@@ -41,3 +42,16 @@ def get_single_model(
     return model.to_dict()
   return {"error": "Model not found"}
 
+
+
+@router.get('/graph/{model_id}')
+def get_single_graph(
+  model_id: str, 
+  request: Request
+):
+  model_ref = request.app.database.db.collection('models').document(model_id)
+  model = model_ref.get()
+     
+  if model.exists:
+    return crear_grafo(model)
+  return {"error": "Model not found"}
