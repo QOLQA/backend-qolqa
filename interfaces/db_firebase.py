@@ -13,11 +13,11 @@ MODELS_COLLECTION_NAME = 'models'
 
 class Firebase(Database):
   def __init__(self) -> None:
-    self.app = initialize_app(cred, {
-      'storageBucket': 'developqolqa.appspot.com'
-    })
+    # self.app = initialize_app(cred, {
+    #   'storageBucket': 'developqolqa.appspot.com'
+    # })
     self.db = firestore.client()
-    self.storage = FirebaseStorage()
+    self.storage = FirebaseStorage('thumbnail')
 
   def update(self, model_id: str, model: Model):
     super().update(model_id, model)

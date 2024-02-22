@@ -15,7 +15,7 @@ def agregar_arista_unidireccional(grafo, nodo_origen, nodo_destino):
 
 
 def crear_grafo(modelJ):
-  dictModel = modelJ.to_dict()['submodels']
+  dictModel = modelJ['submodels']
   G = nx.DiGraph()
 
   for documents in dictModel:

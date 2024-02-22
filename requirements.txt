@@ -6,3 +6,4 @@ pydantic
 faker
 python-dotenv
 python-multipart
+networkx
