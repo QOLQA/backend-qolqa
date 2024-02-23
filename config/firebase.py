@@ -12,7 +12,7 @@ load_dotenv()
 is_local = os.environ.get('IS_LOCAL')
 
 if is_local == 'true':
-  os.environ['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080'
+  os.environ['FIRESTORE_EMULATOR_HOST'] = 'localhost:8085'
 
 
 initialize_app(credentials, {
