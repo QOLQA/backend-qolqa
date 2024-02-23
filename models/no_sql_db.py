@@ -6,6 +6,7 @@ class NestedCollection(BaseModel):
 	name: str | None = None
 	fields: Dict[str, str] | None = None
 	nested_docs: List['NestedCollection'] | None = None
+	# cardinality: str
 
 class Position(BaseModel):
     x: int
@@ -17,11 +18,15 @@ class Collection(BaseModel):
 	fields: Dict[str, str] | None = None
 	position: Position
 	nested_docs: List[NestedCollection] | None
-
+ 
+class Relation(BaseModel):
+  id_source: str
+  id_target: str
+  # cardinality: str
 
 class SubModel(BaseModel):
-  documents: List[Collection]
-  relations: Dict[str, str] | None
+  collections: List[Collection]
+  relations: list[Relation] | None = None
   
   
 class NoSqlDBForm(BaseModel):

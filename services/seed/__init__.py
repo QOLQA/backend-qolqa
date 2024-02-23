@@ -4,7 +4,7 @@ from fastapi import Request
 from interfaces.seed import Seed
 import uuid
 
-from models.no_sql_db import NoSqlDBForm, SubModel, Collection, Position, NestedCollection
+from models.no_sql_db import NoSqlDBForm, SubModel, Collection, Position, NestedCollection, Relation
 
 fake = Faker()
 
@@ -12,13 +12,15 @@ fake = Faker()
 class Seed(Seed):
   def documents(self, request: Request, number_models: int):
     for _ in range(number_models):
-      collection = NoSqlDBForm(submodels=[])
+      no_sql_db = NoSqlDBForm(submodels=[])
       num_sub_models = randint(2, 3)
+
       for _ in range(num_sub_models):
-        sub_model = SubModel(documents=[], relations={})
-        num_documents = randint(1, 3)
-        for _ in range(num_documents):
-          document = Collection(
+        sub_model = SubModel(collections=[], relations=None)
+        num_collections = randint(2, 4)
+
+        for _ in range(num_collections):
+          collection = Collection(
             name=fake.word(),
             id=str(uuid.uuid4()),
             fields={fake.word(): fake.word() for _ in range(3)},
@@ -33,13 +35,17 @@ class Seed(Seed):
               fields={fake.word(): fake.word() for _ in range(2)},
               nested_docs=[]
             )
-            document.nested_docs.append(nested_doc)
-          sub_model.documents.append(document)
-          
-        sub_model.relations[sub_model.documents[0].id] = sub_model.documents[len(sub_model.documents) - 1].id
-        collection.submodels.append(sub_model)
+            collection.nested_docs.append(nested_doc)
+          sub_model.collections.append(collection)
 
-      request.app.services.models.create(collection)
+        sub_model.relations = []
+        sub_model.relations.append(Relation(
+          id_source=sub_model.collections[0].id,
+          id_target=sub_model.collections[len(sub_model.collections) - 1].id
+        ))
+        no_sql_db.submodels.append(sub_model)
+
+      request.app.services.models.create(no_sql_db)
     return {'msg': 'cool'}
 
 seed = Seed()
