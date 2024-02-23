@@ -1,5 +1,8 @@
 class Hasher:
-  def hash_password(self, password: str):
+  def hash_password(self, plain_password: str):
+    pass
+  
+  def verify_password(self, plain_password: str, hashed_password):
     pass
 
 class Auth:
