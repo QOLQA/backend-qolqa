@@ -3,14 +3,15 @@ from typing import List, Dict
 
 
 class NestedCollection(BaseModel):
-	name: str | None = None
-	fields: Dict[str, str] | None = None
-	nested_docs: List['NestedCollection'] | None = None
-	# cardinality: str
+  name: str | None = None
+  fields: Dict[str, str] | None = None
+  nested_docs: List['NestedCollection'] | None = None
+  id: str
+  cardinality: str | None = None
 
 class Position(BaseModel):
-    x: int
-    y: int
+  x: int
+  y: int
 
 class Collection(BaseModel):
 	name: str | None = None
@@ -22,7 +23,7 @@ class Collection(BaseModel):
 class Relation(BaseModel):
   id_source: str
   id_target: str
-  # cardinality: str
+  cardinality: str | None = None
 
 class SubModel(BaseModel):
   collections: List[Collection]
