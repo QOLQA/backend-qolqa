@@ -33,7 +33,9 @@ class Seed(Seed):
             nested_doc = NestedCollection(
               name=fake.word(),
               fields={fake.word(): fake.word() for _ in range(2)},
-              nested_docs=[]
+              nested_docs=[],
+              id=str(uuid.uuid4()),
+              cardinality="1..1"
             )
             collection.nested_docs.append(nested_doc)
           sub_model.collections.append(collection)
@@ -41,7 +43,8 @@ class Seed(Seed):
         sub_model.relations = []
         sub_model.relations.append(Relation(
           id_source=sub_model.collections[0].id,
-          id_target=sub_model.collections[len(sub_model.collections) - 1].id
+          id_target=sub_model.collections[len(sub_model.collections) - 1].id,
+          cardinality="n..1"
         ))
         no_sql_db.submodels.append(sub_model)
 
