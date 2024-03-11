@@ -1,23 +1,12 @@
-import os
 import uvicorn
-from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.models import router as models_router
+from routers.no_sql_db import router as models_router
 from routers.fake import router as fake_router
-from interfaces.db_firebase import Firebase
-from interfaces.database import Database
-
-load_dotenv()
-
-is_local = os.environ.get("IS_LOCAL")
-
-print('is local', is_local)
-
-if is_local == 'true':
-    os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099"
-    os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
+from routers.thumbnails import router as thumbnails_router
+from routers.user import router as users_router
+from services.inner import Services
 
 app = FastAPI()
 
@@ -37,9 +26,15 @@ app.include_router(
     fake_router, prefix='/fake'
 )
 
+app.include_router(
+    thumbnails_router, prefix='/thumbnails'
+)
+
+app.include_router(users_router, prefix='/users')
+
 @app.on_event('startup')
 def startup_db_client():
-    app.database: Database = Firebase()
+    app.services = Services()
 
 
 @app.get("/")

@@ -5,3 +5,7 @@ wheel
 pydantic
 faker
 python-dotenv
+python-multipart
+networkx
+python-jose[cryptography]
+passlib[bcrypt]
