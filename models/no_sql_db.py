@@ -32,6 +32,7 @@ class SubModel(BaseModel):
   
 class NoSqlDBForm(BaseModel):
   submodels: List[SubModel]
+  name: str
   
 class NoSqlDB(NoSqlDBForm):
   id: str
