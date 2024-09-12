@@ -37,6 +37,13 @@ def get_single_model(
   return request.app.services.models.get_one(model_id)
 
 
+@router.delete('/{model_id}')
+def delete_model(
+    model_id: str,
+    request: Request
+) -> None:
+    # Eliminar el modelo utilizando su ID
+    request.app.services.models.delete(model_id)
 
 @router.get('/graph/{model_id}')
 def get_single_graph(

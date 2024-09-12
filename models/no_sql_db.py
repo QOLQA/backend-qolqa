@@ -29,9 +29,14 @@ class SubModel(BaseModel):
   collections: List[Collection]
   relations: list[Relation] | None = None
   
+class Query(BaseModel):
+  full_query: str
+  collections: list[str]
   
 class NoSqlDBForm(BaseModel):
   submodels: List[SubModel]
+  name: str
+  queries: list[Query] = []
   
 class NoSqlDB(NoSqlDBForm):
   id: str

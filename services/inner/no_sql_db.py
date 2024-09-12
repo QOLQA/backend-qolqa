@@ -28,5 +28,8 @@ class NoSqlDBService:
     collection_updated = Model(id=id, data=model_updated.dict())
     updated = self.repo.update(id, collection_updated)
     return NoSqlDB(id=updated.id, **updated.data)
-
+    
+  def delete(self, id: str) -> None:
+        self.repo.delete(id)
+        
 model_service = NoSqlDBService(repo_models)

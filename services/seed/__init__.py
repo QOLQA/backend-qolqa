@@ -12,7 +12,7 @@ fake = Faker()
 class Seed(Seed):
   def documents(self, request: Request, number_models: int):
     for _ in range(number_models):
-      no_sql_db = NoSqlDBForm(submodels=[])
+      no_sql_db = NoSqlDBForm(submodels=[], name=fake.word())
       num_sub_models = randint(2, 3)
 
       for _ in range(num_sub_models):
