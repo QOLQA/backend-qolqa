@@ -10,7 +10,7 @@ class NoSqlDBService:
     
   def create(self, modelForm: NoSqlDBForm) -> NoSqlDB:
     new_model = self.repo.create()
-    model_updated = Model(id=new_model.id, data=modelForm.model_dump())
+    model_updated = Model(id=new_model.id, data=modelForm.dict())
     model = self.repo.update(new_model.id, model_updated)
     return NoSqlDB(id=model.id, **model.data)
     
@@ -25,8 +25,11 @@ class NoSqlDBService:
     return model
   
   def update(self, id: str, model_updated: NoSqlDBForm):
-    collection_updated = Model(id=id, data=model_updated.model_dump())
+    collection_updated = Model(id=id, data=model_updated.dict())
     updated = self.repo.update(id, collection_updated)
     return NoSqlDB(id=updated.id, **updated.data)
-
+    
+  def delete(self, id: str) -> None:
+        self.repo.delete(id)
+        
 model_service = NoSqlDBService(repo_models)

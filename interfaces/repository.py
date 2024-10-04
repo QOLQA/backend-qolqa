@@ -4,7 +4,7 @@ class Repository:
   def create(self) -> Model:
     pass
   
-  def delete(self, model: Model) -> None:
+  def delete(self, id: str) -> None:
     pass
   
   def get_all(self) -> list[Model]:
