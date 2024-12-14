@@ -1,0 +1,67 @@
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from interfaces.repository import Repository
+
+from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
+from schemas.solution import Solution as SolutionDB, Query
+from utils.errors import Missing
+
+class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartialUpdate]):
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_id(self, id):
+        select_query = (select(SolutionDB)
+            .options(selectinload(SolutionDB.queries))
+            .where(SolutionDB.id == id))
+        
+        result = await self.session.execute(select_query)
+
+        solution = result.scalar_one_or_none()
+
+        if solution is None:
+            raise Missing(msg=f'The solution with id: {id} does not exists.')
+        
+        return solution
+    
+    async def add(self, entity_data):
+        solution = SolutionDB(**entity_data
+            .model_dump(exclude={'queries'}), queries=[])
+        
+        self.session.add(solution)
+
+        for query_item in entity_data.queries:
+            query = Query(**query_item.model_dump(), solution=solution)
+
+            self.session.add(query)
+
+        await self.session.commit()
+
+        return await self.get_by_id(solution.id)
+    
+    async def get_all(self):
+        select_query = (select(SolutionDB)
+            .options(selectinload(SolutionDB.queries)))
+        
+        result = await self.session.execute(select_query)
+        print('hacec el query de manera existosa')
+
+        return result.scalars().all()
+    
+    async def delete(self, id):
+        solution = await self.get_by_id(id)
+        await self.session.delete(solution)
+        await self.session.commit()
+        
+    async def update(self, id, entity_update):
+        solution_update_dict = entity_update.model_dump(exclude_unset=True)
+        solution = await self.get_by_id(id)
+        for key, value in solution_update_dict.items():
+            setattr(solution, key, value)
+
+        self.session.add(solution)
+        await self.session.commit()
+
+        return solution

@@ -1,9 +1,35 @@
+import contextlib
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers.solutions import router as solutions_router
+from solution.router import router as solutions_router
+from models.settings import settings, TypeDB
+from config.sql import create_all_tables
 
-app = FastAPI()
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+  await create_all_tables()
+  print(settings)
+  yield
+
+app = FastAPI(lifespan=lifespan)
+
+# if settings.type_db == TypeDB.sql:
+#   @contextlib.asynccontextmanager
+#   async def lifespan(app: FastAPI):
+#     await create_all_tables()
+#     print(settings)
+#     yield
+
+#   app = FastAPI(lifespan=lifespan)
+# else:
+#   @contextlib.asynccontextmanager
+#   async def lifespan(app: FastAPI):
+#     print(settings)
+#     yield
+
+  # app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
   CORSMiddleware,

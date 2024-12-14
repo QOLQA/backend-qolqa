@@ -1,7 +1,7 @@
-from typing import Any, Annotated, Callable
+from typing import Any, Annotated, Callable, ClassVar
 
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from pydantic_core import core_schema
 
 class _ObjectIdPydanticAnnotation:
@@ -29,9 +29,12 @@ PyObjectId = Annotated[
 ]
 
 class MongoBaseModel(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: PyObjectId = Field(alias="_id")
 
-    class Config:
-        json_encoders = {ObjectId: str}
+    model_config = ConfigDict(json_encoders={ObjectId: str})
 
-        
+
+class SQLBaseModel(BaseModel):
+    id: int
+    
+    model_config = ConfigDict(from_attributes=True)

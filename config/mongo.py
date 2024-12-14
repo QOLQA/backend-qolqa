@@ -1,6 +1,9 @@
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-motor_client = AsyncIOMotorClient('mongodb://localhost:27017')
+from models.settings import settings
+
+motor_client = AsyncIOMotorClient('mongodb://localhost:27019')
+# motor_client = AsyncIOMotorClient(settings.database_url)
 database = motor_client['qolqa']
 
 def get_database() -> AsyncIOMotorDatabase:
