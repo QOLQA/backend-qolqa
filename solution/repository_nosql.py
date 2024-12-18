@@ -23,9 +23,8 @@ class SolutionRepositoryNoSql(Repository[Solution, SolutionCreate, SolutionParti
         return Solution(**raw_solution)
     
     async def add(self, entity_data):
-        solution = SolutionCreate(**entity_data.model_dump())
         solution_created = await self.database['solutions'] \
-            .insert_one(solution.model_dump(by_alias=True))
+            .insert_one(entity_data.model_dump())
         
         return await self.get_by_id(solution_created.inserted_id)
     
@@ -40,11 +39,11 @@ class SolutionRepositoryNoSql(Repository[Solution, SolutionCreate, SolutionParti
         return results
     
     async def update(self, id, entity_update):
-        await self.get_by_id(id)
+        solution = await self.get_by_id(id)
         
         await self.database['solutions'] \
             .update_one(
-                {'_id': id},
+                {'_id': solution.id},
                 {'$set': entity_update.model_dump(exclude_unset=True)}
             )
         
@@ -53,7 +52,7 @@ class SolutionRepositoryNoSql(Repository[Solution, SolutionCreate, SolutionParti
         return solution
     
     async def delete(self, id):
-        await self.get_by_id(id)
+        solution = await self.get_by_id(id)
 
         await self.database['solutions'] \
-            .delete_one({'_id': id})
+            .delete_one({'_id': solution.id})

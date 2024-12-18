@@ -1,32 +1,29 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status
 
-from interfaces.repository import Repository
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
 from solution import service
+from solution.repository_nosql import SolutionRepositoryNoSql
 
 from utils.handle_errors import handle_common_errors
-from utils.get_repository import get_repository
+from utils.get_database import get_database
 
 router = APIRouter()
 
 
 @router.get('', response_model=list[Solution])
 async def all(
-    repository: Repository = Depends(get_repository),
-    name: str = Query(default=None)
+    database = Depends(get_database),
 ) -> list[Solution]:
-    if name is None:
-        return await service.get_all(repository)
-    return await service.get_one_by_name(repository, name)
+    return await service.get_all(SolutionRepositoryNoSql(database))
 
 
 @router.post('', response_model=Solution, status_code=status.HTTP_201_CREATED)
 async def create(
     solution_create: SolutionCreate,
-    repository: Repository = Depends(get_repository),
+    database = Depends(get_database),
 ) -> Solution:
     try:
-        return await service.create(repository, solution_create)
+        return await service.create(SolutionRepositoryNoSql(database), solution_create)
     except Exception as exc:
         await handle_common_errors(exc)
 
@@ -34,10 +31,10 @@ async def create(
 @router.get('/{id}', response_model=Solution)
 async def get(
     id: int | str,
-    repository: Repository = Depends(get_repository),
+    database = Depends(get_database),
 ) -> Solution:
     try:
-        return await service.get_one(repository, id)
+        return await service.get_one(SolutionRepositoryNoSql(database), id)
     except Exception as exc:
         await handle_common_errors(exc)
 
@@ -46,10 +43,10 @@ async def get(
 async def update(
     id: str | int,
     solution_update: SolutionPartialUpdate,
-    repository: Repository = Depends(get_repository),
+    database = Depends(get_database),
 ) -> Solution:
     try:
-        return await service.modify(repository, id, solution_update)
+        return await service.modify(SolutionRepositoryNoSql(database), id, solution_update)
     except Exception as exc:
         await handle_common_errors(exc)
     
@@ -57,9 +54,9 @@ async def update(
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete(
     id: str | int,
-    repository: Repository = Depends(get_repository),
+    database = Depends(get_database),
 ) -> None:
     try:
-        return await service.delete(repository, id)
+        return await service.delete(SolutionRepositoryNoSql(database), id)
     except Exception as exc:
         await handle_common_errors(exc)

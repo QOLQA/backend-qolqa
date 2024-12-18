@@ -1,24 +1,24 @@
 from models.solution import SolutionCreate, Solution, SolutionPartialUpdate
-from utils.get_repository import SolutionRepository
+from interfaces.repository import Repository
 
-async def get_all(repository: SolutionRepository) -> list[Solution]:
+async def get_all(repository: Repository) -> list[Solution]:
     return await repository.get_all()
 
-async def get_one(repository: SolutionRepository, id: str | int):
+async def get_one(repository: Repository, id: str | int):
     return await repository.get_by_id(id)
 
-async def create(repository: SolutionRepository, solution: SolutionCreate) -> Solution:
+async def create(repository: Repository, solution: SolutionCreate) -> Solution:
     return await repository.add(solution)
 
 async def modify(
-    repository: SolutionRepository,
+    repository: Repository,
     id: str | int,
     solution_update: SolutionPartialUpdate,
 ) -> Solution:
-    return await repository.update_solution(id, solution_update)
+    return await repository.update(id, solution_update)
 
 async def delete(
-    repository: SolutionRepository,
+    repository: Repository,
     id: str | int,
 ) -> None:
     return await repository.delete(id)

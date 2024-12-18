@@ -1,13 +1,12 @@
 from typing import Any
 from pydantic import BaseModel
 
-from models.settings import settings, TypeDB
+from config.settings import settings, TypeDB
 
-# if settings.type_db == TypeDB.mongo:
-#     from models.base import MongoBaseModel as Base
-# else: # sql database model
-#     from models.base import SQLBaseModel as Base
-from models.base import SQLBaseModel as Base
+if settings.type_db == TypeDB.mongo:
+    from models.base import MongoBaseModel as Base
+else: # sql database model
+    from models.base import SQLBaseModel as Base
 
 class Query(BaseModel):
     full_query: str

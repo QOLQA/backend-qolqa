@@ -6,6 +6,7 @@ from interfaces.repository import Repository
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
 from schemas.solution import Solution as SolutionDB, Query
+from utils.sql import get_integer_id
 from utils.errors import Missing
 
 class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartialUpdate]):
@@ -13,9 +14,10 @@ class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartial
         self.session = session
 
     async def get_by_id(self, id):
+        integer_id = await get_integer_id(id)
         select_query = (select(SolutionDB)
             .options(selectinload(SolutionDB.queries))
-            .where(SolutionDB.id == id))
+            .where(SolutionDB.id == integer_id))
         
         result = await self.session.execute(select_query)
 
@@ -46,7 +48,6 @@ class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartial
             .options(selectinload(SolutionDB.queries)))
         
         result = await self.session.execute(select_query)
-        print('hacec el query de manera existosa')
 
         return result.scalars().all()
     

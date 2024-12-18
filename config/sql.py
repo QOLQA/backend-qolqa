@@ -4,12 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from schemas.solution import Base
 
-from models.settings import settings
+from config.settings import settings
 
-DATABASE_URL = f'postgresql+asyncpg://roswell:pando@localhost:5434/qolqa'
-
-
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(settings.database_url)
 
 
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
