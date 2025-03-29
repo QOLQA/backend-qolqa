@@ -1,63 +1,95 @@
-# backend-qolqa
+# Backend QOLQA
 
-<p align="center">
-  <a href="https://fastapi.tiangolo.com"><img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png" alt="FastAPI"></a>
-</p>
-<p align="center">
-    <em>FastAPI framework, high performance, easy to learn, fast to code, ready for production</em>
-</p>
-<p align="center">
-<a href="https://github.com/tiangolo/fastapi/actions?query=workflow%3ATest+event%3Apush+branch%3Amaster" target="_blank">
-    <img src="https://github.com/tiangolo/fastapi/workflows/Test/badge.svg?event=push&amp;branch=master" alt="Test">
-</a>
-<a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/tiangolo/fastapi" target="_blank">
-    <img src="https://coverage-badge.samuelcolvin.workers.dev/tiangolo/fastapi.svg" alt="Coverage">
-</a>
-<a href="https://pypi.org/project/fastapi" target="_blank">
-    <img src="https://img.shields.io/pypi/v/fastapi?color=%2334D058&amp;label=pypi%20package" alt="Package version">
-</a>
-<a href="https://pypi.org/project/fastapi" target="_blank">
-    <img src="https://img.shields.io/pypi/pyversions/fastapi.svg?color=%2334D058" alt="Supported Python versions">
-</a>
-</p>
+A FastAPI-based backend service that provides solutions management functionality. This project is built with modern Python practices and supports MongoDB database.
 
-## Description
+## Features
 
-[FastAPI](https://fastapi.tiangolo.com/es/) framework python first steps.
+- FastAPI-based REST API
+- Support for MongoDB database
+- CORS middleware enabled
+- Environment-based configuration
+- Structured project layout with clear separation of concerns
 
+## Project Structure
 
-## Running the app
-
-```bash
-# create an environment
-$ python -m venv name_of_environment
-
-# use the enviroment
-$ name_of_environment/Scripts/activate
-
-# install packages
-$ pip install -r requirements.txt
-
-# run the server
-$ uvicorn main:app --reload
+```
+backend-qolqa/
+├── config/         # Configuration files and settings
+├── interfaces/     # Interface definitions
+├── models/         # Database models
+├── schemas/        # Pydantic schemas
+├── solution/       # Solution-related endpoints and logic
+├── utils/          # Utility functions
+├── main.py         # Application entry point
+└── requirements.txt # Project dependencies
 ```
 
-## Running the emulators
+## Prerequisites
+
+- Python 3.8+
+- MongoDB (if using MongoDB as database)
+
+## Installation
+
+1. Clone the repository:
 ```bash
-# navigate to emulators-suit
-$ cd emulators-suite/
-
-# install dependencies
-$ npm install
-
-# run emulators
-$ npm run dev
+git clone <repository-url>
+cd backend-qolqa
 ```
 
-## Support
+2. Create and activate a virtual environment:
+```bash
+python -m venv env
+source env/bin/activate  # On Windows: env\Scripts\activate
+```
 
-FastAPI is a modern, high-performance web framework for building APIs with Python 3.7+ based on standard Python type hints. If you'd like to learn more, please check the github [read more here](https://github.com/tiangolo/fastapi).
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Create a `.env` file in the root directory with the following variables:
+```
+TYPE_DB=sql  # or mongodb
+DATABASE_URL=your_database_url
+```
+
+## Running the Application
+
+Start the server with:
+```bash
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+## API Documentation
+
+Once the server is running, you can access:
+- Swagger UI documentation at `http://localhost:8000/docs`
+- ReDoc documentation at `http://localhost:8000/redoc`
+
+## Dependencies
+
+- FastAPI (0.110.3)
+- Uvicorn (0.23.2)
+- Motor (3.6.0) - MongoDB driver
+- Pydantic Settings (2.6.1)
+- Python-dotenv (1.0.0)
+- Asyncio (3.4.3)
+- Asyncpg (0.30.0)
+- SQLAlchemy (2.0.36)
+
+## Development
+
+The project follows a modular structure with clear separation of concerns:
+- `config/`: Contains configuration settings and database connections
+- `interfaces/`: Defines interfaces and abstract classes
+- `models/`: Contains database models
+- `schemas/`: Pydantic models for request/response validation
+- `solution/`: Business logic and API endpoints for solutions
+- `utils/`: Helper functions and utilities
 
 ## License
 
-FastAPI is MIT licensed.
+[Add your license information here]
