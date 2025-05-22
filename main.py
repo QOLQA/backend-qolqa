@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from solution.router import router as solutions_router
+from version.router import router as versions_router
 from config.settings import settings, TypeDB
 
 if settings.type_db == TypeDB.sql:
@@ -33,3 +34,4 @@ app.add_middleware(
 
 
 app.include_router(solutions_router, prefix='/solutions', tags=['Solutions'])
+app.include_router(versions_router, prefix='/versions', tags=['Versions'])
