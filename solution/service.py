@@ -1,4 +1,5 @@
 from models.solution import SolutionCreate, Solution, SolutionPartialUpdate
+from models.version import Version, VersionCreate, VersionPartialUpdate
 from interfaces.repository import Repository
 
 async def get_all(repository: Repository) -> list[Solution]:
@@ -22,4 +23,23 @@ async def delete(
     id: str | int,
 ) -> None:
     return await repository.delete(id)
-    
+
+async def get_solution_versions(repository: Repository, solution_id: str) -> list[Version]:
+    """Get all versions associated with a solution"""
+    return await repository.get_by_solution_id(solution_id)
+
+async def create_version(repository: Repository, version: VersionCreate) -> Version:
+    """Create a new version"""
+    return await repository.add(version)
+
+async def modify_version(
+    repository: Repository,
+    id: str | int,
+    version_update: VersionPartialUpdate,
+) -> Version:
+    """Update a specific version"""
+    return await repository.update(id, version_update)
+
+async def delete_solution_versions(repository: Repository, solution_id: str) -> None:
+    """Delete all versions associated with a solution"""
+    return await repository.delete_by_solution_id(solution_id)

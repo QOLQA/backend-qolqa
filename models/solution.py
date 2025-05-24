@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from config.settings import settings, TypeDB
+from models.version import Version
 
 if settings.type_db == TypeDB.mongo:
     from models.base import MongoBaseModel as Base
@@ -22,6 +23,6 @@ class SolutionCreate(SolutionBase):
     pass
 
 class Solution(Base, SolutionBase):
-    pass
+    versions: list[Version] = []
 
 

@@ -55,3 +55,18 @@ class VersionRepositoryNoSql(Repository[Version, VersionCreate, VersionPartialUp
 
         await self.database['versions'] \
             .delete_one({'_id': version.id})
+    
+    async def get_by_solution_id(self, solution_id: str) -> list[Version]:
+        """Get all versions for a specific solution"""
+        query = self.database['versions'].find({'solution_id': solution_id})
+        
+        results = [
+            Version(**raw_version)
+            async for raw_version in query
+        ]
+        
+        return results
+    
+    async def delete_by_solution_id(self, solution_id: str) -> None:
+        """Delete all versions associated with a solution"""
+        await self.database['versions'].delete_many({'solution_id': solution_id})
