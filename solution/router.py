@@ -79,38 +79,6 @@ async def update(
         await handle_common_errors(exc)
     
 
-@router.get('/{id}/versions', response_model=list[Version])
-async def get_solution_versions(
-    id: str | int,
-    database = Depends(get_database),
-) -> list[Version]:
-    """Get all versions for a specific solution"""
-    try:
-        return await service.get_solution_versions(VersionRepositoryNoSql(database), str(id))
-    except Exception as exc:
-        await handle_common_errors(exc)
-
-
-@router.post('/{id}/versions', response_model=Version, status_code=status.HTTP_201_CREATED)
-async def create_solution_version(
-    id: str | int,
-    version_create: VersionCreate,
-    database = Depends(get_database),
-) -> Version:
-    """Create a new version for a specific solution"""
-    try:
-        # Verify solution exists
-        await service.get_one(SolutionRepositoryNoSql(database), id)
-        # Ensure the version is associated with the correct solution
-        version_create.solution_id = str(id)
-        new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
-        solution_updated = SolutionPartialUpdate(last_version_saved=str(new_version.id))
-        await service.modify(SolutionRepositoryNoSql(database), id, solution_updated)
-        return new_version
-    except Exception as exc:
-        await handle_common_errors(exc)
-
-
 @router.patch('/{solution_id}/versions/{version_id}', response_model=Version)
 async def update_solution_version(
     solution_id: str | int,
