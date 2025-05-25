@@ -35,9 +35,13 @@ async def create(
             description="Initial version",
             solution_id=str(solution.id)
         )
-        await service.create_version(VersionRepositoryNoSql(database), version_create)
+        new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
+
+        update_solution = SolutionPartialUpdate(last_version_saved=str(new_version.id))
+
+        updated_solution = await service.modify(SolutionRepositoryNoSql(database), solution.id, update_solution)
         
-        return solution
+        return updated_solution
     except Exception as exc:
         await handle_common_errors(exc)
 
@@ -94,7 +98,10 @@ async def create_solution_version(
         await service.get_one(SolutionRepositoryNoSql(database), id)
         # Ensure the version is associated with the correct solution
         version_create.solution_id = str(id)
-        return await service.create_version(VersionRepositoryNoSql(database), version_create)
+        new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
+        solution_updated = SolutionPartialUpdate(last_version_saved=str(new_version.id))
+        await service.modify(SolutionRepositoryNoSql(database), id, solution_updated)
+        return new_version
     except Exception as exc:
         await handle_common_errors(exc)
 
