@@ -11,8 +11,8 @@ else: # sql database model
 
 class SolutionBase(BaseModel):
     name: str
-    last_version_saved: str
-    src_img: str
+    last_version_saved: str = "unknown"
+    src_img: str = "http://unknown.es"
 
 class SolutionPartialUpdate(BaseModel):
     name: Optional[str] = None
