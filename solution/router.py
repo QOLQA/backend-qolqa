@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
-from models.version import Version, VersionCreate, VersionPartialUpdate
+from models.version import Version, VersionCreate, VersionPartialUpdate, default_version_descriptions
 from solution import service
 from solution.repository_nosql import SolutionRepositoryNoSql
 from version.repository_nosql import VersionRepositoryNoSql
@@ -27,17 +27,22 @@ async def create(
     try:
         # Create solution and initial version
         solution = await service.create(SolutionRepositoryNoSql(database), solution_create)
-        
-        # Create initial version
-        version_create = VersionCreate(
-            queries=[],
-            submodels=[],
-            description="Initial version",
-            solution_id=str(solution.id)
-        )
-        new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
 
-        update_solution = SolutionPartialUpdate(last_version_saved=str(new_version.id))
+        last_version_saved = ""
+
+        for default_version_description in default_version_descriptions:
+            # Create initial version
+            version_create = VersionCreate(
+                queries=[],
+                submodels=[],
+                description=default_version_description,
+                solution_id=str(solution.id)
+            )
+            new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
+            last_version_saved = str(new_version.id)
+
+
+        update_solution = SolutionPartialUpdate(last_version_saved=last_version_saved)
 
         updated_solution = await service.modify(SolutionRepositoryNoSql(database), solution.id, update_solution)
         
