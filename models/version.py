@@ -61,3 +61,10 @@ class VersionCreate(VersionBase):
 
 class Version(Base, VersionBase):
     pass
+
+default_version_descriptions = [
+    "Primera version",
+    "Segunda version",
+    "Tercera version",
+    "Cuarta version"
+]
