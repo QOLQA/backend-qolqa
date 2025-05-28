@@ -9,12 +9,13 @@ else: # sql database model
     from models.base import SQLBaseModel as Base
 
 class Query(BaseModel):
+    id: str
     full_query: str
     collections: list[str]
 
 class Position(BaseModel):
-    x: int
-    y: int
+    x: float
+    y: float
 
 class Column(BaseModel):
     id: str
