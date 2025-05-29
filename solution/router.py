@@ -90,6 +90,11 @@ async def update_solution_version(
     try:
         # Verify solution exists
         await service.get_one(SolutionRepositoryNoSql(database), solution_id)
+        
+				# Update the last_version_saved field in the solution
+        update_last_version_saved = SolutionPartialUpdate.construct(last_version_saved=str(version_id))
+        await service.modify(SolutionRepositoryNoSql(database), solution_id, update_last_version_saved)
+        
         # Update the version
         return await service.modify_version(VersionRepositoryNoSql(database), version_id, version_update)
     except Exception as exc:
