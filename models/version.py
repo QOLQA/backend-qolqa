@@ -8,11 +8,6 @@ if settings.type_db == TypeDB.mongo:
 else: # sql database model
     from models.base import SQLBaseModel as Base
 
-class Query(BaseModel):
-    id: str
-    full_query: str
-    collections: list[str]
-
 class Position(BaseModel):
     x: float
     y: float
@@ -46,13 +41,11 @@ class Submodel(BaseModel):
     edges: List[Edge]
 
 class VersionBase(BaseModel):
-    queries: list[Query]
     submodels: List[Submodel]
     description: str
     solution_id: str
 
 class VersionPartialUpdate(BaseModel):
-    queries: Optional[List[Query]] = None
     submodels: Optional[List[Submodel]] = None
     description: Optional[str] = None
     solution_id: Optional[str] = None
