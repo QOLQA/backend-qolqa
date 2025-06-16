@@ -38,3 +38,5 @@ emulators-suite/node_modules
 interfaces/serviceAccount.json
 
 **/serviceAccount.json
+
+.devcontainer
