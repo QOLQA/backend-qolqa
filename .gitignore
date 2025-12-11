@@ -32,8 +32,18 @@ dist/
 
 emulators-suite/node_modules
 
-
+# Environment variables
 .env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
 
 interfaces/serviceAccount.json
 
