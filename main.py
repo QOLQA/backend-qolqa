@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from solution.router import router as solutions_router
+from auth.router import router as auth_router
 from config.settings import settings, TypeDB
 
 if settings.type_db == TypeDB.sql:
@@ -32,4 +33,5 @@ app.add_middleware(
 )
 
 
+app.include_router(auth_router, prefix='/auth', tags=['Authentication'])
 app.include_router(solutions_router, prefix='/solutions', tags=['Solutions'])

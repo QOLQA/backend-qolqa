@@ -31,7 +31,10 @@ PyObjectId = Annotated[
 class MongoBaseModel(BaseModel):
     id: PyObjectId = Field(alias="_id")
 
-    model_config = ConfigDict(json_encoders={ObjectId: str})
+    model_config = ConfigDict(
+        json_encoders={ObjectId: str},
+        populate_by_name=True
+    )
 
 
 class SQLBaseModel(BaseModel):
