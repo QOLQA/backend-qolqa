@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 from typing import Optional, Dict, Any
 from pathlib import Path
+from logging.handlers import RotatingFileHandler
 
 # Create logs directory if it doesn't exist
 LOGS_DIR = Path(__file__).parent.parent / "logs"
@@ -17,8 +18,14 @@ audit_logger = logging.getLogger("audit")
 audit_logger.setLevel(logging.INFO)
 audit_logger.propagate = False  # Don't propagate to root logger
 
-# File handler for audit logs
-audit_file_handler = logging.FileHandler(LOGS_DIR / "audit.log")
+# Rotating file handler for audit logs
+# Rotates when file reaches 10MB, keeps 5 backup files
+audit_file_handler = RotatingFileHandler(
+    LOGS_DIR / "audit.log",
+    maxBytes=10_000_000,  # 10 MB per file
+    backupCount=5,        # Keep 5 historical files (audit.log.1 to audit.log.5)
+    encoding='utf-8'
+)
 audit_file_handler.setLevel(logging.INFO)
 
 # JSON formatter for structured logging
