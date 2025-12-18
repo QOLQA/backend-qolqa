@@ -1,13 +1,19 @@
 import contextlib
 from datetime import datetime
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
 from config.settings import settings, TypeDB
+
+# Configurar rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 if settings.type_db == TypeDB.sql:
   from config.sql import create_all_tables
@@ -25,6 +31,10 @@ else:
     yield
 
   app = FastAPI(lifespan=lifespan)
+
+# Configurar rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
   CORSMiddleware,

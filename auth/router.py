@@ -2,8 +2,10 @@
 Authentication router
 Handles login, registration, and user profile endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from auth import service
 from auth.repository import UserRepository
@@ -14,6 +16,9 @@ from utils.get_database import get_database
 from utils.handle_errors import handle_common_errors
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
+
+# Rate limiter se configura en main.py y se accede via request.app.state.limiter
 
 
 async def get_current_user(
@@ -59,7 +64,9 @@ async def get_current_user(
 
 
 @router.post('/register', response_model=User, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/hour")  # 3 registros por hora
 async def register(
+    request: Request,
     user_create: UserCreate,
     database = Depends(get_database)
 ) -> User:
@@ -82,7 +89,9 @@ async def register(
 
 
 @router.post('/login', response_model=Token)
+@limiter.limit("5/minute")  # 5 intentos de login por minuto
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     database = Depends(get_database)
 ) -> Token:

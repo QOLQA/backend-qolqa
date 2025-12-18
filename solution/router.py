@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate, SolutionBase
 from models.version import Version, VersionCreate, VersionPartialUpdate, default_version_descriptions
@@ -12,10 +14,13 @@ from utils.handle_errors import handle_common_errors
 from utils.get_database import get_database
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get('', response_model=list[Solution])
+@limiter.limit("100/minute")  # 100 consultas por minuto
 async def all(
+    request: Request,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
 ) -> list[Solution]:
@@ -28,7 +33,9 @@ async def all(
 
 
 @router.post('', response_model=Solution, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")  # 20 creaciones por minuto
 async def create(
+    request: Request,
     solution_create: SolutionCreate,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
@@ -65,7 +72,9 @@ async def create(
 
 
 @router.get('/{id}', response_model=Solution)
+@limiter.limit("100/minute")  # 100 consultas por minuto
 async def get(
+    request: Request,
     id: int | str,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
@@ -93,7 +102,9 @@ async def get(
 
 
 @router.patch('/{id}', response_model=Solution)
+@limiter.limit("30/minute")  # 30 actualizaciones por minuto
 async def update(
+    request: Request,
     id: str | int,
     solution_update: SolutionPartialUpdate,
     current_user: User = Depends(get_current_user),
@@ -117,7 +128,9 @@ async def update(
 
 
 @router.patch('/{solution_id}/versions/{version_id}', response_model=Version)
+@limiter.limit("30/minute")  # 30 actualizaciones por minuto
 async def update_solution_version(
+    request: Request,
     solution_id: str | int,
     version_id: str | int,
     version_update: VersionPartialUpdate,
@@ -147,7 +160,9 @@ async def update_solution_version(
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("10/minute")  # 10 eliminaciones por minuto
 async def delete(
+    request: Request,
     id: str | int,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
