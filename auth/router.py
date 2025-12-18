@@ -136,6 +136,14 @@ async def login(
         )
         
         if not user:
+            # Audit log: failed login attempt
+            log_auth_attempt(
+                username=form_data.username,
+                success=False,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+                reason="Invalid credentials"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
@@ -143,10 +151,36 @@ async def login(
             )
         
         token = await service.create_user_token(user)
+        
+        # Audit log: successful login
+        log_auth_attempt(
+            username=user.username,
+            success=True,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+        
         return token
-    except HTTPException:
+    except HTTPException as http_exc:
+        # If it's a 401, log failed attempt (in case it wasn't logged above)
+        if http_exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            log_auth_attempt(
+                username=form_data.username,
+                success=False,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+                reason=str(http_exc.detail)
+            )
         raise
     except Exception as exc:
+        # Log unexpected errors
+        log_auth_attempt(
+            username=form_data.username,
+            success=False,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            reason=f"Error: {type(exc).__name__}"
+        )
         await handle_common_errors(exc)
 
 
