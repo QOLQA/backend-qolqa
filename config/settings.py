@@ -19,7 +19,7 @@ class Settings(BaseSettings):
         min_length=32
     )
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 300
     
     # Environment
     environment: str = "development"
