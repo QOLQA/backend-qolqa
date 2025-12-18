@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate, SolutionBase
 from models.version import Version, VersionCreate, VersionPartialUpdate, default_version_descriptions
@@ -10,12 +12,16 @@ from version.repository_nosql import VersionRepositoryNoSql
 from auth.router import get_current_user
 from utils.handle_errors import handle_common_errors
 from utils.get_database import get_database
+from utils.audit import log_resource_operation, log_access_denied
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get('', response_model=list[Solution])
+@limiter.limit("100/minute")  # 100 consultas por minuto
 async def all(
+    request: Request,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
 ) -> list[Solution]:
@@ -28,7 +34,9 @@ async def all(
 
 
 @router.post('', response_model=Solution, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")  # 20 creaciones por minuto
 async def create(
+    request: Request,
     solution_create: SolutionCreate,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
@@ -59,13 +67,26 @@ async def create(
         update_solution = SolutionPartialUpdate(last_version_saved=last_version_saved)
         updated_solution = await service.modify(SolutionRepositoryNoSql(database), solution.id, update_solution)
         
+        # Audit log: solution created
+        log_resource_operation(
+            action="solution.create",
+            user_id=str(current_user.id),
+            resource_type="solution",
+            resource_id=str(updated_solution.id),
+            resource_name=updated_solution.name,
+            status="success",
+            ip_address=request.client.host if request.client else None,
+        )
+        
         return updated_solution
     except Exception as exc:
-        await handle_common_errors(exc)
+        await handle_common_errors(exc, request)
 
 
 @router.get('/{id}', response_model=Solution)
+@limiter.limit("100/minute")  # 100 consultas por minuto
 async def get(
+    request: Request,
     id: int | str,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
@@ -76,6 +97,15 @@ async def get(
         
         # Verify ownership
         if solution.user_id != str(current_user.id):
+            # Audit log: access denied
+            log_access_denied(
+                action="solution.read",
+                user_id=str(current_user.id),
+                resource_type="solution",
+                resource_id=str(id),
+                reason="Not owner",
+                ip_address=request.client.host if request.client else None,
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to access this solution"
@@ -93,7 +123,9 @@ async def get(
 
 
 @router.patch('/{id}', response_model=Solution)
+@limiter.limit("30/minute")  # 30 actualizaciones por minuto
 async def update(
+    request: Request,
     id: str | int,
     solution_update: SolutionPartialUpdate,
     current_user: User = Depends(get_current_user),
@@ -104,12 +136,34 @@ async def update(
         # Verify ownership
         solution = await service.get_one(SolutionRepositoryNoSql(database), id)
         if solution.user_id != str(current_user.id):
+            # Audit log: access denied
+            log_access_denied(
+                action="solution.update",
+                user_id=str(current_user.id),
+                resource_type="solution",
+                resource_id=str(id),
+                reason="Not owner",
+                ip_address=request.client.host if request.client else None,
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to modify this solution"
             )
         
-        return await service.modify(SolutionRepositoryNoSql(database), id, solution_update)
+        updated_solution = await service.modify(SolutionRepositoryNoSql(database), id, solution_update)
+        
+        # Audit log: solution updated
+        log_resource_operation(
+            action="solution.update",
+            user_id=str(current_user.id),
+            resource_type="solution",
+            resource_id=str(id),
+            resource_name=updated_solution.name,
+            status="success",
+            ip_address=request.client.host if request.client else None,
+        )
+        
+        return updated_solution
     except HTTPException:
         raise
     except Exception as exc:
@@ -117,7 +171,9 @@ async def update(
 
 
 @router.patch('/{solution_id}/versions/{version_id}', response_model=Version)
+@limiter.limit("30/minute")  # 30 actualizaciones por minuto
 async def update_solution_version(
+    request: Request,
     solution_id: str | int,
     version_id: str | int,
     version_update: VersionPartialUpdate,
@@ -147,7 +203,9 @@ async def update_solution_version(
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("10/minute")  # 10 eliminaciones por minuto
 async def delete(
+    request: Request,
     id: str | int,
     current_user: User = Depends(get_current_user),
     database = Depends(get_database),
@@ -157,10 +215,30 @@ async def delete(
         # Verify ownership
         solution = await service.get_one(SolutionRepositoryNoSql(database), id)
         if solution.user_id != str(current_user.id):
+            # Audit log: access denied
+            log_access_denied(
+                action="solution.delete",
+                user_id=str(current_user.id),
+                resource_type="solution",
+                resource_id=str(id),
+                reason="Not owner",
+                ip_address=request.client.host if request.client else None,
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to delete this solution"
             )
+        
+        # Audit log: solution deleted
+        log_resource_operation(
+            action="solution.delete",
+            user_id=str(current_user.id),
+            resource_type="solution",
+            resource_id=str(id),
+            resource_name=solution.name,
+            status="success",
+            ip_address=request.client.host if request.client else None,
+        )
         
         # Delete all associated versions
         await service.delete_solution_versions(VersionRepositoryNoSql(database), str(solution.id))

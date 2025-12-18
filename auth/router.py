@@ -2,8 +2,10 @@
 Authentication router
 Handles login, registration, and user profile endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from auth import service
 from auth.repository import UserRepository
@@ -12,8 +14,12 @@ from models.user import User, UserCreate
 from schemas.auth import Token
 from utils.get_database import get_database
 from utils.handle_errors import handle_common_errors
+from utils.audit import log_registration, log_auth_attempt
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
+
+# Rate limiter se configura en main.py y se accede via request.app.state.limiter
 
 
 async def get_current_user(
@@ -59,7 +65,9 @@ async def get_current_user(
 
 
 @router.post('/register', response_model=User, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/hour")  # 3 registros por hora
 async def register(
+    request: Request,
     user_create: UserCreate,
     database = Depends(get_database)
 ) -> User:
@@ -76,13 +84,33 @@ async def register(
     try:
         repository = UserRepository(database)
         user = await service.register_user(repository, user_create)
+        
+        # Audit log: successful registration
+        log_registration(
+            user_id=str(user.id),
+            username=user.username,
+            email=user.email,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+        
         return user
     except Exception as exc:
-        await handle_common_errors(exc)
+        # Audit log: failed registration
+        log_auth_attempt(
+            username=user_create.username,
+            success=False,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            reason=str(exc)
+        )
+        await handle_common_errors(exc, request)
 
 
 @router.post('/login', response_model=Token)
+@limiter.limit("5/minute")  # 5 intentos de login por minuto
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     database = Depends(get_database)
 ) -> Token:
@@ -108,6 +136,14 @@ async def login(
         )
         
         if not user:
+            # Audit log: failed login attempt
+            log_auth_attempt(
+                username=form_data.username,
+                success=False,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+                reason="Invalid credentials"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
@@ -115,10 +151,36 @@ async def login(
             )
         
         token = await service.create_user_token(user)
+        
+        # Audit log: successful login
+        log_auth_attempt(
+            username=user.username,
+            success=True,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent")
+        )
+        
         return token
-    except HTTPException:
+    except HTTPException as http_exc:
+        # If it's a 401, log failed attempt (in case it wasn't logged above)
+        if http_exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            log_auth_attempt(
+                username=form_data.username,
+                success=False,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+                reason=str(http_exc.detail)
+            )
         raise
     except Exception as exc:
+        # Log unexpected errors
+        log_auth_attempt(
+            username=form_data.username,
+            success=False,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            reason=f"Error: {type(exc).__name__}"
+        )
         await handle_common_errors(exc)
 
 

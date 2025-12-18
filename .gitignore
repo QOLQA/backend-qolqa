@@ -5,7 +5,8 @@ __pycache__/
 
 # Archivos de registro y registros de errores
 *.log
-logs/
+logs/*.log
+!logs/.gitkeep
 
 # Entorno virtual (si usas uno)
 venv/
