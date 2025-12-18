@@ -104,7 +104,7 @@ async def register(
             user_agent=request.headers.get("user-agent"),
             reason=str(exc)
         )
-        await handle_common_errors(exc)
+        await handle_common_errors(exc, request)
 
 
 @router.post('/login', response_model=Token)

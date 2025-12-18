@@ -80,7 +80,7 @@ async def create(
         
         return updated_solution
     except Exception as exc:
-        await handle_common_errors(exc)
+        await handle_common_errors(exc, request)
 
 
 @router.get('/{id}', response_model=Solution)

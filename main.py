@@ -13,6 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
 from config.settings import settings, TypeDB
+from utils.handle_errors import handle_common_errors
 
 # Configure logging
 logging.basicConfig(
@@ -86,6 +87,32 @@ app.add_middleware(
   allow_methods=["*"],
   allow_headers=["*"]
 )
+
+# Exception handler global para capturar errores no manejados
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Handler global para todas las excepciones no manejadas
+    Evita que se expongan stack traces al cliente
+    """
+    try:
+        await handle_common_errors(exc, request)
+    except HTTPException as http_exc:
+        # Si handle_common_errors lanza HTTPException, retornarla
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content={"detail": http_exc.detail}
+        )
+    except Exception as fallback_exc:
+        # Último recurso: registrar y retornar error genérico
+        logger.error(
+            f"Critical error in exception handler: {str(fallback_exc)}",
+            exc_info=True
+        )
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"}
+        )
 
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication'])
