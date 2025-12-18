@@ -3,12 +3,13 @@ from datetime import datetime
 import time
 import logging
 
-from fastapi import FastAPI, status, Request
+from fastapi import FastAPI, status, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
@@ -25,6 +26,41 @@ logger = logging.getLogger(__name__)
 
 # Configurar rate limiter
 limiter = Limiter(key_func=get_remote_address)
+
+# Request Body Size Limit Middleware
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to limit the size of incoming request bodies
+    Prevents memory exhaustion attacks
+    """
+    def __init__(self, app, max_size: int = 5_000_000):
+        super().__init__(app)
+        self.max_size = max_size
+    
+    async def dispatch(self, request: Request, call_next):
+        # Only check POST, PUT, PATCH requests
+        if request.method in ["POST", "PUT", "PATCH"]:
+            content_length = request.headers.get("content-length")
+            
+            if content_length:
+                try:
+                    content_length = int(content_length)
+                    if content_length > self.max_size:
+                        return JSONResponse(
+                            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            content={
+                                "detail": f"Request body too large. Maximum size is {self.max_size / 1_000_000:.1f} MB"
+                            }
+                        )
+                except ValueError:
+                    # Invalid content-length header
+                    return JSONResponse(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        content={"detail": "Invalid Content-Length header"}
+                    )
+        
+        response = await call_next(request)
+        return response
 
 if settings.type_db == TypeDB.sql:
   from config.sql import create_all_tables
@@ -46,6 +82,12 @@ else:
 # Configurar rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Agregar middleware de límite de tamaño de request
+app.add_middleware(
+    RequestSizeLimitMiddleware,
+    max_size=settings.max_request_body_size
+)
 
 # Logging middleware
 @app.middleware("http")

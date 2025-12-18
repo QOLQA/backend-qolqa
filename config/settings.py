@@ -29,6 +29,18 @@ class Settings(BaseSettings):
         default=["http://localhost:3000", "http://localhost:5173"]
     )
     
+    # Database timeout settings (in seconds)
+    db_operation_timeout: int = Field(
+        default=10,
+        description="Timeout for database operations in seconds"
+    )
+    
+    # Request body size limit (in bytes)
+    max_request_body_size: int = Field(
+        default=5_000_000,  # 5 MB
+        description="Maximum request body size in bytes (default 5MB)"
+    )
+    
     model_config = SettingsConfigDict(env_file='.env')
     
     @property
