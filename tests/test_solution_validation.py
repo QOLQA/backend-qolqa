@@ -32,7 +32,8 @@ class TestSolutionValidation:
         
         errors = exc_info.value.errors()
         assert any(error['loc'] == ('name',) for error in errors)
-        assert any('missing' in error['msg'].lower() for error in errors)
+        # Pydantic v2 usa 'required' en lugar de 'missing'
+        assert any('missing' in error['msg'].lower() or 'required' in error['msg'].lower() for error in errors)
     
     def test_solution_with_empty_name(self):
         """Test that solution creation fails with empty name"""
