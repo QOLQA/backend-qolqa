@@ -237,3 +237,38 @@ def log_access_denied(
         details={"reason": reason},
         ip_address=ip_address,
     )
+
+
+def log_rate_limit_exceeded(
+    path: str,
+    method: str,
+    limit: str,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
+    user_id: Optional[str] = None,
+) -> None:
+    """
+    Log rate limit exceeded events
+    
+    Args:
+        path: Request path that exceeded rate limit
+        method: HTTP method (GET, POST, etc.)
+        limit: Rate limit that was exceeded (e.g., "5/minute")
+        ip_address: Client IP address
+        user_agent: Client user agent
+        user_id: User ID if authenticated (optional)
+    """
+    log_audit(
+        action="security.rate_limit_exceeded",
+        user_id=user_id or "anonymous",
+        resource_type="endpoint",
+        status="blocked",
+        details={
+            "path": path,
+            "method": method,
+            "limit": limit,
+            "message": f"Rate limit exceeded for {method} {path}"
+        },
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )

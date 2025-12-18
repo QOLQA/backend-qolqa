@@ -15,6 +15,7 @@ from solution.router import router as solutions_router
 from auth.router import router as auth_router
 from config.settings import settings, TypeDB
 from utils.handle_errors import handle_common_errors
+from utils.audit import log_rate_limit_exceeded
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +27,55 @@ logger = logging.getLogger(__name__)
 
 # Configurar rate limiter
 limiter = Limiter(key_func=get_remote_address)
+
+# Custom rate limit exception handler with audit logging
+async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """
+    Custom handler for rate limit exceeded errors
+    Logs the event to audit log for security analysis
+    """
+    # Extract rate limit info from exception
+    limit = getattr(exc, 'detail', 'unknown')
+    
+    # Try to get user info if authenticated
+    user_id = None
+    try:
+        # Check if there's an Authorization header
+        auth_header = request.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            from auth.jwt import decode_access_token
+            token = auth_header.replace("Bearer ", "")
+            try:
+                payload = decode_access_token(token)
+                user_id = payload.get("user_id")
+            except:
+                pass  # Token invalid or expired, remain anonymous
+    except:
+        pass  # No auth, remain anonymous
+    
+    # Log to audit system
+    log_rate_limit_exceeded(
+        path=request.url.path,
+        method=request.method,
+        limit=str(limit),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        user_id=user_id
+    )
+    
+    # Log to application logger for immediate visibility
+    logger.warning(
+        f"Rate limit exceeded: {request.method} {request.url.path} "
+        f"from {request.client.host if request.client else 'unknown'} "
+        f"(user: {user_id or 'anonymous'})"
+    )
+    
+    # Return standard rate limit response
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={"detail": "Rate limit exceeded. Please try again later."},
+        headers={"Retry-After": "60"}  # Suggest retry after 60 seconds
+    )
 
 # Request Body Size Limit Middleware
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
@@ -81,7 +131,7 @@ else:
 
 # Configurar rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 
 # Agregar middleware de límite de tamaño de request
 app.add_middleware(
