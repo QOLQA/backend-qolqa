@@ -14,6 +14,7 @@ from models.user import User, UserCreate
 from schemas.auth import Token
 from utils.get_database import get_database
 from utils.handle_errors import handle_common_errors
+from utils.audit import log_registration, log_auth_attempt
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -83,8 +84,26 @@ async def register(
     try:
         repository = UserRepository(database)
         user = await service.register_user(repository, user_create)
+        
+        # Audit log: successful registration
+        log_registration(
+            user_id=str(user.id),
+            username=user.username,
+            email=user.email,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+        
         return user
     except Exception as exc:
+        # Audit log: failed registration
+        log_auth_attempt(
+            username=user_create.username,
+            success=False,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            reason=str(exc)
+        )
         await handle_common_errors(exc)
 
 

@@ -1,5 +1,7 @@
 import contextlib
 from datetime import datetime
+import time
+import logging
 
 from fastapi import FastAPI, status, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +13,14 @@ from slowapi.errors import RateLimitExceeded
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
 from config.settings import settings, TypeDB
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # Configurar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -35,6 +45,39 @@ else:
 # Configurar rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Middleware to log all HTTP requests and responses
+    Following FastAPI best practices for middleware
+    """
+    start_time = time.time()
+    
+    # Log request
+    logger.info(
+        f"Request: {request.method} {request.url.path} "
+        f"from {request.client.host if request.client else 'unknown'}"
+    )
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Calculate process time
+    process_time = time.time() - start_time
+    
+    # Log response
+    logger.info(
+        f"Response: {request.method} {request.url.path} "
+        f"Status {response.status_code} "
+        f"Time {process_time:.3f}s"
+    )
+    
+    # Add process time header
+    response.headers["X-Process-Time"] = str(process_time)
+    
+    return response
 
 app.add_middleware(
   CORSMiddleware,
