@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     environment: str = "development"
     
     # CORS Settings
-    allowed_origins: list[str] = Field(
+    # Using str type with validator to avoid JSON parsing issues
+    allowed_origins: str | list[str] = Field(
         default=["http://localhost:3000", "http://localhost:5173"]
     )
     
@@ -80,8 +81,20 @@ class Settings(BaseSettings):
     def parse_cors_origins(cls, v):
         """
         Parse ALLOWED_ORIGINS from comma-separated string or list
+        Handles both formats:
+        - Comma-separated string: "http://localhost:3000,http://localhost:5173"
+        - JSON array: ["http://localhost:3000", "http://localhost:5173"]
         """
         if isinstance(v, str):
+            # If it's already a JSON-like string, it will be handled by Pydantic
+            # Otherwise, split by comma
+            v = v.strip()
+            if not v:
+                return []
+            # Try to handle comma-separated values
+            if ',' in v and not v.startswith('['):
+                return [origin.strip() for origin in v.split(',') if origin.strip()]
+            # Single origin or will be handled by Pydantic's JSON parser
             return [origin.strip() for origin in v.split(',') if origin.strip()]
         return v
 
