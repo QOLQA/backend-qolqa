@@ -1,0 +1,100 @@
+# ========================================
+# Docker ignore file
+# Prevents unnecessary files from being copied into the image
+# Reduces image size and prevents leaking sensitive data
+# ========================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation
+*.md
+docs/
+README.md
+SECURITY_ANALYSIS.md
+REPORTE_SEGURIDAD_ACTUALIZADO.md
+
+# Environment files (CRITICAL - prevents credential leaks)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+*.code-workspace
+
+# Logs (already in volumes)
+*.log
+logs/
+!logs/.gitkeep
+
+# Testing
+tests/
+test_*.py
+*_test.py
+conftest.py
+pytest.ini
+.pytest_cache/
+
+# Development tools
+Makefile
+docker-compose*.yml
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+*.temp
+temp/
+tmp/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Firebase/Other services
+emulators-suite/
+interfaces/serviceAccount.json
+
+# Database dumps
+*.sql
+*.sqlite
+*.db
