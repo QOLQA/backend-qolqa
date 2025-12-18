@@ -80,12 +80,66 @@ async def log_requests(request: Request, call_next):
     
     return response
 
+# Security Headers Middleware - Applied to all responses
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """
+    Add security headers to all responses
+    Protects against common web vulnerabilities
+    """
+    response = await call_next(request)
+    
+    # Strict-Transport-Security (HSTS)
+    # Forces HTTPS for 1 year, including subdomains
+    if settings.is_production:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    
+    # X-Content-Type-Options
+    # Prevents MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # X-Frame-Options
+    # Prevents clickjacking attacks
+    response.headers["X-Frame-Options"] = "DENY"
+    
+    # X-XSS-Protection
+    # Legacy XSS protection (still useful for older browsers)
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # Referrer-Policy
+    # Controls how much referrer information is sent
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # Permissions-Policy (formerly Feature-Policy)
+    # Restricts access to browser features
+    response.headers["Permissions-Policy"] = (
+        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), "
+        "magnetometer=(), gyroscope=(), speaker=()"
+    )
+    
+    # Content-Security-Policy (CSP)
+    # Mitigates XSS and injection attacks
+    # Note: Adjust this based on your frontend needs
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none';"
+    )
+    
+    return response
+
+# CORS Configuration - Use specific origins, not wildcards
 app.add_middleware(
-  CORSMiddleware,
-  allow_origins=["*"],
-  allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,  # ✅ Specific origins from config
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],  # ✅ Only necessary methods
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin"],  # ✅ Only necessary headers
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Exception handler global para capturar errores no manejados
