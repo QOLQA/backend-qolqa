@@ -23,9 +23,10 @@ class QueryRepositoryNoSql(Repository[Query, QueryCreate, QueryPartialUpdate]):
             raise Missing(msg=f'The query with id: {id} does not exist.')
         
         return Query(
-            id=str(query_doc['_id']),
+            _id=str(query_doc['_id']),
             full_query=query_doc['full_query'],
             collections=query_doc.get('collections', []),
+            highlighted_words=query_doc.get('highlighted_words', []),
             solution_id=str(query_doc['solution_id'])
         )
     
@@ -36,9 +37,10 @@ class QueryRepositoryNoSql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         
         return [
             Query(
-                id=str(query['_id']),
+                _id=str(query['_id']),
                 full_query=query['full_query'],
                 collections=query.get('collections', []),
+                highlighted_words=query.get('highlighted_words', []),
                 solution_id=str(query['solution_id'])
             )
             for query in queries
@@ -54,9 +56,10 @@ class QueryRepositoryNoSql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         
         return [
             Query(
-                id=str(query['_id']),
+                _id=str(query['_id']),
                 full_query=query['full_query'],
                 collections=query.get('collections', []),
+                highlighted_words=query.get('highlighted_words', []),
                 solution_id=str(query['solution_id'])
             )
             for query in queries
@@ -76,15 +79,17 @@ class QueryRepositoryNoSql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         query_doc = {
             "full_query": entity_data.full_query,
             "collections": entity_data.collections,
+            "highlighted_words": entity_data.highlighted_words,
             "solution_id": ObjectId(entity_data.solution_id)
         }
         
         result = await self.collection.insert_one(query_doc)
         
         return Query(
-            id=str(result.inserted_id),
+            _id=str(result.inserted_id),
             full_query=entity_data.full_query,
             collections=entity_data.collections,
+            highlighted_words=entity_data.highlighted_words,
             solution_id=entity_data.solution_id
         )
     

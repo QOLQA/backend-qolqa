@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from config.settings import settings, TypeDB
 
@@ -13,6 +13,7 @@ class QueryBase(BaseModel):
     """Base schema for Query"""
     full_query: str = Field(min_length=1, max_length=10000)
     collections: List[str] = Field(default=[], max_length=50)
+    highlighted_words: List[str] = Field(default=[], max_length=50)
     solution_id: str = Field(min_length=1, max_length=100)
     
     @field_validator('full_query')
@@ -34,6 +35,7 @@ class QueryCreate(BaseModel):
     """Schema for creating a query"""
     full_query: str = Field(min_length=1, max_length=10000)
     collections: List[str] = Field(default=[], max_length=50)
+    highlighted_words: List[str] = Field(default=[], max_length=50)
     solution_id: str = Field(min_length=1, max_length=100)
     
     @field_validator('full_query')
@@ -55,6 +57,7 @@ class QueryPartialUpdate(BaseModel):
     """Schema for updating a query - all fields optional"""
     full_query: Optional[str] = Field(None, min_length=1, max_length=10000)
     collections: Optional[List[str]] = Field(None, max_length=50)
+    highlighted_words: Optional[List[str]] = Field(None, max_length=50)
     # solution_id cannot be updated after creation
     
     @field_validator('full_query')
@@ -67,9 +70,15 @@ class QueryPartialUpdate(BaseModel):
 
 class QueryEmbedded(BaseModel):
     """Query model for embedded queries in solutions - uses string id, not ObjectId"""
-    id: str = Field(min_length=1, max_length=100)
+    id: str = Field(min_length=1, max_length=100, alias="_id")
     full_query: str = Field(min_length=1, max_length=10000)
     collections: List[str] = Field(default=[], max_length=50)
+    highlighted_words: List[str] = Field(default=[], max_length=50)
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_serialization_defaults_required=True,
+    )
     
     @field_validator('full_query')
     @classmethod

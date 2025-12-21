@@ -33,7 +33,9 @@ class MongoBaseModel(BaseModel):
 
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
-        populate_by_name=True
+        populate_by_name=True,
+        # Serializar usando alias por defecto para que el frontend reciba _id
+        json_schema_serialization_defaults_required=True,
     )
 
 

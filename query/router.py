@@ -38,12 +38,12 @@ async def get_all_queries(
         all_queries = await service.get_all(repository)
         
         log_resource_operation(
-            resource_type="query",
-            resource_id=None,
-            operation="list",
+            action="query.list",
             user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
-            status="success"
+            resource_type="query",
+            resource_id="all",
+            status="success",
+            ip_address=request.client.host if request.client else None
         )
         
         return all_queries
@@ -64,12 +64,12 @@ async def get_queries_by_solution(
         queries = await service.get_by_solution(repository, solution_id)
         
         log_resource_operation(
+            action="query.list_by_solution",
+            user_id=str(current_user.id),
             resource_type="query",
             resource_id=solution_id,
-            operation="list_by_solution",
-            user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
-            status="success"
+            status="success",
+            ip_address=request.client.host if request.client else None
         )
         
         return queries
@@ -90,12 +90,12 @@ async def get_query(
         query = await service.get_one(repository, query_id)
         
         log_resource_operation(
+            action="query.read",
+            user_id=str(current_user.id),
             resource_type="query",
             resource_id=query_id,
-            operation="read",
-            user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
-            status="success"
+            status="success",
+            ip_address=request.client.host if request.client else None
         )
         
         return query
@@ -116,13 +116,12 @@ async def create_query(
         new_query = await service.create(repository, query_create)
         
         log_resource_operation(
-            resource_type="query",
-            resource_id=new_query.id,
-            operation="create",
+            action="query.create",
             user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
+            resource_type="query",
+            resource_id=str(new_query.id),
             status="success",
-            details=f"Created query for solution {query_create.solution_id}"
+            ip_address=request.client.host if request.client else None
         )
         
         return new_query
@@ -144,12 +143,12 @@ async def update_query(
         updated_query = await service.modify(repository, query_id, query_update)
         
         log_resource_operation(
+            action="query.update",
+            user_id=str(current_user.id),
             resource_type="query",
             resource_id=query_id,
-            operation="update",
-            user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
-            status="success"
+            status="success",
+            ip_address=request.client.host if request.client else None
         )
         
         return updated_query
@@ -170,12 +169,12 @@ async def delete_query(
         await service.delete(repository, query_id)
         
         log_resource_operation(
+            action="query.delete",
+            user_id=str(current_user.id),
             resource_type="query",
             resource_id=query_id,
-            operation="delete",
-            user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
-            status="success"
+            status="success",
+            ip_address=request.client.host if request.client else None
         )
         
         return None
@@ -196,12 +195,12 @@ async def delete_queries_by_solution(
         await service.delete_by_solution(repository, solution_id)
         
         log_resource_operation(
+            action="query.delete_by_solution",
+            user_id=str(current_user.id),
             resource_type="query",
             resource_id=solution_id,
-            operation="delete_by_solution",
-            user_id=str(current_user.id),
-            ip_address=request.client.host if request.client else None,
-            status="success"
+            status="success",
+            ip_address=request.client.host if request.client else None
         )
         
         return None

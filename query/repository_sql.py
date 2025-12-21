@@ -24,9 +24,10 @@ class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):
             raise Missing(msg=f'The query with id: {id} does not exist.')
         
         return Query(
-            id=str(query.id),
+            _id=str(query.id),
             full_query=query.full_query,
             collections=query.collections,
+            highlighted_words=query.highlighted_words,
             solution_id=str(query.solution_id)
         )
     
@@ -38,9 +39,10 @@ class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         
         return [
             Query(
-                id=str(query.id),
+                _id=str(query.id),
                 full_query=query.full_query,
                 collections=query.collections,
+                highlighted_words=query.highlighted_words,
                 solution_id=str(query.solution_id)
             )
             for query in queries
@@ -56,9 +58,10 @@ class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         
         return [
             Query(
-                id=str(query.id),
+                _id=str(query.id),
                 full_query=query.full_query,
                 collections=query.collections,
+                highlighted_words=query.highlighted_words,
                 solution_id=str(query.solution_id)
             )
             for query in queries
@@ -79,6 +82,7 @@ class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         query = QueryDB(
             full_query=entity_data.full_query,
             collections=entity_data.collections,
+            highlighted_words=entity_data.highlighted_words,
             solution_id=integer_solution_id
         )
         
@@ -87,9 +91,10 @@ class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         await self.session.refresh(query)
         
         return Query(
-            id=str(query.id),
+            _id=str(query.id),
             full_query=query.full_query,
             collections=query.collections,
+            highlighted_words=query.highlighted_words,
             solution_id=str(query.solution_id)
         )
     
@@ -113,9 +118,10 @@ class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):
         await self.session.refresh(query)
         
         return Query(
-            id=str(query.id),
+            _id=str(query.id),
             full_query=query.full_query,
             collections=query.collections,
+            highlighted_words=query.highlighted_words,
             solution_id=str(query.solution_id)
         )
     
