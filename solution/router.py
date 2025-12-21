@@ -5,6 +5,7 @@ from slowapi.util import get_remote_address
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate, SolutionBase
 from models.version import Version, VersionCreate, VersionPartialUpdate, default_version_descriptions
 from models.user import User
+from models.query import Query
 from solution import service
 from solution.repository_nosql import SolutionRepositoryNoSql
 from version.repository_nosql import VersionRepositoryNoSql

@@ -3,16 +3,12 @@ from pydantic import BaseModel, field_validator, Field
 
 from config.settings import settings, TypeDB
 from models.version import Version
+from models.query import Query
 
 if settings.type_db == TypeDB.mongo:
     from models.base import MongoBaseModel as Base
 else: # sql database model
     from models.base import SQLBaseModel as Base
-
-class Query(BaseModel):
-    id: str = Field(default='', max_length=100)
-    full_query: str = Field(default='', max_length=10000)
-    collections: List[str] = Field(default=[], max_length=50)
 
 class SolutionBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)

@@ -13,6 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
+from query.router import router as queries_router
 from config.settings import settings, TypeDB
 from utils.handle_errors import handle_common_errors
 from utils.audit import log_rate_limit_exceeded
@@ -278,6 +279,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication'])
+app.include_router(queries_router, prefix='/queries', tags=['Queries'])
 app.include_router(solutions_router, prefix='/solutions', tags=['Solutions'])
 
 
