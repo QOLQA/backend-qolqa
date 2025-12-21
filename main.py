@@ -211,16 +211,32 @@ async def add_security_headers(request: Request, call_next):
     
     # Content-Security-Policy (CSP)
     # Mitigates XSS and injection attacks
-    # Note: Adjust this based on your frontend needs
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https:; "
-        "font-src 'self' data:; "
-        "connect-src 'self'; "
-        "frame-ancestors 'none';"
-    )
+    # For Swagger docs endpoints, allow cdn.jsdelivr.net resources
+    # For all other endpoints, maintain strict security
+    is_docs_endpoint = request.url.path in ["/docs", "/redoc", "/openapi.json"]
+    
+    if is_docs_endpoint:
+        # Relaxed CSP for Swagger UI - allows CDN resources
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data: https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
+    else:
+        # Strict CSP for all other endpoints
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
     
     return response
 
