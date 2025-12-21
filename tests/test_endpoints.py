@@ -68,8 +68,7 @@ class TestSolutionsEndpoints:
             _id=ObjectId(version_id),
             description="Initial version",
             solution_id=solution_id,
-            submodels=[],
-            queries=[]
+            submodels=[]
         )
         
         with patch('solution.service.create', new_callable=AsyncMock) as mock_create, \
@@ -90,8 +89,7 @@ class TestSolutionsEndpoints:
     async def test_create_solution_invalid_data(self, authenticated_client, auth_headers):
         """Test solution creation with invalid data"""
         invalid_data = {
-            "last_version_saved": "unknown",
-            "queries": []
+            "last_version_saved": "unknown"
             # Missing required 'name' field
         }
         
@@ -161,14 +159,12 @@ class TestSolutionsEndpoints:
             _id=ObjectId(solution_id),
             name="Original Name",
             user_id=str(mock_user.id),
-            queries=[],
             versions=[]
         )
         updated_solution = Solution(
             _id=ObjectId(solution_id),
             name=mock_partial_update_data["name"],
             user_id=str(mock_user.id),
-            queries=[],
             versions=[]
         )
         
@@ -201,7 +197,6 @@ class TestSolutionsEndpoints:
             _id=ObjectId(solution_id),
             name="Original Name",
             user_id=str(mock_user.id),
-            queries=[],
             versions=[]
         )
         updated_solution = Solution(
@@ -209,7 +204,6 @@ class TestSolutionsEndpoints:
             name="Original Name",
             last_version_saved="version_456",
             user_id=str(mock_user.id),
-            queries=[],
             versions=[]
         )
         
@@ -267,7 +261,6 @@ class TestVersionEndpoints:
             _id=ObjectId(solution_id),
             name="Test Solution",
             user_id=str(mock_user.id),
-            queries=[],
             versions=[]
         )
         
@@ -275,8 +268,7 @@ class TestVersionEndpoints:
             _id=ObjectId(version_id),
             description="Updated version description",
             solution_id=solution_id,
-            submodels=[],
-            queries=[]
+            submodels=[]
         )
         
         with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one, \

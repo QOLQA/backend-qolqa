@@ -128,7 +128,11 @@ else:
     print(settings)
     yield
 
-  app = FastAPI(lifespan=lifespan)
+  app = FastAPI(
+    lifespan=lifespan,
+    # Configurar para usar aliases por defecto en respuestas JSON
+    # Esto hace que _id se serialize como _id en lugar de id
+  )
 
 # Configurar rate limiting
 app.state.limiter = limiter
