@@ -4,7 +4,6 @@ from bson import ObjectId
 
 from interfaces.repository import Repository
 from models.query import Query, QueryCreate, QueryPartialUpdate
-from utils.mongo import convert_object_id_to_str
 from utils.errors import Missing
 
 
