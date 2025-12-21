@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from interfaces.repository import Repository
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
-from schemas.solution import Solution as SolutionDB, Query
+from schemas.solution import Solution as SolutionDB
 from utils.sql import get_integer_id
 from utils.errors import Missing
 
@@ -16,7 +16,6 @@ class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartial
     async def get_by_id(self, id):
         integer_id = await get_integer_id(id)
         select_query = (select(SolutionDB)
-            .options(selectinload(SolutionDB.queries))
             .where(SolutionDB.id == integer_id))
         
         result = await self.session.execute(select_query)
@@ -29,23 +28,15 @@ class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartial
         return solution
     
     async def add(self, entity_data):
-        solution = SolutionDB(**entity_data
-            .model_dump(exclude={'queries'}), queries=[])
+        solution = SolutionDB(**entity_data.model_dump())
         
         self.session.add(solution)
-
-        for query_item in entity_data.queries:
-            query = Query(**query_item.model_dump(), solution=solution)
-
-            self.session.add(query)
-
         await self.session.commit()
 
         return await self.get_by_id(solution.id)
     
     async def get_all(self):
-        select_query = (select(SolutionDB)
-            .options(selectinload(SolutionDB.queries)))
+        select_query = select(SolutionDB)
         
         result = await self.session.execute(select_query)
 

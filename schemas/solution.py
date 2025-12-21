@@ -8,10 +8,11 @@ class Base(DeclarativeBase):
 class Query(Base):
     __tablename__ = 'queries'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    _id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     solution_id: Mapped[int] = mapped_column(ForeignKey('solutions.id'), nullable=False)
     full_query: Mapped[str] = mapped_column(String(255), nullable=False)
     collections: Mapped[list[str]] = mapped_column(ARRAY(String))
+    highlighted_words: Mapped[list[str]] = mapped_column(ARRAY(String))
 
     solution: Mapped["Solution"] = relationship("Solution", back_populates="queries")
 

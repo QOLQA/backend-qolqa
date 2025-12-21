@@ -9,6 +9,7 @@ from models.query import Query
 from solution import service
 from solution.repository_nosql import SolutionRepositoryNoSql
 from version.repository_nosql import VersionRepositoryNoSql
+from query.repository_nosql import QueryRepositoryNoSql
 
 from auth.router import get_current_user
 from utils.handle_errors import handle_common_errors
@@ -57,7 +58,6 @@ async def create(
         for default_version_description in default_version_descriptions:
             # Create initial version
             version_create = VersionCreate(
-                queries=[],
                 submodels=[],
                 description=default_version_description,
                 solution_id=str(solution.id)
@@ -240,6 +240,10 @@ async def delete(
             status="success",
             ip_address=request.client.host if request.client else None,
         )
+        
+        # Delete all associated queries
+        query_repository = QueryRepositoryNoSql(database)
+        await query_repository.delete_by_solution_id(str(solution.id))
         
         # Delete all associated versions
         await service.delete_solution_versions(VersionRepositoryNoSql(database), str(solution.id))
