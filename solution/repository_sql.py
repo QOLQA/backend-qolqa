@@ -28,7 +28,11 @@ class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartial
         return solution
     
     async def add(self, entity_data):
-        solution = SolutionDB(**entity_data.model_dump())
+        # Handle both dict and SolutionCreate object
+        if isinstance(entity_data, dict):
+            solution = SolutionDB(**entity_data)
+        else:
+            solution = SolutionDB(**entity_data.model_dump())
         
         self.session.add(solution)
         await self.session.commit()
