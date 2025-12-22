@@ -385,7 +385,6 @@ class TestAuthorizationRoles:
                 _id=ObjectId(),
                 name="Other Solution",
                 user_id=user2_id,  # Different user!
-                queries=[],
                 versions=[]
             )
             mock_get_one.return_value = other_solution

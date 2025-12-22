@@ -27,9 +27,15 @@ class SolutionRepositoryNoSql(Repository[Solution, SolutionCreate, SolutionParti
         return Solution(**raw_solution)
     
     async def add(self, entity_data):
+        # Handle both dict and SolutionCreate object
+        if isinstance(entity_data, dict):
+            data_to_insert = entity_data
+        else:
+            data_to_insert = entity_data.model_dump()
+            
         solution_created = await with_timeout(
             self.database['solutions'].insert_one,
-            entity_data.model_dump(),
+            data_to_insert,
             operation_name="insert solution"
         )
         

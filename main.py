@@ -13,6 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
+from query.router import router as queries_router
 from config.settings import settings, TypeDB
 from utils.handle_errors import handle_common_errors
 from utils.audit import log_rate_limit_exceeded
@@ -127,7 +128,11 @@ else:
     print(settings)
     yield
 
-  app = FastAPI(lifespan=lifespan)
+  app = FastAPI(
+    lifespan=lifespan,
+    # Configurar para usar aliases por defecto en respuestas JSON
+    # Esto hace que _id se serialize como _id en lugar de id
+  )
 
 # Configurar rate limiting
 app.state.limiter = limiter
@@ -211,16 +216,32 @@ async def add_security_headers(request: Request, call_next):
     
     # Content-Security-Policy (CSP)
     # Mitigates XSS and injection attacks
-    # Note: Adjust this based on your frontend needs
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https:; "
-        "font-src 'self' data:; "
-        "connect-src 'self'; "
-        "frame-ancestors 'none';"
-    )
+    # For Swagger docs endpoints, allow cdn.jsdelivr.net resources
+    # For all other endpoints, maintain strict security
+    is_docs_endpoint = request.url.path in ["/docs", "/redoc", "/openapi.json"]
+    
+    if is_docs_endpoint:
+        # Relaxed CSP for Swagger UI - allows CDN resources
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data: https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
+    else:
+        # Strict CSP for all other endpoints
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
     
     return response
 
@@ -262,6 +283,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication'])
+app.include_router(queries_router, prefix='/queries', tags=['Queries'])
 app.include_router(solutions_router, prefix='/solutions', tags=['Solutions'])
 
 

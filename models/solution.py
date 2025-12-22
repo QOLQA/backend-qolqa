@@ -1,4 +1,5 @@
 from typing import Optional, List
+from datetime import datetime
 from pydantic import BaseModel, field_validator, Field
 
 from config.settings import settings, TypeDB
@@ -9,17 +10,12 @@ if settings.type_db == TypeDB.mongo:
 else: # sql database model
     from models.base import SQLBaseModel as Base
 
-class Query(BaseModel):
-    id: str = Field(default='', max_length=100)
-    full_query: str = Field(default='', max_length=10000)
-    collections: List[str] = Field(default=[], max_length=50)
-
 class SolutionBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     last_version_saved: str = Field(default="unknown", max_length=100)
     src_img: str = Field(default="http://unknown.es", max_length=500)
-    queries: List[Query] = Field(default=[], max_length=100)
     user_id: str  # Owner of the solution
+    last_updated_at: Optional[datetime] = None  # Timestamp of last update
     
     @field_validator('name')
     @classmethod
@@ -32,7 +28,7 @@ class SolutionPartialUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     last_version_saved: Optional[str] = Field(None, max_length=100)
     src_img: Optional[str] = Field(None, max_length=500)
-    queries: Optional[List[Query]] = None
+    last_updated_at: Optional[datetime] = None
     # user_id cannot be updated
 
 class SolutionCreate(BaseModel):
@@ -40,7 +36,6 @@ class SolutionCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     last_version_saved: str = Field(default="unknown", max_length=100)
     src_img: str = Field(default="http://unknown.es", max_length=500)
-    queries: List[Query] = Field(default=[], max_length=100)
     
     @field_validator('name')
     @classmethod

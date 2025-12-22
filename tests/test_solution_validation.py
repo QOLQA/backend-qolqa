@@ -4,7 +4,7 @@ Tests Pydantic model validation, field requirements, and data types
 """
 import pytest
 from pydantic import ValidationError
-from models.solution import Solution, SolutionCreate, SolutionPartialUpdate, Query
+from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
 
 
 @pytest.mark.validation
@@ -19,15 +19,13 @@ class TestSolutionValidation:
         assert solution.name == "Test Solution"
         assert solution.last_version_saved == "unknown"
         assert solution.src_img == "http://test.com/image.png"
-        assert len(solution.queries) == 1
     
     def test_solution_missing_required_field(self):
         """Test that solution creation fails without required name field"""
         with pytest.raises(ValidationError) as exc_info:
             SolutionCreate(
                 last_version_saved="unknown",
-                src_img="http://test.com/image.png",
-                queries=[]
+                src_img="http://test.com/image.png"
             )
         
         errors = exc_info.value.errors()
@@ -39,8 +37,7 @@ class TestSolutionValidation:
         """Test that solution creation fails with empty name"""
         with pytest.raises(ValidationError):
             SolutionCreate(
-                name="",
-                queries=[]
+                name=""
             )
     
     def test_solution_default_values(self):
@@ -49,30 +46,17 @@ class TestSolutionValidation:
         
         assert solution.last_version_saved == "unknown"
         assert solution.src_img == "http://unknown.es"
-        assert solution.queries == []
     
-    def test_solution_with_multiple_queries(self):
-        """Test solution with multiple queries"""
+    def test_solution_with_user_id(self):
+        """Test solution with user_id"""
         data = {
-            "name": "Multi Query Solution",
-            "queries": [
-                {
-                    "id": "q1",
-                    "full_query": "SELECT * FROM users",
-                    "collections": ["users"]
-                },
-                {
-                    "id": "q2",
-                    "full_query": "SELECT * FROM posts",
-                    "collections": ["posts"]
-                }
-            ]
+            "name": "User Solution",
+            "user_id": "user123"
         }
         solution = SolutionCreate(**data)
         
-        assert len(solution.queries) == 2
-        assert solution.queries[0].id == "q1"
-        assert solution.queries[1].id == "q2"
+        assert solution.name == "User Solution"
+        assert solution.user_id == "user123"
     
     def test_partial_update_all_fields_optional(self):
         """Test that all fields in partial update are optional"""
@@ -81,7 +65,6 @@ class TestSolutionValidation:
         assert update.name is None
         assert update.last_version_saved is None
         assert update.src_img is None
-        assert update.queries is None
     
     def test_partial_update_with_single_field(self):
         """Test partial update with only one field"""
@@ -105,53 +88,6 @@ class TestSolutionValidation:
 
 @pytest.mark.validation
 @pytest.mark.unit
-class TestQueryValidation:
-    """Test suite for Query model validation"""
-    
-    def test_create_valid_query(self):
-        """Test creating a valid query"""
-        query = Query(
-            id="query1",
-            full_query="SELECT * FROM users",
-            collections=["users"]
-        )
-        
-        assert query.id == "query1"
-        assert query.full_query == "SELECT * FROM users"
-        assert query.collections == ["users"]
-    
-    def test_query_default_values(self):
-        """Test default values for query fields"""
-        query = Query()
-        
-        assert query.id == ''
-        assert query.full_query == ''
-        assert query.collections == []
-    
-    def test_query_with_multiple_collections(self):
-        """Test query with multiple collections"""
-        query = Query(
-            id="q1",
-            full_query="SELECT * FROM users JOIN posts",
-            collections=["users", "posts"]
-        )
-        
-        assert len(query.collections) == 2
-        assert "users" in query.collections
-        assert "posts" in query.collections
-    
-    def test_query_collections_type_validation(self):
-        """Test that collections must be a list of strings"""
-        with pytest.raises(ValidationError):
-            Query(
-                id="q1",
-                full_query="SELECT * FROM users",
-                collections="users"  # Should be a list, not a string
-            )
-
-
-@pytest.mark.validation
-@pytest.mark.unit
 class TestSolutionFieldTypes:
     """Test suite for Solution field type validation"""
     
@@ -159,16 +95,7 @@ class TestSolutionFieldTypes:
         """Test that name must be a string"""
         with pytest.raises(ValidationError):
             SolutionCreate(
-                name=123,  # Should be string
-                queries=[]
-            )
-    
-    def test_queries_must_be_list(self):
-        """Test that queries must be a list"""
-        with pytest.raises(ValidationError):
-            SolutionCreate(
-                name="Test",
-                queries="not a list"
+                name=123  # Should be string
             )
     
     def test_last_version_saved_must_be_string(self):
