@@ -22,6 +22,7 @@ class NestedNode(BaseModel):
     name: str
     cols: List[Column]
     nested_nodes: Optional[List['NestedNode']] = None
+    cardinality: Optional[str] = "1 ... 1"
 
 class Node(BaseModel):
     id: str
@@ -35,6 +36,7 @@ class Edge(BaseModel):
     id: str
     source: str
     target: str
+    cardinality: Optional[str] = "1 ... 1"
 
 class Submodel(BaseModel):
     nodes: List[Node]
