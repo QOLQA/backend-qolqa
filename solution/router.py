@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+import logging
+import pprint
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate, SolutionBase
 from models.version import Version, VersionCreate, VersionPartialUpdate, default_version_descriptions
@@ -15,6 +17,9 @@ from auth.router import get_current_user
 from utils.handle_errors import handle_common_errors
 from utils.get_database import get_database
 from utils.audit import log_resource_operation, log_access_denied
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -53,21 +58,26 @@ async def create(
         # Create solution and initial version
         solution = await service.create(SolutionRepositoryNoSql(database), solution_with_user)
 
-        last_version_saved = ""
+        # Create only one initial version
+        version_create = VersionCreate(
+            submodels=[],
+            description=default_version_descriptions[0],  # "Primera version"
+            solution_id=str(solution.id)
+        )
+        new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
+        last_version_saved = str(new_version.id)
 
-        for default_version_description in default_version_descriptions:
-            # Create initial version
-            version_create = VersionCreate(
-                submodels=[],
-                description=default_version_description,
-                solution_id=str(solution.id)
-            )
-            new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
-            last_version_saved = str(new_version.id)
+
 
         update_solution = SolutionPartialUpdate(last_version_saved=last_version_saved)
         updated_solution = await service.modify(SolutionRepositoryNoSql(database), solution.id, update_solution)
         
+        # Usar logger en lugar de print - esto SÍ aparecerá
+        logger.info("=" * 60)
+        logger.info(">>>>>>>>>>>>> SOLUTION_WITH_USER:")
+        logger.info(pprint.pformat(updated_solution.model_dump(), indent=2, width=100))
+        logger.info("=" * 60)
+
         # Audit log: solution created
         log_resource_operation(
             action="solution.create",
@@ -169,6 +179,53 @@ async def update(
         raise
     except Exception as exc:
         await handle_common_errors(exc)
+
+
+@router.post('/{solution_id}/versions', response_model=Version, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")  # 20 creaciones por minuto
+async def create_version_for_solution(
+    request: Request,
+    solution_id: str | int,
+    version_create: VersionCreate,
+    current_user: User = Depends(get_current_user),
+    database = Depends(get_database),
+) -> Version:
+    """Create a new version for a solution - only if solution is owned by current user"""
+    try:
+        # Verify solution exists and ownership
+        solution = await service.get_one(SolutionRepositoryNoSql(database), solution_id)
+        if solution.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to create versions for this solution"
+            )
+        
+        # Ensure solution_id in version_create matches the URL parameter
+        version_create.solution_id = str(solution_id)
+        
+        # Create the version
+        new_version = await service.create_version(VersionRepositoryNoSql(database), version_create)
+        
+        # Update last_version_saved in the solution
+        update_solution = SolutionPartialUpdate(last_version_saved=str(new_version.id))
+        await service.modify(SolutionRepositoryNoSql(database), solution_id, update_solution)
+        
+        # Audit log: version created
+        log_resource_operation(
+            action="version.create",
+            user_id=str(current_user.id),
+            resource_type="version",
+            resource_id=str(new_version.id),
+            resource_name=version_create.description,
+            status="success",
+            ip_address=request.client.host if request.client else None,
+        )
+        
+        return new_version
+    except HTTPException:
+        raise
+    except Exception as exc:
+        await handle_common_errors(exc, request)
 
 
 @router.patch('/{solution_id}/versions/{version_id}', response_model=Version)
