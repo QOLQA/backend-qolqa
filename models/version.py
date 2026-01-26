@@ -57,8 +57,8 @@ class Version(Base, VersionBase):
     pass
 
 default_version_descriptions = [
-    "Primera version",
-    "Segunda version",
-    "Tercera version",
-    "Cuarta version"
+    "version 1",
+    "version 2",
+    "version 3",
+    "version 4"
 ]
