@@ -207,7 +207,7 @@ class TestUserRegistration:
     async def test_register_duplicate_username(self, async_client):
         """Test registration with existing username"""
         with patch('auth.service.register_user', new_callable=AsyncMock) as mock_register:
-            from utils.errors import Duplicate
+            from domain.errors import Duplicate
             mock_register.side_effect = Duplicate(msg="Username already exists")
             
             user_data = {

@@ -12,8 +12,8 @@ from auth.repository import UserRepository
 from auth.jwt import get_token_data
 from models.user import User, UserCreate
 from schemas.auth import Token
-from utils.get_database import get_database
-from utils.handle_errors import handle_common_errors
+from infrastructure.db_factory import get_database
+from api.handle_errors import handle_common_errors
 from utils.audit import log_registration, log_auth_attempt
 
 router = APIRouter()

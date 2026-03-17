@@ -1,5 +1,5 @@
 from models.version import VersionCreate, Version, VersionPartialUpdate
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 
 async def get_all(repository: Repository) -> list[Version]:
     """Get all versions from the repository"""

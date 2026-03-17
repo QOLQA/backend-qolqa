@@ -1,5 +1,5 @@
 from models.query import QueryCreate, Query, QueryPartialUpdate
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 
 
 async def get_all(repository: Repository) -> list[Query]:

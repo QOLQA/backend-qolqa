@@ -138,7 +138,7 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_solution_not_found(self, authenticated_client, auth_headers):
         """Test getting a non-existent solution"""
-        from utils.errors import NotFoundError
+        from domain.errors import NotFoundError
         
         with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
@@ -226,7 +226,7 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_invalid_id(self, authenticated_client, auth_headers):
         """Test updating a solution with invalid ID"""
-        from utils.errors import NotFoundError
+        from domain.errors import NotFoundError
         
         with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
@@ -292,7 +292,7 @@ class TestVersionEndpoints:
     @pytest.mark.asyncio
     async def test_update_version_nonexistent_solution(self, authenticated_client, auth_headers):
         """Test updating version for non-existent solution"""
-        from utils.errors import NotFoundError
+        from domain.errors import NotFoundError
         
         with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")

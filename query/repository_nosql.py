@@ -2,9 +2,9 @@ from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 from models.query import Query, QueryCreate, QueryPartialUpdate
-from utils.errors import Missing
+from domain.errors import Missing
 
 
 class QueryRepositoryNoSql(Repository[Query, QueryCreate, QueryPartialUpdate]):

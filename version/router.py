@@ -4,8 +4,8 @@ from models.version import Version, VersionCreate, VersionPartialUpdate
 from version import service
 from version.repository_nosql import VersionRepositoryNoSql
 
-from utils.handle_errors import handle_common_errors
-from utils.get_database import get_database
+from api.handle_errors import handle_common_errors
+from infrastructure.db_factory import get_database
 
 router = APIRouter()
 

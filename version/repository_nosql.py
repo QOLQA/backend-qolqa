@@ -1,9 +1,9 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 from models.version import Version, VersionCreate, VersionPartialUpdate
 from utils.mongo import get_object_id
-from utils.errors import Missing
+from domain.errors import Missing
 
 
 class VersionRepositoryNoSql(Repository[Version, VersionCreate, VersionPartialUpdate]):

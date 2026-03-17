@@ -1,7 +1,7 @@
 from datetime import datetime
 from models.solution import SolutionCreate, Solution, SolutionPartialUpdate
 from models.version import Version, VersionCreate, VersionPartialUpdate
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 
 async def get_all(repository: Repository) -> list[Solution]:
     return await repository.get_all()

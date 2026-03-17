@@ -1,11 +1,11 @@
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 from models.query import Query, QueryCreate, QueryPartialUpdate
 from schemas.solution import Query as QueryDB, Solution as SolutionDB
 from utils.sql import get_integer_id
-from utils.errors import Missing
+from domain.errors import Missing
 
 
 class QueryRepositorySql(Repository[Query, QueryCreate, QueryPartialUpdate]):

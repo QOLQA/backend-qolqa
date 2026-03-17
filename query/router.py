@@ -9,8 +9,8 @@ from query.repository_sql import QueryRepositorySql
 from query.repository_nosql import QueryRepositoryNoSql
 
 from auth.router import get_current_user
-from utils.handle_errors import handle_common_errors
-from utils.get_database import get_database
+from api.handle_errors import handle_common_errors
+from infrastructure.db_factory import get_database
 from utils.audit import log_resource_operation, log_access_denied
 from config.settings import settings, TypeDB
 

@@ -8,8 +8,8 @@ from bson import ObjectId
 
 from models.user import UserInDB, UserCreate, UserUpdate
 from auth.password import get_password_hash
-from interfaces.repository import Repository
-from utils.errors import Duplicate, Missing
+from domain.repositories.user.repo import Repository
+from domain.errors import Duplicate, Missing
 from utils.mongo import get_object_id
 
 
