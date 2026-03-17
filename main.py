@@ -11,7 +11,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from auth.router import router as auth_router
+from api.controllers.auth import router as auth_router
 from api.controllers.query import router as queries_router
 from api.controllers.version import router as versions_router
 from api.controllers.solution import router as solutions_router
