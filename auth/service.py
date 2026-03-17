@@ -80,7 +80,7 @@ async def register_user(repository: UserRepository, user_create: UserCreate) -> 
     Returns:
         Created user (without password)
     """
-    user_in_db = await repository.create(user_create)
+    user_in_db = await repository.add(user_create)
     
     return User(
         id=str(user_in_db.id),
