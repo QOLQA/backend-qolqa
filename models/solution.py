@@ -47,7 +47,4 @@ class SolutionCreate(BaseModel):
 class Solution(Base, SolutionBase):
     versions: List[Version] = []
 
-class Solution(Base, SolutionBase):
-    versions: List[Version] = []
-
 
