@@ -13,7 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from solution.router import router as solutions_router
 from auth.router import router as auth_router
-from query.router import router as queries_router
+from api.controllers.query import router as queries_router
 from config.settings import settings, TypeDB
 from api.handle_errors import handle_common_errors
 from utils.audit import log_rate_limit_exceeded
