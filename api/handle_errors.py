@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status, Request
 import logging
 
-from domain.errors import Format, Missing, Duplicate, NotFoundError
+from domain.errors import Format, Missing, Duplicate, NotFoundError, Forbidden
 from config.settings import settings
 
 # Logger para errores no manejados
@@ -29,6 +29,11 @@ async def handle_common_errors(exc: Exception, request: Request = None):
     if isinstance(exc, Duplicate):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
+            detail=exc.msg,
+        )
+    if isinstance(exc, Forbidden):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=exc.msg,
         )
     

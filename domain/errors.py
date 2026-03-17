@@ -13,3 +13,8 @@ class Duplicate(Exception):
 class Format(Exception):
     def __init__(self, msg: str) -> None:
       self.msg = msg
+
+class Forbidden(Exception):
+    """Raised when an authenticated user attempts an action they do not own or are not allowed to perform."""
+    def __init__(self, msg: str) -> None:
+        self.msg = msg

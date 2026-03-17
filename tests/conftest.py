@@ -6,13 +6,39 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 import os
 from typing import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 # Set test environment variables
 os.environ['DATABASE_URL'] = 'mongodb://localhost:27017/test_db'
 os.environ['TYPE_DB'] = 'mongo'
 
 from main import app
+from infrastructure.db_factory import get_database
+
+
+def get_mock_database():
+    """Returns an AsyncMock that mimics AsyncIOMotorDatabase."""
+    mock_collection = AsyncMock()
+    mock_collection.find_one = AsyncMock(return_value=None)
+    mock_collection.find = MagicMock(return_value=AsyncMock())
+    mock_collection.insert_one = AsyncMock()
+    mock_collection.update_one = AsyncMock()
+    mock_collection.delete_one = AsyncMock()
+    mock_collection.delete_many = AsyncMock()
+
+    # cursor mock for find()
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_collection.find = MagicMock(return_value=mock_cursor)
+
+    mock_db = MagicMock()
+    mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+    return mock_db
+
+
+async def override_get_database():
+    """FastAPI dependency override — yields a mock DB instead of real MongoDB."""
+    yield get_mock_database()
 
 
 @pytest.fixture
@@ -23,9 +49,11 @@ def client():
 
 @pytest.fixture
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
-    """Asynchronous test client"""
+    """Asynchronous test client with mocked DB"""
+    app.dependency_overrides[get_database] = override_get_database
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -34,11 +62,13 @@ async def authenticated_client(mock_user) -> AsyncGenerator[AsyncClient, None]:
     Asynchronous test client with authentication automatically mocked
     Use this for endpoint tests that require authentication
     """
+    app.dependency_overrides[get_database] = override_get_database
     with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user:
         mock_get_user.return_value = mock_user
         
         async with AsyncClient(app=app, base_url="http://test") as ac:
             yield ac
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
