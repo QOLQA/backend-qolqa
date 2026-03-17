@@ -1,11 +1,11 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
 from utils.mongo import get_object_id
-from utils.errors import Missing
-from utils.db_timeout import with_timeout
+from domain.errors import Missing
+from infrastructure.db_timeout import with_timeout
 
 
 class SolutionRepositoryNoSql(Repository[Solution, SolutionCreate, SolutionPartialUpdate]):

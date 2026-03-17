@@ -2,12 +2,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from interfaces.repository import Repository
+from domain.repositories.user.repo import Repository
 
 from models.solution import Solution, SolutionCreate, SolutionPartialUpdate
 from schemas.solution import Solution as SolutionDB
 from utils.sql import get_integer_id
-from utils.errors import Missing
+from domain.errors import Missing
 
 class SolutionRepositorySql(Repository[Solution, SolutionCreate, SolutionPartialUpdate]):
     def __init__(self, session: AsyncSession):
