@@ -21,7 +21,7 @@ from infrastructure.repositories import SolutionRepositoryImpl, VersionRepositor
 from infrastructure.repositories.QueryRepoImpl import QueryRepositoryImpl
 from models.user import User
 from models.version import default_version_descriptions
-from auth.router import get_current_user
+from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from domain.errors import Forbidden
 from infrastructure.db_factory import get_database

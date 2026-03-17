@@ -62,10 +62,23 @@ async def authenticated_client(mock_user) -> AsyncGenerator[AsyncClient, None]:
     Asynchronous test client with authentication automatically mocked
     Use this for endpoint tests that require authentication
     """
+    from domain.entities.auth.UserEntity import UserEntity
+    from datetime import datetime
+
+    # Build a UserEntity from mock_user for the clean-architecture get_user_by_id
+    mock_entity = UserEntity(
+        id=str(mock_user.id),
+        username=mock_user.username,
+        email=mock_user.email,
+        full_name=mock_user.full_name,
+        is_active=mock_user.is_active,
+        created_at=mock_user.created_at,
+    )
+
     app.dependency_overrides[get_database] = override_get_database
-    with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user:
-        mock_get_user.return_value = mock_user
-        
+    with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user:
+        mock_get_user.return_value = mock_entity
+
         async with AsyncClient(app=app, base_url="http://test") as ac:
             yield ac
     app.dependency_overrides.clear()

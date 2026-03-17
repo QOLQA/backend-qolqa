@@ -12,7 +12,7 @@ from application.use_cases.version.DeleteVersion import delete_version
 from infrastructure.mappers import VersionMapper
 from infrastructure.repositories import VersionRepositoryImpl
 from models.user import User
-from auth.router import get_current_user
+from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from infrastructure.db_factory import get_database
 from utils.audit import log_resource_operation
