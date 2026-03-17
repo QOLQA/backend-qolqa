@@ -19,13 +19,13 @@ from application.use_cases.version.UpdateVersion import update_version
 from infrastructure.mappers import SolutionMapper, VersionMapper
 from infrastructure.repositories import SolutionRepositoryImpl, VersionRepositoryImpl
 from infrastructure.repositories.QueryRepoImpl import QueryRepositoryImpl
-from models.user import User
-from models.version import default_version_descriptions
+from domain.entities.auth.UserEntity import UserEntity as User
+from application.dtos.version.VersionRequest import default_version_descriptions
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from domain.errors import Forbidden
 from infrastructure.db_factory import get_database
-from utils.audit import log_resource_operation, log_access_denied
+from infrastructure.audit import log_resource_operation, log_access_denied
 
 logger = logging.getLogger(__name__)
 

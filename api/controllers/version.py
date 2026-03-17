@@ -11,11 +11,11 @@ from application.use_cases.version.UpdateVersion import update_version
 from application.use_cases.version.DeleteVersion import delete_version
 from infrastructure.mappers import VersionMapper
 from infrastructure.repositories import VersionRepositoryImpl
-from models.user import User
+from domain.entities.auth.UserEntity import UserEntity as User
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from infrastructure.db_factory import get_database
-from utils.audit import log_resource_operation
+from infrastructure.audit import log_resource_operation
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
