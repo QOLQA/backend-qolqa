@@ -2,17 +2,18 @@
 User repository for MongoDB
 Handles CRUD operations for users
 """
-from typing import Optional
+from typing import Optional, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 
-from models.user import UserInDB, UserCreate
+from models.user import UserInDB, UserCreate, UserUpdate
 from auth.password import get_password_hash
+from interfaces.repository import Repository
 from utils.errors import Duplicate, Missing
 from utils.mongo import get_object_id
 
 
-class UserRepository:
+class UserRepository(Repository[UserInDB, UserCreate, UserUpdate]):
     """Repository for user CRUD operations"""
     
     def __init__(self, database: AsyncIOMotorDatabase):
@@ -47,7 +48,7 @@ class UserRepository:
         
         return UserInDB(**user_data)
     
-    async def create(self, user_create: UserCreate) -> UserInDB:
+    async def add(self, user_create: UserCreate) -> UserInDB:
         """Create a new user"""
         # Check if username already exists
         existing_user = await self.get_by_username(user_create.username)
@@ -74,6 +75,12 @@ class UserRepository:
         # Return created user
         return await self.get_by_id(result.inserted_id)
     
+    async def get_all(self) -> List[UserInDB]:
+        """Get all users"""
+        cursor = self.collection.find({})
+        users = await cursor.to_list(length=None)
+        return [UserInDB(**u) for u in users]
+
     async def update(self, user_id: str | ObjectId, update_data: dict) -> UserInDB:
         """Update user information"""
         object_id = await get_object_id(user_id)
