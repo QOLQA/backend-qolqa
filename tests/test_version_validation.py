@@ -4,10 +4,8 @@ Tests Pydantic model validation for versions, submodels, nodes, and edges
 """
 import pytest
 from pydantic import ValidationError
-from models.version import (
-    Version, VersionCreate, VersionPartialUpdate,
-    Submodel, Node, Edge, Column, NestedNode, Position
-)
+from application.dtos.version.VersionRequest import VersionCreateRequest as VersionCreate, VersionPartialUpdateRequest as VersionPartialUpdate
+from domain.entities.VersionEntity import Submodel, Node, Edge, Column, NestedNode, Position
 
 
 @pytest.mark.validation
@@ -36,14 +34,16 @@ class TestVersionValidation:
         assert any(error['loc'] == ('solution_id',) for error in errors)
     
     def test_version_with_empty_description(self):
-        """Test version with empty description"""
-        version = VersionCreate(
-            submodels=[],
-            description="",
-            solution_id="123"
-        )
+        """Test version with empty description is rejected (description must be non-empty)"""
+        with pytest.raises(ValidationError) as exc_info:
+            VersionCreate(
+                submodels=[],
+                description="",
+                solution_id="123"
+            )
         
-        assert version.description == ""
+        errors = exc_info.value.errors()
+        assert any(error['loc'] == ('description',) for error in errors)
     
     def test_version_with_multiple_submodels(self):
         """Test version with multiple submodels"""

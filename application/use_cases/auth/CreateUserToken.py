@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from application.dtos.auth.AuthResponse import TokenResponse
-from auth.jwt import create_access_token
+from infrastructure.jwt import create_access_token
 from config.settings import settings
 from domain.entities.auth.UserEntity import UserEntity
 

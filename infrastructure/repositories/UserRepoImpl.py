@@ -4,7 +4,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from application.dtos.auth.AuthRequest import UserCreateRequest, UserUpdateRequest
-from auth.password import get_password_hash
+from infrastructure.password import get_password_hash
 from domain.entities.auth.UserEntity import UserEntity
 from domain.errors import Duplicate, Missing
 from domain.repositories.user.repo import IUserRepository

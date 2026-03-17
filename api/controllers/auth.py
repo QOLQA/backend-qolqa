@@ -15,11 +15,11 @@ from application.use_cases.auth.GetUserById import get_user_by_id
 from application.use_cases.auth.CreateUserToken import create_user_token
 from infrastructure.mappers import UserMapper
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
-from auth.jwt import get_token_data
-from models.user import User
+from infrastructure.jwt import get_token_data
+from domain.entities.auth.UserEntity import UserEntity as User
 from api.handle_errors import handle_common_errors
 from infrastructure.db_factory import get_database
-from utils.audit import log_registration, log_auth_attempt
+from infrastructure.audit import log_registration, log_auth_attempt
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)

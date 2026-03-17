@@ -3,6 +3,13 @@ from pydantic import BaseModel, Field, field_validator
 
 from domain.entities.VersionEntity import Submodel
 
+default_version_descriptions = [
+    "version 1",
+    "version 2",
+    "version 3",
+    "version 4"
+]
+
 
 class VersionCreateRequest(BaseModel):
     """DTO for creating a new version."""

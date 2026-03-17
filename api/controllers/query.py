@@ -13,11 +13,11 @@ from application.use_cases.query.DeleteQuery import delete_query
 from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
 from infrastructure.mappers import QueryMapper
 from infrastructure.repositories import QueryRepositoryImpl
-from models.user import User
+from domain.entities.auth.UserEntity import UserEntity as User
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from infrastructure.db_factory import get_database
-from utils.audit import log_resource_operation
+from infrastructure.audit import log_resource_operation
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)

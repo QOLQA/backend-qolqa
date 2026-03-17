@@ -1,6 +1,6 @@
 from typing import Optional
 
-from auth.password import verify_password
+from infrastructure.password import verify_password
 from domain.entities.auth.UserEntity import UserEntity
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
 

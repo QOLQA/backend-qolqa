@@ -2,9 +2,9 @@ from bson import ObjectId, errors
 from fastapi import HTTPException, status
 import re
 
-from utils.errors import Format
+from domain.errors import Format
 
-async def get_object_id(id: str | ObjectId) -> ObjectId:
+async def get_object_id(id) -> ObjectId:
     """
     Convierte y valida un ID de MongoDB de forma segura
     Previene NoSQL injection validando formato estricto
@@ -58,7 +58,7 @@ async def get_object_id(id: str | ObjectId) -> ObjectId:
         )
 
 
-def sanitize_query_filters(filters: dict, allowed_fields: list[str]) -> dict:
+def sanitize_query_filters(filters: dict, allowed_fields: list) -> dict:
     """
     Sanitiza filtros de búsqueda para prevenir NoSQL injection
     Solo permite campos específicos y tipos simples
@@ -88,4 +88,3 @@ def sanitize_query_filters(filters: dict, allowed_fields: list[str]) -> dict:
         # Rechazar cualquier otro tipo (dict, objetos, etc.)
     
     return safe_filters
-    
