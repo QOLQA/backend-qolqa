@@ -15,7 +15,7 @@ class TestSolutionsEndpoints:
     async def test_get_all_solutions_empty(self, async_client, mock_user, auth_headers):
         """Test getting all solutions when database is empty"""
         with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
-             patch('solution.service.get_all', new_callable=AsyncMock) as mock_get_all:
+             patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             
             mock_get_user.return_value = mock_user
             mock_get_all.return_value = []
@@ -28,18 +28,18 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_all_solutions_with_data(self, authenticated_client, mock_user, mock_solution_data, auth_headers):
         """Test getting all solutions with data"""
-        from models.solution import Solution
+        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
         
         # Create modified solution data for second solution
         solution_data_2 = {**mock_solution_data, "name": "Second Solution"}
         
         mock_solutions = [
-            Solution(_id=ObjectId(), user_id=str(mock_user.id), **mock_solution_data, versions=[]),
-            Solution(_id=ObjectId(), user_id=str(mock_user.id), **solution_data_2, versions=[])
+            SolutionEntity(id=str(ObjectId()), user_id=str(mock_user.id), name=mock_solution_data["name"], versions=[]),
+            SolutionEntity(id=str(ObjectId()), user_id=str(mock_user.id), name=solution_data_2["name"], versions=[])
         ]
         
-        with patch('solution.service.get_all', new_callable=AsyncMock) as mock_get_all:
+        with patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             mock_get_all.return_value = mock_solutions
             
             response = await authenticated_client.get("/solutions", headers=auth_headers)
@@ -51,29 +51,29 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_create_solution_success(self, authenticated_client, mock_user, mock_solution_data, auth_headers):
         """Test successful solution creation"""
-        from models.solution import Solution
-        from models.version import Version
+        from domain.entities.SolutionEntity import SolutionEntity
+        from domain.entities.VersionEntity import VersionEntity
         from bson import ObjectId
         
         solution_id = str(ObjectId())
         version_id = str(ObjectId())
-        expected_solution = Solution(
-            _id=ObjectId(solution_id),
-            **mock_solution_data,
+        expected_solution = SolutionEntity(
+            id=solution_id,
+            name=mock_solution_data["name"],
             user_id=str(mock_user.id),
             versions=[]
         )
         
-        mock_version = Version(
-            _id=ObjectId(version_id),
+        mock_version = VersionEntity(
+            id=version_id,
             description="Initial version",
             solution_id=solution_id,
             submodels=[]
         )
         
-        with patch('solution.service.create', new_callable=AsyncMock) as mock_create, \
-             patch('solution.service.create_version', new_callable=AsyncMock) as mock_create_version, \
-             patch('solution.service.modify', new_callable=AsyncMock) as mock_modify:
+        with patch('api.controllers.solution.create_solution', new_callable=AsyncMock) as mock_create, \
+             patch('api.controllers.solution.create_version', new_callable=AsyncMock) as mock_create_version, \
+             patch('api.controllers.solution.SolutionRepositoryImpl.update', new_callable=AsyncMock) as mock_modify:
             
             mock_create.return_value = expected_solution
             mock_create_version.return_value = mock_version
@@ -112,19 +112,19 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_solution_by_id_success(self, authenticated_client, mock_user, mock_solution_data, auth_headers):
         """Test getting a solution by ID"""
-        from models.solution import Solution
+        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
         
         solution_id = str(ObjectId())
-        expected_solution = Solution(
-            _id=ObjectId(solution_id),
-            **mock_solution_data,
+        expected_solution = SolutionEntity(
+            id=solution_id,
+            name=mock_solution_data["name"],
             user_id=str(mock_user.id),
             versions=[]
         )
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one, \
-             patch('solution.service.get_solution_versions', new_callable=AsyncMock) as mock_get_versions:
+        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
+             patch('api.controllers.solution.VersionRepositoryImpl.get_by_solution_id', new_callable=AsyncMock) as mock_get_versions:
             
             mock_get_one.return_value = expected_solution
             mock_get_versions.return_value = []
@@ -140,7 +140,7 @@ class TestSolutionsEndpoints:
         """Test getting a non-existent solution"""
         from domain.errors import NotFoundError
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
+        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
             
             response = await authenticated_client.get("/solutions/nonexistent", headers=auth_headers)
@@ -151,27 +151,19 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_success(self, authenticated_client, mock_user, mock_partial_update_data, auth_headers):
         """Test successful solution update"""
-        from models.solution import Solution
+        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
         
         solution_id = str(ObjectId())
-        existing_solution = Solution(
-            _id=ObjectId(solution_id),
-            name="Original Name",
-            user_id=str(mock_user.id),
-            versions=[]
-        )
-        updated_solution = Solution(
-            _id=ObjectId(solution_id),
+        updated_solution = SolutionEntity(
+            id=solution_id,
             name=mock_partial_update_data["name"],
             user_id=str(mock_user.id),
             versions=[]
         )
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one, \
-             patch('solution.service.modify', new_callable=AsyncMock) as mock_modify:
+        with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_modify:
             
-            mock_get_one.return_value = existing_solution
             mock_modify.return_value = updated_solution
             
             response = await authenticated_client.patch(
@@ -187,30 +179,22 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_partial_fields(self, authenticated_client, mock_user, auth_headers):
         """Test updating only specific fields"""
-        from models.solution import Solution
+        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
         
         solution_id = str(ObjectId())
         update_data = {"last_version_saved": "version_456"}
         
-        existing_solution = Solution(
-            _id=ObjectId(solution_id),
-            name="Original Name",
-            user_id=str(mock_user.id),
-            versions=[]
-        )
-        updated_solution = Solution(
-            _id=ObjectId(solution_id),
+        updated_solution = SolutionEntity(
+            id=solution_id,
             name="Original Name",
             last_version_saved="version_456",
             user_id=str(mock_user.id),
             versions=[]
         )
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one, \
-             patch('solution.service.modify', new_callable=AsyncMock) as mock_modify:
+        with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_modify:
             
-            mock_get_one.return_value = existing_solution
             mock_modify.return_value = updated_solution
             
             response = await authenticated_client.patch(
@@ -228,7 +212,7 @@ class TestSolutionsEndpoints:
         """Test updating a solution with invalid ID"""
         from domain.errors import NotFoundError
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
+        with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
             
             response = await authenticated_client.patch(
@@ -247,8 +231,8 @@ class TestVersionEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_version_success(self, authenticated_client, mock_user, auth_headers):
         """Test successful version update"""
-        from models.solution import Solution
-        from models.version import Version
+        from domain.entities.SolutionEntity import SolutionEntity
+        from domain.entities.VersionEntity import VersionEntity
         from bson import ObjectId
         
         solution_id = str(ObjectId())
@@ -257,23 +241,23 @@ class TestVersionEndpoints:
             "description": "Updated version description"
         }
         
-        mock_solution = Solution(
-            _id=ObjectId(solution_id),
+        mock_solution = SolutionEntity(
+            id=solution_id,
             name="Test Solution",
             user_id=str(mock_user.id),
             versions=[]
         )
         
-        mock_version = Version(
-            _id=ObjectId(version_id),
+        mock_version = VersionEntity(
+            id=version_id,
             description="Updated version description",
             solution_id=solution_id,
             submodels=[]
         )
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one, \
-             patch('solution.service.modify', new_callable=AsyncMock) as mock_modify_solution, \
-             patch('solution.service.modify_version', new_callable=AsyncMock) as mock_modify_version:
+        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
+             patch('api.controllers.solution.SolutionRepositoryImpl.update', new_callable=AsyncMock) as mock_modify_solution, \
+             patch('api.controllers.solution.update_version', new_callable=AsyncMock) as mock_modify_version:
             
             mock_get_one.return_value = mock_solution
             mock_modify_solution.return_value = mock_solution
@@ -294,7 +278,7 @@ class TestVersionEndpoints:
         """Test updating version for non-existent solution"""
         from domain.errors import NotFoundError
         
-        with patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
+        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
             
             response = await authenticated_client.patch(
@@ -385,7 +369,7 @@ class TestEndpointErrorHandling:
     @pytest.mark.asyncio
     async def test_database_error_handling(self, authenticated_client, mock_solution_data, auth_headers):
         """Test proper error handling for database errors"""
-        with patch('solution.service.create', new_callable=AsyncMock) as mock_create:
+        with patch('api.controllers.solution.create_solution', new_callable=AsyncMock) as mock_create:
             mock_create.side_effect = Exception("Database connection error")
             
             response = await authenticated_client.post("/solutions", json=mock_solution_data, headers=auth_headers)

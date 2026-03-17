@@ -366,7 +366,7 @@ class TestAuthorizationRoles:
         valid_token = create_access_token(token_data)
         
         with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
-             patch('solution.service.get_one', new_callable=AsyncMock) as mock_get_one:
+             patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
             
             # Mock current user (user1)
             current_user = UserInDB(
@@ -380,17 +380,13 @@ class TestAuthorizationRoles:
             )
             mock_get_user.return_value = current_user
             
-            # Solution owned by another user (user2)
-            other_solution = Solution(
-                _id=ObjectId(),
-                name="Other Solution",
-                user_id=user2_id,  # Different user!
-                versions=[]
-            )
-            mock_get_one.return_value = other_solution
+            # Solution owned by another user — use case raises Forbidden
+            from domain.errors import Forbidden
+            mock_get_one.side_effect = Forbidden(msg="Not authorized to modify this solution")
+            other_solution_id = str(ObjectId())
             
             response = await async_client.patch(
-                f"/solutions/{str(other_solution.id)}",
+                f"/solutions/{other_solution_id}",
                 json={"name": "Hacked Name"},
                 headers={"Authorization": f"Bearer {valid_token}"}
             )
