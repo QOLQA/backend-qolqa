@@ -14,10 +14,20 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_all_solutions_empty(self, async_client, mock_user, auth_headers):
         """Test getting all solutions when database is empty"""
-        with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
+        from domain.entities.auth.UserEntity import UserEntity
+
+        mock_entity = UserEntity(
+            id=str(mock_user.id),
+            username=mock_user.username,
+            email=mock_user.email,
+            is_active=mock_user.is_active,
+            created_at=mock_user.created_at,
+        )
+
+        with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
              patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             
-            mock_get_user.return_value = mock_user
+            mock_get_user.return_value = mock_entity
             mock_get_all.return_value = []
             
             response = await async_client.get("/solutions", headers=auth_headers)

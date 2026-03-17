@@ -13,28 +13,26 @@ class TestJWTAuthentication:
     @pytest.mark.asyncio
     async def test_login_success(self, async_client):
         """Test successful user login and JWT token generation"""
-        # Mock user authentication
-        with patch('auth.service.authenticate_user', new_callable=AsyncMock) as mock_auth, \
-             patch('auth.service.create_user_token', new_callable=AsyncMock) as mock_token:
+        # Mock use case functions (clean architecture paths)
+        with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
+             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             
-            from models.user import UserInDB
-            from bson import ObjectId
+            from domain.entities.auth.UserEntity import UserEntity
+            from application.dtos.auth.AuthResponse import TokenResponse
             from datetime import datetime
             
-            mock_user = UserInDB(
-                _id=ObjectId(),
+            mock_entity = UserEntity(
+                id="507f1f77bcf86cd799439011",
                 username="testuser",
                 email="test@example.com",
-                hashed_password="hashed",
                 is_active=True,
                 created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
             )
-            mock_auth.return_value = mock_user
-            mock_token.return_value = {
-                "access_token": "fake_token",
-                "token_type": "bearer"
-            }
+            mock_auth.return_value = mock_entity
+            mock_token.return_value = TokenResponse(
+                access_token="fake_token",
+                token_type="bearer",
+            )
             
             response = await async_client.post(
                 "/auth/login",
@@ -50,7 +48,7 @@ class TestJWTAuthentication:
     @pytest.mark.asyncio
     async def test_login_invalid_credentials(self, async_client):
         """Test login with invalid credentials"""
-        with patch('auth.service.authenticate_user', new_callable=AsyncMock) as mock_auth:
+        with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
             mock_auth.return_value = None
             
             response = await async_client.post(
@@ -86,21 +84,21 @@ class TestJWTAuthentication:
         }
         valid_token = create_access_token(token_data)
         
-        # Mock database operations
-        with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
+        # Mock use case functions (clean architecture paths)
+        with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
              patch('solution.service.get_all', new_callable=AsyncMock) as mock_get_all:
             
-            # Mock the user retrieval
-            mock_user = UserInDB(
+            from domain.entities.auth.UserEntity import UserEntity
+            
+            # Mock the user retrieval — return UserEntity (clean arch entity)
+            mock_entity = UserEntity(
                 id=user_id,
                 username="testuser",
                 email="test@example.com",
-                hashed_password="fake_hash",
                 is_active=True,
                 created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
             )
-            mock_get_user.return_value = mock_user
+            mock_get_user.return_value = mock_entity
             
             # Mock empty solutions list for this user
             mock_get_all.return_value = []
@@ -176,16 +174,16 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_new_user_success(self, async_client):
         """Test successful user registration"""
-        with patch('auth.service.register_user', new_callable=AsyncMock) as mock_register:
-            from models.user import User
+        with patch('api.controllers.auth.register_user', new_callable=AsyncMock) as mock_register:
+            from domain.entities.auth.UserEntity import UserEntity
             from datetime import datetime
             
-            mock_register.return_value = User(
-                id="123",
+            mock_register.return_value = UserEntity(
+                id="507f1f77bcf86cd799439011",
                 username="newuser",
                 email="newuser@example.com",
                 is_active=True,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
             
             new_user = {
@@ -206,7 +204,7 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_duplicate_username(self, async_client):
         """Test registration with existing username"""
-        with patch('auth.service.register_user', new_callable=AsyncMock) as mock_register:
+        with patch('api.controllers.auth.register_user', new_callable=AsyncMock) as mock_register:
             from domain.errors import Duplicate
             mock_register.side_effect = Duplicate(msg="Username already exists")
             
@@ -365,18 +363,18 @@ class TestAuthorizationRoles:
         }
         valid_token = create_access_token(token_data)
         
-        with patch('auth.service.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
+        with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
              patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
             
-            # Mock current user (user1)
-            current_user = UserInDB(
+            from domain.entities.auth.UserEntity import UserEntity
+            
+            # Mock current user (user1) — return UserEntity (clean arch entity)
+            current_user = UserEntity(
                 id=user1_id,
                 username="user1",
                 email="user1@example.com",
-                hashed_password="fake_hash",
                 is_active=True,
                 created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
             )
             mock_get_user.return_value = current_user
             
