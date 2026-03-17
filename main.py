@@ -17,7 +17,7 @@ from api.controllers.version import router as versions_router
 from api.controllers.solution import router as solutions_router
 from config.settings import settings, TypeDB
 from api.handle_errors import handle_common_errors
-from utils.audit import log_rate_limit_exceeded
+from infrastructure.audit import log_rate_limit_exceeded
 
 # Configure logging
 logging.basicConfig(
@@ -45,7 +45,7 @@ async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) ->
         # Check if there's an Authorization header
         auth_header = request.headers.get("authorization")
         if auth_header and auth_header.startswith("Bearer "):
-            from auth.jwt import decode_access_token
+            from infrastructure.jwt import decode_access_token
             token = auth_header.replace("Bearer ", "")
             try:
                 payload = decode_access_token(token)
