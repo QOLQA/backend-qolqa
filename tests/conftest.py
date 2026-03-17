@@ -157,25 +157,27 @@ def mock_partial_update_data():
 @pytest.fixture
 def mock_user():
     """Mock authenticated user"""
-    from models.user import UserInDB
+    import types
     from datetime import datetime
     from bson import ObjectId
-    
-    return UserInDB(
+
+    user = types.SimpleNamespace(
         id=str(ObjectId()),
         username="testuser",
         email="test@example.com",
+        full_name=None,
         hashed_password="$2b$12$fake_hash",
         is_active=True,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
+    return user
 
 
 @pytest.fixture
 def valid_jwt_token(mock_user):
     """Generate a valid JWT token for testing"""
-    from auth.jwt import create_access_token
+    from infrastructure.jwt import create_access_token
     
     token_data = {
         "sub": mock_user.username,

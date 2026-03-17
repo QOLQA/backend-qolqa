@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 from bson import ObjectId
 
-from utils.mongo import get_object_id, sanitize_query_filters
+from infrastructure.mongo_utils import get_object_id, sanitize_query_filters
 
 
 class TestObjectIdValidation:

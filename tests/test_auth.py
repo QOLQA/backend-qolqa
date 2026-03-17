@@ -68,9 +68,7 @@ class TestJWTAuthentication:
     @pytest.mark.asyncio
     async def test_access_protected_endpoint_with_valid_token(self, async_client):
         """Test accessing protected endpoint with valid token"""
-        from auth.jwt import create_access_token
-        from auth.repository import UserRepository
-        from models.user import UserInDB, UserCreate
+        from infrastructure.jwt import create_access_token
         from datetime import datetime
         from bson import ObjectId
         
@@ -86,7 +84,7 @@ class TestJWTAuthentication:
         
         # Mock use case functions (clean architecture paths)
         with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
-             patch('solution.service.get_all', new_callable=AsyncMock) as mock_get_all:
+             patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             
             from domain.entities.auth.UserEntity import UserEntity
             
@@ -251,7 +249,7 @@ class TestJWTUtilities:
     
     def test_create_access_token(self):
         """Test JWT token creation"""
-        from auth.jwt import create_access_token
+        from infrastructure.jwt import create_access_token
         
         token = create_access_token(data={"sub": "user123"})
         
@@ -261,7 +259,7 @@ class TestJWTUtilities:
     
     def test_decode_token_valid(self):
         """Test decoding valid JWT token"""
-        from auth.jwt import create_access_token, decode_access_token
+        from infrastructure.jwt import create_access_token, decode_access_token
         
         token = create_access_token(data={"sub": "user123", "user_id": "456"})
         payload = decode_access_token(token)
@@ -272,7 +270,7 @@ class TestJWTUtilities:
     
     def test_decode_token_invalid(self):
         """Test decoding invalid JWT token"""
-        from auth.jwt import decode_access_token
+        from infrastructure.jwt import decode_access_token
         from fastapi import HTTPException
         
         with pytest.raises(HTTPException) as exc_info:
@@ -282,7 +280,7 @@ class TestJWTUtilities:
     
     def test_token_includes_expiration(self):
         """Test that generated tokens include expiration time"""
-        from auth.jwt import create_access_token, decode_access_token
+        from infrastructure.jwt import create_access_token, decode_access_token
         
         token = create_access_token(data={"sub": "user123"})
         payload = decode_access_token(token)
@@ -299,7 +297,7 @@ class TestPasswordHashing:
     
     def test_hash_password(self):
         """Test password hashing"""
-        from auth.password import get_password_hash
+        from infrastructure.password import get_password_hash
         
         hashed = get_password_hash("mypassword")
         
@@ -309,7 +307,7 @@ class TestPasswordHashing:
     
     def test_verify_password_correct(self):
         """Test password verification with correct password"""
-        from auth.password import get_password_hash, verify_password
+        from infrastructure.password import get_password_hash, verify_password
         
         password = "mypassword"
         hashed = get_password_hash(password)
@@ -318,7 +316,7 @@ class TestPasswordHashing:
     
     def test_verify_password_incorrect(self):
         """Test password verification with incorrect password"""
-        from auth.password import get_password_hash, verify_password
+        from infrastructure.password import get_password_hash, verify_password
         
         hashed = get_password_hash("mypassword")
         
@@ -346,9 +344,7 @@ class TestAuthorizationRoles:
     @pytest.mark.asyncio
     async def test_user_can_only_modify_own_solutions(self, async_client):
         """Test users can only modify their own solutions"""
-        from auth.jwt import create_access_token
-        from models.solution import Solution
-        from models.user import UserInDB
+        from infrastructure.jwt import create_access_token
         from datetime import datetime
         from bson import ObjectId
         
