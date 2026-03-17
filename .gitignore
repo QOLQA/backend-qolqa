@@ -10,6 +10,7 @@ logs/
 # Entorno virtual (si usas uno)
 venv/
 env/
+.venv/
 
 # Carpetas y archivos específicos de IDE
 .vscode/
