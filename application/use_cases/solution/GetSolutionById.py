@@ -2,7 +2,7 @@ from typing import List
 
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.entities.VersionEntity import VersionEntity
-from domain.repositories.solution.repo import ISolutionRepository
+from application.repositories.solution.repo import ISolutionRepository
 
 
 async def get_solution_by_id(

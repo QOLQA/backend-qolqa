@@ -1,6 +1,6 @@
 from application.dtos.solution.SolutionRequest import SolutionCreateRequest
 from domain.entities.SolutionEntity import SolutionEntity
-from domain.repositories.solution.repo import ISolutionRepository
+from application.repositories.solution.repo import ISolutionRepository
 from infrastructure.mappers.SolutionMapper import SolutionMapper
 
 

@@ -1,4 +1,4 @@
-from domain.repositories.query.repo import IQueryRepository
+from application.repositories.query.repo import IQueryRepository
 
 
 async def delete_queries_by_solution(

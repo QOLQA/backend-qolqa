@@ -1,6 +1,6 @@
 from domain.errors import Forbidden
-from domain.repositories.solution.repo import ISolutionRepository
-from domain.repositories.version.repo import IVersionRepository
+from application.repositories.solution.repo import ISolutionRepository
+from application.repositories.version.repo import IVersionRepository
 
 
 async def delete_solution(

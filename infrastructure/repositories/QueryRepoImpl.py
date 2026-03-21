@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from application.dtos.query.QueryRequest import QueryCreateRequest, QueryPartialUpdateRequest
 from domain.entities.QueryEntity import QueryEntity
 from domain.errors import Missing
-from domain.repositories.query.repo import IQueryRepository
+from application.repositories.query.repo import IQueryRepository
 from infrastructure.mappers import QueryMapper
 
 

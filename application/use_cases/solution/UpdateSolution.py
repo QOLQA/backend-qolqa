@@ -1,7 +1,7 @@
 from application.dtos.solution.SolutionRequest import SolutionPartialUpdateRequest
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.errors import Forbidden
-from domain.repositories.solution.repo import ISolutionRepository
+from application.repositories.solution.repo import ISolutionRepository
 
 
 async def update_solution(

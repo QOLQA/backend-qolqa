@@ -1,5 +1,5 @@
 from domain.entities.VersionEntity import VersionEntity
-from domain.repositories.version.repo import IVersionRepository
+from application.repositories.version.repo import IVersionRepository
 
 
 async def get_version_by_id(

@@ -1,7 +1,7 @@
 from typing import List
 
 from domain.entities.SolutionEntity import SolutionEntity
-from domain.repositories.solution.repo import ISolutionRepository
+from application.repositories.solution.repo import ISolutionRepository
 
 
 async def get_all_solutions_for_user(

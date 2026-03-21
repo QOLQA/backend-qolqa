@@ -1,6 +1,6 @@
 from application.dtos.query.QueryRequest import QueryCreateRequest
 from domain.entities.QueryEntity import QueryEntity
-from domain.repositories.query.repo import IQueryRepository
+from application.repositories.query.repo import IQueryRepository
 
 
 async def create_query(

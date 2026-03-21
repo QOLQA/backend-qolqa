@@ -1,5 +1,5 @@
 from domain.entities.auth.UserEntity import UserEntity
-from domain.repositories.user.repo import IUserRepository
+from application.repositories.user.repo import IUserRepository
 
 
 async def get_user_by_id(

@@ -7,7 +7,7 @@ from application.dtos.auth.AuthRequest import UserCreateRequest, UserUpdateReque
 from infrastructure.password import get_password_hash
 from domain.entities.auth.UserEntity import UserEntity
 from domain.errors import Duplicate, Missing
-from domain.repositories.user.repo import IUserRepository
+from application.repositories.user.repo import IUserRepository
 from infrastructure.mappers import UserMapper
 
 

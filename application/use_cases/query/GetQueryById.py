@@ -1,5 +1,5 @@
 from domain.entities.QueryEntity import QueryEntity
-from domain.repositories.query.repo import IQueryRepository
+from application.repositories.query.repo import IQueryRepository
 
 
 async def get_query_by_id(

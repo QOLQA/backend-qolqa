@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, TypeVar, List
 
-from domain.repositories.user.repo import Repository
+from application.repositories.user.repo import Repository
 
 T = TypeVar('T')
 TCreate = TypeVar('TCreate')

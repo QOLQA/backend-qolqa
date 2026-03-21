@@ -1,4 +1,4 @@
-from domain.repositories.version.repo import IVersionRepository
+from application.repositories.version.repo import IVersionRepository
 
 
 async def delete_version(
