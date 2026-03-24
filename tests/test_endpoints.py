@@ -94,6 +94,7 @@ class TestSolutionsEndpoints:
             assert response.status_code == status.HTTP_201_CREATED
             data = response.json()
             assert data["name"] == mock_solution_data["name"]
+            assert "_id" in data
     
     @pytest.mark.asyncio
     async def test_create_solution_invalid_data(self, authenticated_client, auth_headers):
@@ -144,6 +145,7 @@ class TestSolutionsEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["name"] == mock_solution_data["name"]
+            assert data["_id"] == solution_id
     
     @pytest.mark.asyncio
     async def test_get_solution_not_found(self, authenticated_client, auth_headers):
@@ -185,6 +187,7 @@ class TestSolutionsEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["name"] == mock_partial_update_data["name"]
+            assert data["_id"] == solution_id
     
     @pytest.mark.asyncio
     async def test_update_solution_partial_fields(self, authenticated_client, mock_user, auth_headers):
@@ -282,6 +285,7 @@ class TestVersionEndpoints:
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["description"] == version_update["description"]
+            assert data["_id"] == version_id
     
     @pytest.mark.asyncio
     async def test_update_version_nonexistent_solution(self, authenticated_client, auth_headers):

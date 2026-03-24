@@ -8,7 +8,7 @@ from application.dtos.version.VersionResponse import VersionResponse
 class SolutionResponse(BaseModel):
     """DTO for solution API responses. id is always a plain string."""
 
-    id: str = Field(min_length=1)
+    id: str = Field(min_length=1, serialization_alias='_id')
     name: str
     user_id: str
     last_version_saved: str

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional
+from typing import Generic, TypeVar, List, Optional, Union
 
 # Definir un tipo generico T para representar el modelo
 T = TypeVar('T')
@@ -9,7 +9,7 @@ TUpdate = TypeVar('TUpdate')
 
 class Repository(ABC, Generic[T, TCreate, TUpdate]):
     @abstractmethod
-    async def get_by_id(self, id: str | int) -> T:
+    async def get_by_id(self, id: Union[str, int]) -> T:
         '''
         Obtiene un elemento por su ID.
         '''
@@ -30,14 +30,14 @@ class Repository(ABC, Generic[T, TCreate, TUpdate]):
         pass
 
     @abstractmethod
-    async def update(self, id: str | int, entity_update: TUpdate) -> T:
+    async def update(self, id: Union[str, int], entity_update: TUpdate) -> T:
         '''
         Actualiza un elemento existente en el repositorio.
         '''
         pass
 
     @abstractmethod
-    async def delete(self, id: str | int) -> None:
+    async def delete(self, id: Union[str, int]) -> None:
         '''
         Elimina un elemento del repositorio.
         '''

@@ -8,6 +8,7 @@ __pycache__/
 logs/
 
 # Entorno virtual (si usas uno)
+.venv/
 venv/
 env/
 

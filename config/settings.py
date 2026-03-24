@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator, ValidationError
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
     
     # CORS Settings
     # Using str type with validator to avoid JSON parsing issues
-    allowed_origins: str | list[str] = Field(
+    allowed_origins: Union[str, list[str]] = Field(
         default=["http://localhost:3000", "http://localhost:5173"]
     )
     
