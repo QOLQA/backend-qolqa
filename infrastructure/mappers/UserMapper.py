@@ -3,6 +3,7 @@ from datetime import datetime
 from application.dtos.auth.AuthRequest import UserCreateRequest
 from application.dtos.auth.AuthResponse import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
+from domain.enums.RoleEnum import RoleEnum
 
 
 class UserMapper:
@@ -18,6 +19,9 @@ class UserMapper:
             full_name=raw.get('full_name'),
             is_active=raw.get('is_active', True),
             created_at=raw.get('created_at', datetime.utcnow()),
+            profile_picture_url=raw.get('profile_picture_url'),
+            roles=[RoleEnum(r) for r in raw.get('roles', [])] or [RoleEnum.user],
+            token_version=raw.get('token_version', 0),
         )
 
     @staticmethod
@@ -31,6 +35,9 @@ class UserMapper:
             'hashed_password': hashed_password,
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow(),
+            'profile_picture_url': None,
+            'roles': [RoleEnum.user.value],
+            'token_version': 0,
         }
 
     @staticmethod
@@ -43,4 +50,6 @@ class UserMapper:
             full_name=entity.full_name,
             is_active=entity.is_active,
             created_at=entity.created_at,
+            profile_picture_url=entity.profile_picture_url,
+            roles=entity.roles,
         )

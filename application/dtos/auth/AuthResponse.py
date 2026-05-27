@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
+
+from domain.enums.RoleEnum import RoleEnum
 
 
 class UserResponse(BaseModel):
@@ -13,6 +15,8 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     is_active: bool
     created_at: datetime
+    profile_picture_url: Optional[str] = None
+    roles: List[RoleEnum] = []
 
 
 class TokenResponse(BaseModel):
