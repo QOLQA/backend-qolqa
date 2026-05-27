@@ -51,3 +51,10 @@ interfaces/serviceAccount.json
 **/serviceAccount.json
 
 .devcontainer
+
+# AI tooling — local skill caches, not project source
+.atl/
+.agents/
+.gga
+.claude/
+skills-lock.json
