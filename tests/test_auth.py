@@ -27,6 +27,8 @@ class TestJWTAuthentication:
                 email="test@example.com",
                 is_active=True,
                 created_at=datetime.utcnow(),
+                roles=[],
+                token_version=0,
             )
             mock_auth.return_value = mock_entity
             mock_token.return_value = TokenResponse(
@@ -48,14 +50,16 @@ class TestJWTAuthentication:
     @pytest.mark.asyncio
     async def test_login_invalid_credentials(self, async_client):
         """Test login with invalid credentials"""
+        from domain.errors import InvalidCredentials
+
         with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
-            mock_auth.return_value = None
-            
+            mock_auth.side_effect = InvalidCredentials()
+
             response = await async_client.post(
                 "/auth/login",
                 data={"username": "nonexistent", "password": "wrongpassword"}
             )
-            
+
             assert response.status_code == status.HTTP_401_UNAUTHORIZED
     
     @pytest.mark.asyncio
@@ -68,46 +72,42 @@ class TestJWTAuthentication:
     @pytest.mark.asyncio
     async def test_access_protected_endpoint_with_valid_token(self, async_client):
         """Test accessing protected endpoint with valid token"""
-        from infrastructure.jwt import create_access_token
         from datetime import datetime
         from bson import ObjectId
-        
-        # Create valid ObjectId for user
+        from main import app as fastapi_app
+        from api.dependencies.auth import get_current_user
+        from domain.entities.auth.UserEntity import UserEntity
+
         user_id = str(ObjectId())
-        
-        # Create a valid JWT token
-        token_data = {
-            "sub": "testuser",
-            "user_id": user_id
-        }
-        valid_token = create_access_token(token_data)
-        
-        # Mock use case functions (clean architecture paths)
-        with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
-             patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
-            
-            from domain.entities.auth.UserEntity import UserEntity
-            
-            # Mock the user retrieval — return UserEntity (clean arch entity)
-            mock_entity = UserEntity(
-                id=user_id,
-                username="testuser",
-                email="test@example.com",
-                is_active=True,
-                created_at=datetime.utcnow(),
-            )
-            mock_get_user.return_value = mock_entity
-            
-            # Mock empty solutions list for this user
-            mock_get_all.return_value = []
-            
-            response = await async_client.get(
-                "/solutions",
-                headers={"Authorization": f"Bearer {valid_token}"}
-            )
-            
-            assert response.status_code == status.HTTP_200_OK
-            assert response.json() == []
+
+        mock_entity = UserEntity(
+            id=user_id,
+            username="testuser",
+            email="test@example.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        async def override_current_user():
+            return mock_entity
+
+        fastapi_app.dependency_overrides[get_current_user] = override_current_user
+
+        try:
+            with patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
+                mock_get_all.return_value = []
+
+                response = await async_client.get(
+                    "/solutions",
+                    headers={"Authorization": "Bearer fake_but_bypassed"}
+                )
+
+                assert response.status_code == status.HTTP_200_OK
+                assert response.json() == []
+        finally:
+            fastapi_app.dependency_overrides.pop(get_current_user, None)
     
     @pytest.mark.asyncio
     async def test_access_protected_endpoint_without_token(self, async_client):
@@ -138,6 +138,8 @@ class TestJWTAuthentication:
             {
                 "sub": "testuser",
                 "user_id": "123",
+                "roles": [],
+                "token_version": 0,
                 "exp": datetime.utcnow() - timedelta(minutes=30)
             },
             settings.secret_key,
@@ -182,6 +184,8 @@ class TestUserRegistration:
                 email="newuser@example.com",
                 is_active=True,
                 created_at=datetime.utcnow(),
+                roles=[],
+                token_version=0,
             )
             
             new_user = {
@@ -269,14 +273,12 @@ class TestJWTUtilities:
         assert "exp" in payload
     
     def test_decode_token_invalid(self):
-        """Test decoding invalid JWT token"""
+        """Test decoding invalid JWT token raises domain error (not HTTPException)"""
         from infrastructure.jwt import decode_access_token
-        from fastapi import HTTPException
-        
-        with pytest.raises(HTTPException) as exc_info:
+        from domain.errors import InvalidToken
+
+        with pytest.raises(InvalidToken):
             decode_access_token("invalid.token.here")
-        
-        assert exc_info.value.status_code == 401
     
     def test_token_includes_expiration(self):
         """Test that generated tokens include expiration time"""
@@ -325,67 +327,129 @@ class TestPasswordHashing:
 
 @pytest.mark.auth
 class TestAuthorizationRoles:
-    """Test suite for role-based authorization (future feature)"""
-    
-    @pytest.mark.skip(reason="Role-based auth not yet implemented")
+    """Test suite for role-based authorization"""
+
     @pytest.mark.asyncio
-    async def test_admin_access_admin_endpoint(self, async_client):
-        """Test admin user can access admin endpoints"""
-        # TODO: Implement when roles are added
-        pass
-    
-    @pytest.mark.skip(reason="Role-based auth not yet implemented")
+    async def test_admin_can_access_admin_endpoint(self, async_client):
+        """Test admin user can access admin endpoints — receives 200, not 403"""
+        from datetime import datetime
+        from bson import ObjectId
+        from main import app as fastapi_app
+        from api.dependencies.auth import get_current_user, require_admin
+        from domain.entities.auth.UserEntity import UserEntity
+        from domain.enums.RoleEnum import RoleEnum
+
+        admin_user = UserEntity(
+            id=str(ObjectId()),
+            username="adminuser",
+            email="admin@example.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[RoleEnum.admin],
+        )
+
+        async def override_current_user() -> UserEntity:
+            return admin_user
+
+        async def override_require_admin() -> UserEntity:
+            return admin_user
+
+        fastapi_app.dependency_overrides[get_current_user] = override_current_user
+        fastapi_app.dependency_overrides[require_admin] = override_require_admin
+
+        try:
+            with patch('api.controllers.admin.UserRepositoryImpl.get_all', new_callable=AsyncMock) as mock_get_all:
+                mock_get_all.return_value = []
+                response = await async_client.get("/admin/users")
+        finally:
+            fastapi_app.dependency_overrides.pop(get_current_user, None)
+            fastapi_app.dependency_overrides.pop(require_admin, None)
+
+        assert response.status_code == status.HTTP_200_OK
+
     @pytest.mark.asyncio
     async def test_regular_user_denied_admin_endpoint(self, async_client):
-        """Test regular user cannot access admin endpoints"""
-        # TODO: Implement when roles are added
-        pass
-    
+        """Test regular user (no admin role) receives 403 on admin endpoints"""
+        from datetime import datetime
+        from bson import ObjectId
+        from main import app as fastapi_app
+        from api.dependencies.auth import get_current_user
+        from domain.entities.auth.UserEntity import UserEntity
+        from infrastructure.jwt import create_access_token
+
+        regular_user = UserEntity(
+            id=str(ObjectId()),
+            username="regularuser",
+            email="regular@example.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        async def override_current_user() -> UserEntity:
+            return regular_user
+
+        token = create_access_token({
+            "sub": regular_user.username,
+            "user_id": regular_user.id,
+            "roles": [],
+            "token_version": 0,
+        })
+
+        fastapi_app.dependency_overrides[get_current_user] = override_current_user
+
+        try:
+            response = await async_client.get(
+                "/admin/users",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        finally:
+            fastapi_app.dependency_overrides.pop(get_current_user, None)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
     @pytest.mark.asyncio
     async def test_user_can_only_modify_own_solutions(self, async_client):
         """Test users can only modify their own solutions"""
-        from infrastructure.jwt import create_access_token
         from datetime import datetime
         from bson import ObjectId
-        
-        # Create valid ObjectIds
+        from main import app as fastapi_app
+        from api.dependencies.auth import get_current_user
+        from domain.entities.auth.UserEntity import UserEntity
+
         user1_id = str(ObjectId())
-        user2_id = str(ObjectId())
-        
-        # Create a valid JWT token for user1
-        token_data = {
-            "sub": "user1",
-            "user_id": user1_id
-        }
-        valid_token = create_access_token(token_data)
-        
-        with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
-             patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
-            
-            from domain.entities.auth.UserEntity import UserEntity
-            
-            # Mock current user (user1) — return UserEntity (clean arch entity)
-            current_user = UserEntity(
-                id=user1_id,
-                username="user1",
-                email="user1@example.com",
-                is_active=True,
-                created_at=datetime.utcnow(),
-            )
-            mock_get_user.return_value = current_user
-            
-            # Solution owned by another user — use case raises Forbidden
-            from domain.errors import Forbidden
-            mock_get_one.side_effect = Forbidden(msg="Not authorized to modify this solution")
-            other_solution_id = str(ObjectId())
-            
-            response = await async_client.patch(
-                f"/solutions/{other_solution_id}",
-                json={"name": "Hacked Name"},
-                headers={"Authorization": f"Bearer {valid_token}"}
-            )
-            
-            # Should be forbidden
-            assert response.status_code == status.HTTP_403_FORBIDDEN
-            assert "Not authorized" in response.json()["detail"]
+
+        current_user = UserEntity(
+            id=user1_id,
+            username="user1",
+            email="user1@example.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        async def override_current_user() -> UserEntity:
+            return current_user
+
+        fastapi_app.dependency_overrides[get_current_user] = override_current_user
+
+        try:
+            with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
+                from domain.errors import Forbidden
+                mock_get_one.side_effect = Forbidden(msg="Not authorized to modify this solution")
+                other_solution_id = str(ObjectId())
+
+                response = await async_client.patch(
+                    f"/solutions/{other_solution_id}",
+                    json={"name": "Hacked Name"},
+                    headers={"Authorization": "Bearer fake_but_bypassed"}
+                )
+
+                assert response.status_code == status.HTTP_403_FORBIDDEN
+                assert "Not authorized" in response.json()["detail"]
+        finally:
+            fastapi_app.dependency_overrides.pop(get_current_user, None)
 
