@@ -2,7 +2,7 @@
 Authentication controller (Clean Architecture)
 Handles login, registration, and user profile endpoints.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -11,74 +11,16 @@ from application.dtos.auth.AuthRequest import UserCreateRequest
 from application.dtos.auth.AuthResponse import UserResponse, TokenResponse
 from application.use_cases.auth.AuthenticateUser import authenticate_user
 from application.use_cases.auth.RegisterUser import register_user
-from application.use_cases.auth.GetUserById import get_user_by_id
-from application.use_cases.auth.CreateUserToken import create_user_token
+from infrastructure.token_service import create_user_token
 from infrastructure.mappers import UserMapper
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
-from infrastructure.jwt import get_token_data
 from domain.entities.auth.UserEntity import UserEntity as User
 from api.handle_errors import handle_common_errors
-from infrastructure.db_factory import get_database
+from api.dependencies.auth import get_current_user, get_user_repository
 from infrastructure.audit import log_registration, log_auth_attempt
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
-
-
-def get_user_repository(database=Depends(get_database)) -> UserRepositoryImpl:
-    """Dependency: always returns the MongoDB UserRepositoryImpl."""
-    return UserRepositoryImpl(database)
-
-
-async def get_current_user(
-    token_data: dict = Depends(get_token_data),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
-) -> User:
-    """
-    Get current authenticated user from JWT token.
-
-    Args:
-        token_data: Decoded JWT token data
-        repository: UserRepositoryImpl dependency
-
-    Returns:
-        Current authenticated user as models.user.User
-
-    Raises:
-        HTTPException: If user not found or inactive
-    """
-    username: str = token_data.get("sub")
-    user_id: str = token_data.get("user_id")
-
-    if username is None or user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    try:
-        entity = await get_user_by_id(repository, user_id)
-
-        if not entity.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Inactive user",
-            )
-
-        # Return as models.user.User for backward compatibility with other controllers
-        return User(
-            id=entity.id,
-            username=entity.username,
-            email=entity.email,
-            full_name=entity.full_name,
-            is_active=entity.is_active,
-            created_at=entity.created_at,
-        )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        await handle_common_errors(exc)
 
 
 @router.post('/register', response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -154,21 +96,6 @@ async def login(
             form_data.password,
         )
 
-        if not entity:
-            # Audit log: failed login attempt
-            log_auth_attempt(
-                username=form_data.username,
-                success=False,
-                ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent"),
-                reason="Invalid credentials",
-            )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
         token = await create_user_token(entity)
 
         # Audit log: successful login
@@ -180,19 +107,8 @@ async def login(
         )
 
         return token
-    except HTTPException as http_exc:
-        # If it's a 401, log failed attempt (in case it wasn't logged above)
-        if http_exc.status_code == status.HTTP_401_UNAUTHORIZED:
-            log_auth_attempt(
-                username=form_data.username,
-                success=False,
-                ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent"),
-                reason=str(http_exc.detail),
-            )
-        raise
     except Exception as exc:
-        # Log unexpected errors
+        # Log failed or unexpected errors before delegating to error handler
         log_auth_attempt(
             username=form_data.username,
             success=False,
@@ -216,11 +132,4 @@ async def get_current_user_profile(
     Returns:
         UserResponse with user profile information
     """
-    return UserResponse(
-        id=str(current_user.id),
-        username=current_user.username,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        is_active=current_user.is_active,
-        created_at=current_user.created_at,
-    )
+    return UserMapper.to_response(current_user)
