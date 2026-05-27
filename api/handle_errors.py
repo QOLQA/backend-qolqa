@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status, Request
 import logging
 
-from domain.errors import Format, Missing, Duplicate, NotFoundError, Forbidden, InvalidCredentials
+from domain.errors import Format, Missing, Duplicate, NotFoundError, Forbidden, InvalidCredentials, InvalidToken
 from config.settings import settings
 
 # Logger for unhandled errors
@@ -37,6 +37,12 @@ async def handle_common_errors(exc: Exception, request: Request | None = None) -
             detail=exc.msg,
         )
     if isinstance(exc, InvalidCredentials):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=exc.msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if isinstance(exc, InvalidToken):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=exc.msg,

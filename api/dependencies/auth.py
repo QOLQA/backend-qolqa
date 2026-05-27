@@ -6,10 +6,26 @@ from fastapi import Depends, HTTPException, status
 from api.handle_errors import handle_common_errors
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
-from infrastructure.jwt import get_token_data
+from domain.errors import InvalidToken
+from infrastructure.jwt import decode_access_token, oauth2_scheme
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
 from application.use_cases.auth.GetUserById import get_user_by_id
 from infrastructure.db_factory import get_database
+
+
+def get_token_data(token: str = Depends(oauth2_scheme)) -> dict:
+    """
+    Extract and validate data from JWT token.
+    Raises HTTP 401 if token is invalid or expired.
+    """
+    try:
+        return decode_access_token(token)
+    except InvalidToken as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=exc.msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 def get_user_repository(database=Depends(get_database)) -> UserRepositoryImpl:
