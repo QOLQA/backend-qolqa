@@ -1,8 +1,9 @@
 import contextlib
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import logging
 
+from pydantic import BaseModel
 from fastapi import FastAPI, status, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -12,12 +13,15 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.controllers.auth import router as auth_router
+from api.controllers.user import router as user_router
+from api.controllers.admin import router as admin_router
 from api.controllers.query import router as queries_router
 from api.controllers.version import router as versions_router
 from api.controllers.solution import router as solutions_router
 from config.settings import settings, TypeDB
 from api.handle_errors import handle_common_errors
 from infrastructure.audit import log_rate_limit_exceeded
+from infrastructure.jwt import decode_access_token
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +30,21 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+
+class DatabaseHealthStatus(BaseModel):
+    type: str
+    status: str
+    error: str | None = None
+
+
+class HealthResponse(BaseModel):
+    status: str
+    timestamp: str
+    service: str
+    environment: str
+    database: DatabaseHealthStatus
+
 
 # Configurar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -45,15 +64,14 @@ async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) ->
         # Check if there's an Authorization header
         auth_header = request.headers.get("authorization")
         if auth_header and auth_header.startswith("Bearer "):
-            from infrastructure.jwt import decode_access_token
             token = auth_header.replace("Bearer ", "")
             try:
                 payload = decode_access_token(token)
                 user_id = payload.get("user_id")
-            except:
-                pass  # Token invalid or expired, remain anonymous
-    except:
-        pass  # No auth, remain anonymous
+            except Exception as token_exc:
+                logger.debug("Token decode failed in rate-limit handler: %s", type(token_exc).__name__)
+    except Exception as auth_exc:
+        logger.debug("Auth header parse failed in rate-limit handler: %s", type(auth_exc).__name__)
     
     # Log to audit system
     log_rate_limit_exceeded(
@@ -278,25 +296,27 @@ async def global_exception_handler(request: Request, exc: Exception):
             exc_info=True
         )
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "Internal server error"}
         )
 
 
 app.include_router(auth_router, prefix='/auth', tags=['Authentication'])
+app.include_router(user_router, prefix='/users', tags=['Users'])
+app.include_router(admin_router, prefix='/admin', tags=['Admin'])
 app.include_router(queries_router, prefix='/queries', tags=['Queries'])
 app.include_router(versions_router, prefix='/versions', tags=['Versions'])
 app.include_router(solutions_router, prefix='/solutions', tags=['Solutions'])
 
 
-@app.get('/health', tags=['Health'])
+@app.get('/health', tags=['Health'], response_model=HealthResponse)
 async def health_check():
     """
     Health check endpoint to verify service and database connectivity
     """
     health_status = {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "service": "qolqa-api",
         "environment": settings.environment,
         "database": {
@@ -326,7 +346,8 @@ async def health_check():
     except Exception as e:
         health_status["status"] = "unhealthy"
         health_status["database"]["status"] = "disconnected"
-        health_status["database"]["error"] = str(e)
+        # Log internally — do not expose raw error details in the response
+        logger.error("Health check database error: %s", type(e).__name__, exc_info=True)
         
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
