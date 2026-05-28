@@ -47,6 +47,7 @@ class TestSolutionValidation:
         assert solution.last_version_saved == "unknown"
         assert solution.src_img == "http://unknown.es"
     
+    @pytest.mark.skip(reason="user_id removed from SolutionCreate — injected by endpoint from current_user")
     def test_solution_with_user_id(self):
         """Test solution with user_id"""
         data = {

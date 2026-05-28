@@ -2,6 +2,7 @@ from typing import Optional
 
 from infrastructure.password import verify_password
 from domain.entities.auth.UserEntity import UserEntity
+from domain.errors import InvalidCredentials
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
 
 
@@ -9,7 +10,7 @@ async def authenticate_user(
     repository: UserRepositoryImpl,
     username: str,
     password: str,
-) -> Optional[UserEntity]:
+) -> UserEntity:
     """
     Authenticate a user by username or email and password.
 
@@ -19,7 +20,10 @@ async def authenticate_user(
         password: Plain text password
 
     Returns:
-        UserEntity if authentication successful, None otherwise
+        UserEntity if authentication successful
+
+    Raises:
+        InvalidCredentials: If username/password combination is invalid or user is inactive
     """
     # Try username first, then fall back to email
     user_entity = await repository.get_by_username(username)
@@ -28,18 +32,15 @@ async def authenticate_user(
         user_entity = await repository.get_by_email(username)
 
     if not user_entity:
-        return None
+        raise InvalidCredentials()
 
     # Retrieve hashed_password from the raw document (infra-level detail)
     hashed_password = await repository.get_hashed_password(user_entity.username)
 
-    if hashed_password is None:
-        return None
-
-    if not verify_password(password, hashed_password):
-        return None
+    if hashed_password is None or not verify_password(password, hashed_password):
+        raise InvalidCredentials()
 
     if not user_entity.is_active:
-        return None
+        raise InvalidCredentials()
 
     return user_entity

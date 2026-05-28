@@ -1,21 +1,21 @@
 from fastapi import HTTPException, status, Request
 import logging
 
-from domain.errors import Format, Missing, Duplicate, NotFoundError, Forbidden
+from domain.errors import Format, Missing, Duplicate, NotFoundError, Forbidden, InvalidCredentials, InvalidToken
 from config.settings import settings
 
-# Logger para errores no manejados
+# Logger for unhandled errors
 logger = logging.getLogger(__name__)
 
-async def handle_common_errors(exc: Exception, request: Request = None):
+async def handle_common_errors(exc: Exception, request: Request | None = None) -> None:
     """
-    Maneja errores de forma segura sin exponer información sensible
-    
+    Safely handle exceptions without exposing sensitive internal details.
+
     Args:
-        exc: Excepción a manejar
-        request: Request de FastAPI (opcional, para logging)
+        exc: Exception to handle
+        request: FastAPI Request (optional, used for logging context)
     """
-    # Errores conocidos y controlados - estos son seguros de exponer
+    # Known, controlled domain errors — safe to expose to the client
     if isinstance(exc, Format):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -36,28 +36,40 @@ async def handle_common_errors(exc: Exception, request: Request = None):
             status_code=status.HTTP_403_FORBIDDEN,
             detail=exc.msg,
         )
-    
-    # Para errores no esperados:
-    # 1. Registrar detalles completos en logs (incluyendo stack trace)
+    if isinstance(exc, InvalidCredentials):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=exc.msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if isinstance(exc, InvalidToken):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=exc.msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Unexpected errors:
+    # 1. Log full details including stack trace for internal observability
     logger.error(
         f"Unhandled error: {type(exc).__name__}: {str(exc)}",
-        exc_info=True,  # Incluye stack trace completo en logs
+        exc_info=True,  # Includes full stack trace in logs
         extra={
             "path": request.url.path if request else "unknown",
             "method": request.method if request else "unknown",
             "error_type": type(exc).__name__,
         }
     )
-    
-    # 2. Retornar mensaje genérico al cliente (NO revelar detalles internos)
+
+    # 2. Return a generic message to the client — never expose internal details
     if settings.debug and settings.environment == "development":
-        # Solo en desarrollo con debug=True, mostrar detalles
+        # In development with debug=True, show error details
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {type(exc).__name__}: {str(exc)}"
         )
     else:
-        # En producción, mensaje genérico
+        # In production, return a generic message
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error. Please contact support if the problem persists."

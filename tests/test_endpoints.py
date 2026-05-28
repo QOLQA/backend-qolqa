@@ -12,26 +12,13 @@ class TestSolutionsEndpoints:
     """Test suite for Solutions API endpoints"""
     
     @pytest.mark.asyncio
-    async def test_get_all_solutions_empty(self, async_client, mock_user, auth_headers):
+    async def test_get_all_solutions_empty(self, authenticated_client, mock_user, auth_headers):
         """Test getting all solutions when database is empty"""
-        from domain.entities.auth.UserEntity import UserEntity
-
-        mock_entity = UserEntity(
-            id=str(mock_user.id),
-            username=mock_user.username,
-            email=mock_user.email,
-            is_active=mock_user.is_active,
-            created_at=mock_user.created_at,
-        )
-
-        with patch('api.controllers.auth.get_user_by_id', new_callable=AsyncMock) as mock_get_user, \
-             patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
-            
-            mock_get_user.return_value = mock_entity
+        with patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             mock_get_all.return_value = []
-            
-            response = await async_client.get("/solutions", headers=auth_headers)
-            
+
+            response = await authenticated_client.get("/solutions", headers=auth_headers)
+
             assert response.status_code == status.HTTP_200_OK
             assert response.json() == []
     
@@ -156,7 +143,7 @@ class TestSolutionsEndpoints:
             response = await authenticated_client.get("/solutions/nonexistent", headers=auth_headers)
             
             # The error handling should catch this
-            assert response.status_code in [status.HTTP_404_NOT_FOUND, status.HTTP_500_INTERNAL_SERVER_ERROR]
+            assert response.status_code == status.HTTP_404_NOT_FOUND
     
     @pytest.mark.asyncio
     async def test_update_solution_success(self, authenticated_client, mock_user, mock_partial_update_data, auth_headers):
@@ -231,7 +218,7 @@ class TestSolutionsEndpoints:
                 headers=auth_headers
             )
             
-            assert response.status_code in [status.HTTP_404_NOT_FOUND, status.HTTP_500_INTERNAL_SERVER_ERROR]
+            assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.integration
@@ -297,7 +284,7 @@ class TestVersionEndpoints:
                 headers=auth_headers
             )
             
-            assert response.status_code in [status.HTTP_404_NOT_FOUND, status.HTTP_500_INTERNAL_SERVER_ERROR]
+            assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.integration
@@ -324,6 +311,7 @@ class TestSolutionValidationEndpoints:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     
     @pytest.mark.asyncio
+    @pytest.mark.skip(reason="queries field removed from SolutionCreateRequest — extra fields are ignored by Pydantic")
     async def test_create_solution_with_wrong_type_queries(self, authenticated_client, auth_headers):
         """Test creating solution with wrong type for queries"""
         invalid_data = {

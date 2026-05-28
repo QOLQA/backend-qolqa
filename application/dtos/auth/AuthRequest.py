@@ -1,6 +1,8 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from domain.enums.RoleEnum import RoleEnum
 
 
 class UserCreateRequest(BaseModel):
@@ -47,3 +49,14 @@ class UserUpdateRequest(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = Field(None, max_length=100)
     is_active: Optional[bool] = None
+    profile_picture_url: Optional[str] = None
+
+
+class AdminUserUpdateRequest(BaseModel):
+    """DTO for admin updating any user. Includes roles and is_active."""
+
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = Field(None, max_length=100)
+    profile_picture_url: Optional[str] = None
+    is_active: Optional[bool] = None
+    roles: Optional[List[RoleEnum]] = None

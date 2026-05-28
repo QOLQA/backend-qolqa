@@ -1,9 +1,9 @@
-from typing import List, Optional
+from __future__ import annotations
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from application.dtos.auth.AuthRequest import UserCreateRequest, UserUpdateRequest
+from application.dtos.auth.AuthRequest import UserCreateRequest, UserUpdateRequest, AdminUserUpdateRequest
 from infrastructure.password import get_password_hash
 from domain.entities.auth.UserEntity import UserEntity
 from domain.errors import Duplicate, Missing
@@ -38,13 +38,13 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
 
         return UserMapper.to_entity(raw)
 
-    async def get_all(self) -> List[UserEntity]:
+    async def get_all(self) -> list[UserEntity]:
         """Retrieve all users."""
         cursor = self.collection.find()
         raws = await cursor.to_list(length=None)
         return [UserMapper.to_entity(raw) for raw in raws]
 
-    async def get_by_username(self, username: str) -> Optional[UserEntity]:
+    async def get_by_username(self, username: str) -> UserEntity | None:
         """Retrieve a user by username. Returns None if not found."""
         raw = await self.collection.find_one({'username': username.lower()})
 
@@ -53,7 +53,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
 
         return UserMapper.to_entity(raw)
 
-    async def get_by_email(self, email: str) -> Optional[UserEntity]:
+    async def get_by_email(self, email: str) -> UserEntity | None:
         """Retrieve a user by email. Returns None if not found."""
         raw = await self.collection.find_one({'email': email.lower()})
 
@@ -62,7 +62,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
 
         return UserMapper.to_entity(raw)
 
-    async def get_hashed_password(self, username: str) -> Optional[str]:
+    async def get_hashed_password(self, username: str) -> str | None:
         """Return only the hashed_password field for credential verification.
 
         This is an auth-specific infrastructure helper — not part of IUserRepository.
@@ -104,7 +104,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
 
         return await self.get_by_id(str(result.inserted_id))
 
-    async def update(self, id: str, entity_update: UserUpdateRequest) -> UserEntity:
+    async def update(self, id: str, entity_update: UserUpdateRequest | AdminUserUpdateRequest) -> UserEntity:
         """Partially update a user. Returns the updated entity."""
         if not ObjectId.is_valid(str(id)):
             raise Missing(msg=f'Invalid user id format: {id}')
@@ -112,7 +112,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
         # Verify exists
         await self.get_by_id(id)
 
-        update_data = entity_update.model_dump(exclude_unset=True)
+        update_data = entity_update.model_dump(exclude_unset=True, mode='json')
         if not update_data:
             return await self.get_by_id(id)
 
