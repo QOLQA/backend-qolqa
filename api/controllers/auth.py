@@ -7,10 +7,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from application.dtos.auth.AuthRequest import UserCreateRequest
-from application.dtos.auth.AuthResponse import UserResponse, TokenResponse
+from application.dtos.auth.AuthRequest import UserCreateRequest, GoogleLoginRequest
+from application.dtos.auth.AuthResponse import UserResponse, TokenResponse, GoogleLoginResponse
 from application.use_cases.auth.AuthenticateUser import authenticate_user
 from application.use_cases.auth.RegisterUser import register_user
+from application.use_cases.auth.GoogleLogin import google_login
 from infrastructure.token_service import create_user_token
 from infrastructure.mappers import UserMapper
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
@@ -18,6 +19,7 @@ from domain.entities.auth.UserEntity import UserEntity as User
 from api.handle_errors import handle_common_errors
 from api.dependencies.auth import get_current_user, get_user_repository
 from infrastructure.audit import log_registration, log_auth_attempt
+from config.settings import settings
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -133,3 +135,59 @@ async def get_current_user_profile(
         UserResponse with user profile information
     """
     return UserMapper.to_response(current_user)
+
+
+@router.post('/google', response_model=GoogleLoginResponse)
+@limiter.limit("5/minute")
+async def google_login_endpoint(
+    request: Request,
+    login_request: GoogleLoginRequest,
+    repository: UserRepositoryImpl = Depends(get_user_repository),
+) -> GoogleLoginResponse:
+    """
+    Google OAuth login endpoint.
+
+    Args:
+        request: FastAPI Request (for audit logging and rate limiting)
+        login_request: GoogleLoginRequest DTO with Google ID token
+        repository: UserRepositoryImpl dependency
+
+    Returns:
+        GoogleLoginResponse with access token and user profile
+
+    Raises:
+        HTTPException: If Google client not configured, token invalid, or account issues
+    """
+    try:
+        entity = await google_login(
+            repository,
+            login_request.credential,
+            settings.google_client_id,
+        )
+
+        token = await create_user_token(entity)
+        user_response = UserMapper.to_response(entity)
+
+        # Audit log: successful Google login
+        log_auth_attempt(
+            username=entity.username,
+            success=True,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+
+        return GoogleLoginResponse(
+            access_token=token.access_token,
+            token_type=token.token_type,
+            user=user_response,
+        )
+    except Exception as exc:
+        # Log failed or unexpected errors before delegating to error handler
+        log_auth_attempt(
+            username="google-login",
+            success=False,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            reason=f"Error: {type(exc).__name__}",
+        )
+        await handle_common_errors(exc, request)

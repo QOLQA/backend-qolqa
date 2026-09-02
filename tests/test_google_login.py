@@ -820,3 +820,145 @@ class TestAuthenticateUserGuard:
 
         with pytest.raises(InvalidCredentials):
             await authenticate_user(mock_repo, "inactiveuser", "anypassword")
+
+
+# ============================================================
+# WU4: API Layer + Config Tests
+# ============================================================
+
+class TestHandleErrorsGoogleExceptions:
+    """handle_common_errors mappings for Google-specific exceptions."""
+
+    @pytest.mark.asyncio
+    async def test_handle_errors_password_required_403(self):
+        from api.handle_errors import handle_common_errors
+        from domain.errors import PasswordRequiredForLocalLogin
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as exc_info:
+            await handle_common_errors(PasswordRequiredForLocalLogin())
+
+        assert exc_info.value.status_code == 403
+        assert exc_info.value.detail == "This account uses Google login. Set a password or continue with Google."
+
+    @pytest.mark.asyncio
+    async def test_handle_errors_invalid_google_token_401(self):
+        from api.handle_errors import handle_common_errors
+        from domain.errors import InvalidGoogleToken
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as exc_info:
+            await handle_common_errors(InvalidGoogleToken())
+
+        assert exc_info.value.status_code == 401
+        assert exc_info.value.detail == "Invalid Google token"
+        assert exc_info.value.headers.get("WWW-Authenticate") == "Bearer"
+
+    @pytest.mark.asyncio
+    async def test_handle_errors_google_not_configured_503(self):
+        from api.handle_errors import handle_common_errors
+        from domain.errors import GoogleLoginNotConfigured
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as exc_info:
+            await handle_common_errors(GoogleLoginNotConfigured())
+
+        assert exc_info.value.status_code == 503
+        assert exc_info.value.detail == "Google login is not configured"
+
+
+class TestPostGoogleAuthEndpoint:
+    """POST /auth/google endpoint tests."""
+
+    @pytest.mark.asyncio
+    async def test_post_google_auth_happy_new_user(self, async_client):
+        from datetime import datetime
+        from bson import ObjectId
+        from domain.entities.auth.UserEntity import UserEntity
+        from application.dtos.auth.AuthResponse import TokenResponse
+
+        mock_user = UserEntity(
+            id=str(ObjectId()),
+            username="newgoogleuser",
+            email="new@gmail.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+            mock_use_case.return_value = mock_user
+            mock_token.return_value = TokenResponse(access_token="google-jwt-token", token_type="bearer")
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "valid-google-token"},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "access_token" in data
+            assert "user" in data
+            assert "password" not in data["user"]
+            assert "hashed_password" not in data["user"]
+            assert data["user"]["username"] == "newgoogleuser"
+
+    @pytest.mark.asyncio
+    async def test_post_google_auth_invalid_token_401(self, async_client):
+        from domain.errors import InvalidGoogleToken
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+            mock_use_case.side_effect = InvalidGoogleToken()
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "bad-token"},
+            )
+
+            assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_post_google_auth_unset_client_id_503(self, async_client):
+        from domain.errors import GoogleLoginNotConfigured
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+            mock_use_case.side_effect = GoogleLoginNotConfigured()
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "any-token"},
+            )
+
+            assert response.status_code == 503
+
+    @pytest.mark.asyncio
+    async def test_post_google_auth_existing_google_id(self, async_client):
+        from datetime import datetime
+        from bson import ObjectId
+        from domain.entities.auth.UserEntity import UserEntity
+        from application.dtos.auth.AuthResponse import TokenResponse
+
+        existing_user = UserEntity(
+            id=str(ObjectId()),
+            username="existinggoogle",
+            email="existing@gmail.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+            mock_use_case.return_value = existing_user
+            mock_token.return_value = TokenResponse(access_token="existing-jwt", token_type="bearer")
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "valid-token"},
+            )
+
+            assert response.status_code == 200
+            assert response.json()["user"]["username"] == "existinggoogle"

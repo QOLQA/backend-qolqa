@@ -1,7 +1,18 @@
 from fastapi import HTTPException, status, Request
 import logging
 
-from domain.errors import Format, Missing, Duplicate, NotFoundError, Forbidden, InvalidCredentials, InvalidToken
+from domain.errors import (
+    Format,
+    Missing,
+    Duplicate,
+    NotFoundError,
+    Forbidden,
+    InvalidCredentials,
+    InvalidToken,
+    PasswordRequiredForLocalLogin,
+    InvalidGoogleToken,
+    GoogleLoginNotConfigured,
+)
 from config.settings import settings
 
 # Logger for unhandled errors
@@ -47,6 +58,22 @@ async def handle_common_errors(exc: Exception, request: Request | None = None) -
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=exc.msg,
             headers={"WWW-Authenticate": "Bearer"},
+        )
+    if isinstance(exc, PasswordRequiredForLocalLogin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=exc.msg,
+        )
+    if isinstance(exc, InvalidGoogleToken):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=exc.msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if isinstance(exc, GoogleLoginNotConfigured):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=exc.msg,
         )
 
     # Unexpected errors:
