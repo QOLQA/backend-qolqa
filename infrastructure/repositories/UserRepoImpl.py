@@ -135,3 +135,29 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
 
         if result.deleted_count == 0:
             raise Missing(msg=f'User with id {id} not found')
+
+    # ------------------------------------------------------------------ #
+    # Google Auth (stubs — full implementation in WU2)                    #
+    # ------------------------------------------------------------------ #
+
+    async def get_by_google_id(self, google_id: str) -> UserEntity | None:
+        """Retrieve a user by google_id. Returns None if not found."""
+        raw = await self.collection.find_one({'google_id': google_id})
+        if raw is None:
+            return None
+        return UserMapper.to_entity(raw)
+
+    async def link_google_account(self, user_id: str, google_id: str) -> UserEntity:
+        """Link a Google account to an existing user."""
+        raise NotImplementedError("Full implementation in WU2")
+
+    async def add_google_user(
+        self,
+        username: str,
+        email: str,
+        full_name: str | None,
+        google_id: str,
+        profile_picture_url: str | None,
+    ) -> UserEntity:
+        """Create a new Google-authenticated user (no password)."""
+        raise NotImplementedError("Full implementation in WU2")
