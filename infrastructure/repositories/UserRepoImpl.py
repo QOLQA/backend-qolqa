@@ -137,7 +137,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
             raise Missing(msg=f'User with id {id} not found')
 
     # ------------------------------------------------------------------ #
-    # Google Auth (stubs — full implementation in WU2)                    #
+    # Google Auth                                                          #
     # ------------------------------------------------------------------ #
 
     async def get_by_google_id(self, google_id: str) -> UserEntity | None:
@@ -148,8 +148,33 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
         return UserMapper.to_entity(raw)
 
     async def link_google_account(self, user_id: str, google_id: str) -> UserEntity:
-        """Link a Google account to an existing user."""
-        raise NotImplementedError("Full implementation in WU2")
+        """Link a Google account to an existing user.
+
+        Only sets google_id — never touches token_version, auth_provider, or hashed_password.
+        """
+        if not ObjectId.is_valid(str(user_id)):
+            raise Missing(msg=f'Invalid user id format: {user_id}')
+
+        # Verify user exists
+        existing = await self.collection.find_one({'_id': ObjectId(str(user_id))})
+        if existing is None:
+            raise Missing(msg=f'User with id {user_id} not found')
+
+        try:
+            result = await self.collection.update_one(
+                {'_id': ObjectId(str(user_id))},
+                {'$set': {'google_id': google_id}},
+            )
+        except Exception as exc:
+            from pymongo.errors import DuplicateKeyError
+            if isinstance(exc, DuplicateKeyError):
+                raise Duplicate(msg='google_id already linked')
+            raise
+
+        if result.matched_count == 0:
+            raise Missing(msg=f'User with id {user_id} not found')
+
+        return await self.get_by_id(user_id)
 
     async def add_google_user(
         self,
@@ -159,5 +184,25 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
         google_id: str,
         profile_picture_url: str | None,
     ) -> UserEntity:
-        """Create a new Google-authenticated user (no password)."""
-        raise NotImplementedError("Full implementation in WU2")
+        """Create a new Google-authenticated user (no password, no hashing)."""
+        # Duplicate checks
+        existing_username = await self.get_by_username(username)
+        if existing_username:
+            raise Duplicate(msg=f'Username {username} already exists')
+
+        existing_email = await self.get_by_email(email)
+        if existing_email:
+            raise Duplicate(msg=f'Email {email} already exists')
+
+        # Build insertable document via mapper
+        doc = UserMapper.from_google_request(username, email, full_name, google_id, profile_picture_url)
+
+        try:
+            result = await self.collection.insert_one(doc)
+        except Exception as exc:
+            from pymongo.errors import DuplicateKeyError
+            if isinstance(exc, DuplicateKeyError):
+                raise Duplicate(msg=f'Google user with google_id {google_id} already exists')
+            raise
+
+        return await self.get_by_id(str(result.inserted_id))

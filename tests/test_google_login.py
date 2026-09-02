@@ -113,3 +113,479 @@ class TestUserRepositoryGoogleMethods:
         assert 'username' in params
         assert 'email' in params
         assert 'google_id' in params
+
+
+# ============================================================
+# WU2: Infrastructure Layer Tests
+# ============================================================
+
+class TestUserDocumentNullableFields:
+    """UserDocument accepts optional hashed_password and google fields."""
+
+    def test_user_document_nullable_fields(self):
+        from infrastructure.documents.UserDocument import UserDocument
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from datetime import datetime
+        from bson import ObjectId
+
+        doc = UserDocument(
+            _id=ObjectId(),
+            username="testuser",
+            email="test@example.com",
+            is_active=True,
+            hashed_password=None,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            google_id=None,
+            auth_provider=AuthProviderEnum.local,
+        )
+        assert doc.hashed_password is None
+        assert doc.google_id is None
+        assert doc.auth_provider == AuthProviderEnum.local
+
+    def test_user_document_google_values(self):
+        from infrastructure.documents.UserDocument import UserDocument
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from datetime import datetime
+        from bson import ObjectId
+
+        doc = UserDocument(
+            _id=ObjectId(),
+            username="googler",
+            email="user@gmail.com",
+            is_active=True,
+            hashed_password=None,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            google_id="google-sub-abc",
+            auth_provider=AuthProviderEnum.google,
+        )
+        assert doc.google_id == "google-sub-abc"
+        assert doc.auth_provider == AuthProviderEnum.google
+
+
+class TestUserMapperExtensions:
+    """UserMapper handles google_id, auth_provider, and from_google_request."""
+
+    def test_mapper_to_entity_google_fields(self):
+        from infrastructure.mappers.UserMapper import UserMapper
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from datetime import datetime
+        from bson import ObjectId
+
+        raw = {
+            '_id': ObjectId(),
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'roles': ['user'],
+            'token_version': 0,
+            'google_id': 'google-sub-123',
+            'auth_provider': 'google',
+        }
+        entity = UserMapper.to_entity(raw)
+        assert entity.google_id == 'google-sub-123'
+        assert entity.auth_provider == AuthProviderEnum.google
+
+    def test_mapper_to_entity_defaults(self):
+        from infrastructure.mappers.UserMapper import UserMapper
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from datetime import datetime
+        from bson import ObjectId
+
+        raw = {
+            '_id': ObjectId(),
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'roles': ['user'],
+            'token_version': 0,
+        }
+        entity = UserMapper.to_entity(raw)
+        assert entity.google_id is None
+        assert entity.auth_provider == AuthProviderEnum.local
+
+    def test_mapper_from_create_request_google_fields(self):
+        from infrastructure.mappers.UserMapper import UserMapper
+        from application.dtos.auth.AuthRequest import UserCreateRequest
+
+        request = UserCreateRequest(
+            username="testuser",
+            email="test@example.com",
+            password="SecurePass123",
+        )
+        doc = UserMapper.from_create_request(request, "hashed_pw")
+        assert doc['google_id'] is None
+        assert doc['auth_provider'] == 'local'
+
+    def test_mapper_from_google_request(self):
+        from infrastructure.mappers.UserMapper import UserMapper
+
+        doc = UserMapper.from_google_request(
+            username="johndoe",
+            email="john@gmail.com",
+            full_name="John Doe",
+            google_id="google-sub-456",
+            profile_picture_url="https://example.com/pic.jpg",
+        )
+        assert doc['username'] == 'johndoe'
+        assert doc['email'] == 'john@gmail.com'
+        assert doc['full_name'] == 'John Doe'
+        assert doc['hashed_password'] is None
+        assert doc['auth_provider'] == 'google'
+        assert doc['google_id'] == 'google-sub-456'
+        assert doc['profile_picture_url'] == 'https://example.com/pic.jpg'
+        assert doc['token_version'] == 0
+        assert doc['roles'] == ['user']
+
+
+class TestVerifyGoogleToken:
+    """Google auth verification service."""
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_success(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from unittest.mock import patch, MagicMock
+
+        mock_payload = {
+            'sub': 'google-sub-123',
+            'email': 'user@gmail.com',
+            'email_verified': True,
+            'name': 'Test User',
+            'picture': 'https://example.com/pic.jpg',
+        }
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
+            result = await verify_google_token('valid-credential', 'test-client-id')
+            assert result['sub'] == 'google-sub-123'
+            assert result['email'] == 'user@gmail.com'
+            assert result['email_verified'] is True
+            assert result['name'] == 'Test User'
+            assert result['picture'] == 'https://example.com/pic.jpg'
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_bad_signature(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Bad token")):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('bad-credential', 'test-client-id')
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_wrong_audience(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Wrong audience")):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('credential', 'wrong-client-id')
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_expired(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Token expired")):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('expired-credential', 'test-client-id')
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_malformed(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Malformed token")):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('malformed', 'test-client-id')
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_email_not_verified(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        mock_payload = {
+            'sub': 'google-sub-123',
+            'email': 'user@gmail.com',
+            'email_verified': False,
+            'name': 'Test User',
+        }
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('credential', 'test-client-id')
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_missing_sub(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        mock_payload = {
+            'email': 'user@gmail.com',
+            'email_verified': True,
+            'name': 'Test User',
+        }
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('credential', 'test-client-id')
+
+    @pytest.mark.asyncio
+    async def test_verify_google_token_missing_email(self):
+        from infrastructure.services.google_auth import verify_google_token
+        from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch
+
+        mock_payload = {
+            'sub': 'google-sub-123',
+            'email_verified': True,
+            'name': 'Test User',
+        }
+
+        with patch('infrastructure.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
+            with pytest.raises(InvalidGoogleToken):
+                await verify_google_token('credential', 'test-client-id')
+
+
+class TestUserRepoImplGoogleMethods:
+    """UserRepoImpl Google-specific repository methods."""
+
+    @pytest.mark.asyncio
+    async def test_get_by_google_id_found(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from datetime import datetime
+        from bson import ObjectId
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        user_id = ObjectId()
+        mock_collection.find_one = AsyncMock(return_value={
+            '_id': user_id,
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'roles': ['user'],
+            'token_version': 0,
+            'google_id': 'google-sub-123',
+            'auth_provider': 'google',
+        })
+
+        repo = UserRepositoryImpl(mock_db)
+        entity = await repo.get_by_google_id('google-sub-123')
+
+        assert entity is not None
+        assert entity.google_id == 'google-sub-123'
+        mock_collection.find_one.assert_awaited_once_with({'google_id': 'google-sub-123'})
+
+    @pytest.mark.asyncio
+    async def test_get_by_google_id_none(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from datetime import datetime
+        from bson import ObjectId
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        mock_collection.find_one = AsyncMock(return_value=None)
+
+        repo = UserRepositoryImpl(mock_db)
+        entity = await repo.get_by_google_id('nonexistent')
+
+        assert entity is None
+
+    @pytest.mark.asyncio
+    async def test_link_google_account_success(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from datetime import datetime
+        from bson import ObjectId
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        user_id = str(ObjectId())
+        mock_collection.find_one = AsyncMock(return_value={
+            '_id': ObjectId(user_id),
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'roles': ['user'],
+            'token_version': 0,
+        })
+        mock_collection.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
+
+        repo = UserRepositoryImpl(mock_db)
+        entity = await repo.link_google_account(user_id, 'google-sub-123')
+
+        assert entity is not None
+        mock_collection.update_one.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_link_google_account_bad_object_id(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from domain.errors import Missing
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        repo = UserRepositoryImpl(mock_db)
+        with pytest.raises(Missing):
+            await repo.link_google_account('invalid-id', 'google-sub-123')
+
+    @pytest.mark.asyncio
+    async def test_link_google_account_duplicate_key(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from domain.errors import Duplicate
+        from datetime import datetime
+        from bson import ObjectId
+        from pymongo.errors import DuplicateKeyError
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        user_id = str(ObjectId())
+        mock_collection.find_one = AsyncMock(return_value={
+            '_id': ObjectId(user_id),
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'roles': ['user'],
+            'token_version': 0,
+        })
+        mock_collection.update_one = AsyncMock(side_effect=DuplicateKeyError("duplicate key"))
+
+        repo = UserRepositoryImpl(mock_db)
+        with pytest.raises(Duplicate):
+            await repo.link_google_account(user_id, 'google-sub-123')
+
+    @pytest.mark.asyncio
+    async def test_add_google_user_success(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from datetime import datetime
+        from bson import ObjectId
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        new_id = ObjectId()
+        mock_collection.find_one = AsyncMock(return_value=None)  # No duplicates
+        mock_collection.insert_one = AsyncMock(return_value=MagicMock(inserted_id=new_id))
+
+        # After insert, find_one returns the new user
+        original_find_one = mock_collection.find_one
+        call_count = 0
+
+        async def side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:  # duplicate checks (username, email)
+                return None
+            return {  # get_by_id after insert
+                '_id': new_id,
+                'username': 'johndoe',
+                'email': 'john@gmail.com',
+                'is_active': True,
+                'created_at': datetime.utcnow(),
+                'roles': ['user'],
+                'token_version': 0,
+                'google_id': 'google-sub-456',
+                'auth_provider': 'google',
+            }
+
+        mock_collection.find_one = AsyncMock(side_effect=side_effect)
+
+        repo = UserRepositoryImpl(mock_db)
+        entity = await repo.add_google_user(
+            username='johndoe',
+            email='john@gmail.com',
+            full_name='John Doe',
+            google_id='google-sub-456',
+            profile_picture_url='https://example.com/pic.jpg',
+        )
+
+        assert entity is not None
+        assert entity.google_id == 'google-sub-456'
+        mock_collection.insert_one.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_add_google_user_duplicate_username(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from domain.errors import Duplicate
+        from datetime import datetime
+        from bson import ObjectId
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        mock_collection.find_one = AsyncMock(return_value={
+            '_id': ObjectId(),
+            'username': 'johndoe',
+            'email': 'other@example.com',
+            'is_active': True,
+            'created_at': datetime.utcnow(),
+            'roles': ['user'],
+            'token_version': 0,
+        })
+
+        repo = UserRepositoryImpl(mock_db)
+        with pytest.raises(Duplicate):
+            await repo.add_google_user(
+                username='johndoe',
+                email='john@gmail.com',
+                full_name='John Doe',
+                google_id='google-sub-456',
+                profile_picture_url=None,
+            )
+
+    @pytest.mark.asyncio
+    async def test_add_google_user_duplicate_email(self):
+        from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+        from domain.errors import Duplicate
+        from datetime import datetime
+        from bson import ObjectId
+
+        mock_db = MagicMock()
+        mock_collection = AsyncMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+
+        # First call: username not found, second call: email found
+        mock_collection.find_one = AsyncMock(side_effect=[
+            None,  # username check
+            {  # email check
+                '_id': ObjectId(),
+                'username': 'otheruser',
+                'email': 'john@gmail.com',
+                'is_active': True,
+                'created_at': datetime.utcnow(),
+                'roles': ['user'],
+                'token_version': 0,
+            },
+        ])
+
+        repo = UserRepositoryImpl(mock_db)
+        with pytest.raises(Duplicate):
+            await repo.add_google_user(
+                username='johndoe',
+                email='john@gmail.com',
+                full_name='John Doe',
+                google_id='google-sub-456',
+                profile_picture_url=None,
+            )
