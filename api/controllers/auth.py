@@ -183,8 +183,10 @@ async def google_login_endpoint(
         )
     except Exception as exc:
         # Log failed or unexpected errors before delegating to error handler
+        # Extract email from token info when available, else use marker
+        log_email = getattr(exc, 'email', None) or "google-unknown"
         log_auth_attempt(
-            username="google-login",
+            username=log_email,
             success=False,
             ip_address=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),

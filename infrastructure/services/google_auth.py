@@ -46,13 +46,17 @@ async def verify_google_token(credential: str, client_id: str) -> dict:
     email_verified = idinfo.get('email_verified', False)
 
     if not sub:
-        raise InvalidGoogleToken()
+        exc = InvalidGoogleToken()
+        exc.email = email
+        raise exc
 
     if not email:
         raise InvalidGoogleToken()
 
     if not email_verified:
-        raise InvalidGoogleToken()
+        exc = InvalidGoogleToken()
+        exc.email = email
+        raise exc
 
     return {
         'sub': sub,
