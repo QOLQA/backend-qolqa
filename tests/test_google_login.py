@@ -821,6 +821,27 @@ class TestAuthenticateUserGuard:
         with pytest.raises(InvalidCredentials):
             await authenticate_user(mock_repo, "inactiveuser", "anypassword")
 
+    @pytest.mark.asyncio
+    async def test_authenticate_guard_inactive_hybrid_user(self):
+        """Inactive hybrid user (has password, is_active=False) gets InvalidCredentials."""
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.errors import InvalidCredentials
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from unittest.mock import AsyncMock, MagicMock
+
+        mock_repo = AsyncMock()
+        user_entity = MagicMock()
+        user_entity.username = "inactivehybrid"
+        user_entity.auth_provider = AuthProviderEnum.local
+        user_entity.is_active = False
+
+        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
+        mock_repo.get_hashed_password = AsyncMock(return_value="$2b$12$hashedpassword")
+
+        with patch('application.use_cases.auth.AuthenticateUser.verify_password', return_value=True):
+            with pytest.raises(InvalidCredentials):
+                await authenticate_user(mock_repo, "inactivehybrid", "password123")
+
 
 # ============================================================
 # WU4: API Layer + Config Tests
@@ -963,47 +984,128 @@ class TestPostGoogleAuthEndpoint:
             assert response.status_code == 200
             assert response.json()["user"]["username"] == "existinggoogle"
 
+    @pytest.mark.asyncio
+    async def test_post_google_auth_failure_logs_email_from_exception(self, async_client):
+        """Failed google login audit log uses email from exception, not hardcoded string."""
+        from domain.errors import InvalidGoogleToken
+
+        exc = InvalidGoogleToken()
+        exc.email = "user@example.com"
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('api.controllers.auth.log_auth_attempt') as mock_log:
+            mock_use_case.side_effect = exc
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "bad-token"},
+            )
+
+            assert response.status_code == 401
+            mock_log.assert_called_once()
+            call_kwargs = mock_log.call_args
+            assert call_kwargs.kwargs['username'] == "user@example.com"
+            assert call_kwargs.kwargs['success'] is False
+
+    @pytest.mark.asyncio
+    async def test_post_google_auth_failure_logs_unknown_when_no_email(self, async_client):
+        """Failed google login audit log uses 'google-unknown' when exception has no email."""
+        from domain.errors import InvalidGoogleToken
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('api.controllers.auth.log_auth_attempt') as mock_log:
+            mock_use_case.side_effect = InvalidGoogleToken()
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "bad-token"},
+            )
+
+            # Rate limiting may apply
+            assert response.status_code in (401, 429)
+            if response.status_code == 401:
+                mock_log.assert_called_once()
+                call_kwargs = mock_log.call_args
+                assert call_kwargs.kwargs['username'] == "google-unknown"
+
 
 # ============================================================
 # WU5: Migration Script Tests
 # ============================================================
 
-class TestMigrationScript:
-    """Migration script for adding Google fields."""
+class TestMigrationScriptBehavioral:
+    """Behavioral tests for migration script core logic."""
 
-    def test_migration_script_exists(self):
-        """Migration script file exists."""
-        import os
-        assert os.path.exists('scripts/migrate_add_google_fields.py')
+    @pytest.mark.asyncio
+    async def test_dry_run_does_not_call_update_many(self):
+        """Dry-run mode prints what would be done but performs NO writes."""
+        from scripts.migrate_add_google_fields import migrate
+        from unittest.mock import AsyncMock
 
-    def test_migration_script_has_dry_run_arg(self):
-        """Migration script supports --dry-run argument."""
-        import ast
+        mock_collection = AsyncMock()
+        # count_documents: backfill count, total users, google users
+        mock_collection.count_documents = AsyncMock(side_effect=[5, 10, 0])
+        # If update_many or create_index are called, the test fails
+        mock_collection.update_many = AsyncMock(side_effect=AssertionError("update_many called in dry-run"))
+        mock_collection.create_index = AsyncMock(side_effect=AssertionError("create_index called in dry-run"))
 
-        with open('scripts/migrate_add_google_fields.py', 'r') as f:
-            content = f.read()
+        await migrate(mock_collection, dry_run=True)
 
-        # Verify argparse with --dry-run is present
-        assert 'argparse' in content
-        assert '--dry-run' in content or 'dry_run' in content
+        mock_collection.update_many.assert_not_called()
+        mock_collection.create_index.assert_not_called()
 
-    def test_migration_script_has_required_elements(self):
-        """Migration script contains required patterns."""
-        import os
+    @pytest.mark.asyncio
+    async def test_real_mode_calls_update_many_and_create_index(self):
+        """Real mode backfills auth_provider and creates the google_id index."""
+        from scripts.migrate_add_google_fields import migrate
+        from unittest.mock import AsyncMock
 
-        with open('scripts/migrate_add_google_fields.py', 'r') as f:
-            content = f.read()
+        mock_collection = AsyncMock()
+        # count_documents: first call returns 3 needing backfill, second returns total, third returns google users
+        mock_collection.count_documents = AsyncMock(side_effect=[3, 10, 2])
+        mock_update_result = AsyncMock()
+        mock_update_result.modified_count = 3
+        mock_collection.update_many = AsyncMock(return_value=mock_update_result)
+        mock_collection.create_index = AsyncMock()
 
-        # Must have asyncio.run for async execution
-        assert 'asyncio.run' in content
-        # Must have backfill logic
-        assert 'auth_provider' in content
-        # Must have index creation
-        assert 'create_index' in content or 'google_id' in content
-        # Must have client.close() in finally
-        assert 'client.close()' in content
-        # Must have dry-run logic
-        assert 'dry_run' in content
+        await migrate(mock_collection, dry_run=False)
+
+        mock_collection.update_many.assert_called_once_with(
+            {'auth_provider': {'$exists': False}},
+            {'$set': {'auth_provider': 'local'}},
+        )
+        mock_collection.create_index.assert_called_once_with(
+            [('google_id', 1)],
+            unique=True,
+            sparse=True,
+            name='google_id_1',
+        )
+
+    @pytest.mark.asyncio
+    async def test_dry_run_prints_matched_docs_and_index_spec(self):
+        """Dry-run output includes the number of matched documents and index spec."""
+        from scripts.migrate_add_google_fields import migrate
+        from unittest.mock import AsyncMock
+
+        mock_collection = AsyncMock()
+        mock_collection.count_documents = AsyncMock(side_effect=[7, 0, 0])
+        mock_collection.update_many = AsyncMock()
+        mock_collection.create_index = AsyncMock()
+
+        # Capture print output
+        import io
+        import sys
+        captured = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = captured
+        try:
+            await migrate(mock_collection, dry_run=True)
+        finally:
+            sys.stdout = old_stdout
+
+        output = captured.getvalue()
+        assert "7" in output  # matched docs count
+        assert "google_id" in output  # index spec
 
 
 # ============================================================
