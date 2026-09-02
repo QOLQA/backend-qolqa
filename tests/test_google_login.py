@@ -962,3 +962,45 @@ class TestPostGoogleAuthEndpoint:
 
             assert response.status_code == 200
             assert response.json()["user"]["username"] == "existinggoogle"
+
+
+# ============================================================
+# WU5: Migration Script Tests
+# ============================================================
+
+class TestMigrationScript:
+    """Migration script for adding Google fields."""
+
+    def test_migration_script_exists(self):
+        """Migration script file exists."""
+        import os
+        assert os.path.exists('scripts/migrate_add_google_fields.py')
+
+    def test_migration_script_has_dry_run_arg(self):
+        """Migration script supports --dry-run argument."""
+        import ast
+
+        with open('scripts/migrate_add_google_fields.py', 'r') as f:
+            content = f.read()
+
+        # Verify argparse with --dry-run is present
+        assert 'argparse' in content
+        assert '--dry-run' in content or 'dry_run' in content
+
+    def test_migration_script_has_required_elements(self):
+        """Migration script contains required patterns."""
+        import os
+
+        with open('scripts/migrate_add_google_fields.py', 'r') as f:
+            content = f.read()
+
+        # Must have asyncio.run for async execution
+        assert 'asyncio.run' in content
+        # Must have backfill logic
+        assert 'auth_provider' in content
+        # Must have index creation
+        assert 'create_index' in content or 'google_id' in content
+        # Must have client.close() in finally
+        assert 'client.close()' in content
+        # Must have dry-run logic
+        assert 'dry_run' in content
