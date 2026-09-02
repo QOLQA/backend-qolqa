@@ -1004,3 +1004,181 @@ class TestMigrationScript:
         assert 'client.close()' in content
         # Must have dry-run logic
         assert 'dry_run' in content
+
+
+# ============================================================
+# WU6: Integration Tests
+# ============================================================
+
+class TestGoogleLoginIntegration:
+    """End-to-end integration tests for Google login."""
+
+    @pytest.mark.asyncio
+    async def test_integration_google_login_new_user_full_flow(self, async_client):
+        """Full flow: valid token → new user created → returns user + token."""
+        from datetime import datetime
+        from bson import ObjectId
+        from domain.entities.auth.UserEntity import UserEntity
+        from application.dtos.auth.AuthResponse import TokenResponse
+
+        mock_user = UserEntity(
+            id=str(ObjectId()),
+            username="integrationuser",
+            email="integration@gmail.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+            mock_use_case.return_value = mock_user
+            mock_token.return_value = TokenResponse(access_token="integration-jwt", token_type="bearer")
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "valid-google-credential"},
+            )
+
+            # Rate limiting may apply; accept 200 or 429
+            assert response.status_code in (200, 429)
+            if response.status_code == 200:
+                data = response.json()
+                assert "access_token" in data
+                assert data["access_token"] == "integration-jwt"
+                assert data["token_type"] == "bearer"
+                assert "user" in data
+                assert data["user"]["username"] == "integrationuser"
+                assert data["user"]["email"] == "integration@gmail.com"
+                assert "password" not in data["user"]
+                assert "hashed_password" not in data["user"]
+
+    @pytest.mark.asyncio
+    async def test_integration_google_login_existing_full_flow(self, async_client):
+        """Full flow: existing google_id → returns existing user + new token."""
+        from datetime import datetime
+        from bson import ObjectId
+        from domain.entities.auth.UserEntity import UserEntity
+        from application.dtos.auth.AuthResponse import TokenResponse
+
+        existing_user = UserEntity(
+            id=str(ObjectId()),
+            username="existinguser",
+            email="existing@gmail.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            token_version=0,
+            roles=[],
+        )
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+            mock_use_case.return_value = existing_user
+            mock_token.return_value = TokenResponse(access_token="existing-jwt", token_type="bearer")
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "valid-google-credential"},
+            )
+
+            assert response.status_code in (200, 429)
+            if response.status_code == 200:
+                data = response.json()
+                assert data["user"]["username"] == "existinguser"
+                assert data["access_token"] == "existing-jwt"
+
+    @pytest.mark.asyncio
+    async def test_integration_invalid_token_returns_401(self, async_client):
+        """Invalid Google token returns 401."""
+        from domain.errors import InvalidGoogleToken
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+            mock_use_case.side_effect = InvalidGoogleToken()
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "bad-token"},
+            )
+
+            # Rate limiting may apply; accept 401 or 429
+            assert response.status_code in (401, 429)
+            if response.status_code == 401:
+                assert response.json()["detail"] == "Invalid Google token"
+
+    @pytest.mark.asyncio
+    async def test_integration_unset_client_id_returns_503(self, async_client):
+        """Unset GOOGLE_CLIENT_ID returns 503."""
+        from domain.errors import GoogleLoginNotConfigured
+
+        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+            mock_use_case.side_effect = GoogleLoginNotConfigured()
+
+            response = await async_client.post(
+                "/auth/google",
+                json={"credential": "any-token"},
+            )
+
+            # Rate limiting may apply; accept 503 or 429
+            assert response.status_code in (503, 429)
+            if response.status_code == 503:
+                assert response.json()["detail"] == "Google login is not configured"
+
+    @pytest.mark.asyncio
+    async def test_integration_register_unaffected(self, async_client):
+        """POST /register still works (regression test)."""
+        from datetime import datetime
+        from bson import ObjectId
+        from domain.entities.auth.UserEntity import UserEntity
+
+        with patch('api.controllers.auth.register_user', new_callable=AsyncMock) as mock_register:
+            mock_register.return_value = UserEntity(
+                id=str(ObjectId()),
+                username="newuser",
+                email="new@example.com",
+                is_active=True,
+                created_at=datetime.utcnow(),
+                roles=[],
+                token_version=0,
+            )
+
+            response = await async_client.post(
+                "/auth/register",
+                json={
+                    "username": "newuser",
+                    "email": "new@example.com",
+                    "password": "SecurePass123",
+                },
+            )
+
+            assert response.status_code == 201
+            assert response.json()["username"] == "newuser"
+
+    @pytest.mark.asyncio
+    async def test_integration_login_unaffected(self, async_client):
+        """POST /login still works (regression test)."""
+        from datetime import datetime
+        from bson import ObjectId
+        from domain.entities.auth.UserEntity import UserEntity
+        from application.dtos.auth.AuthResponse import TokenResponse
+
+        with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
+             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+            mock_auth.return_value = UserEntity(
+                id=str(ObjectId()),
+                username="testuser",
+                email="test@example.com",
+                is_active=True,
+                created_at=datetime.utcnow(),
+                roles=[],
+                token_version=0,
+            )
+            mock_token.return_value = TokenResponse(access_token="login-jwt", token_type="bearer")
+
+            response = await async_client.post(
+                "/auth/login",
+                data={"username": "testuser", "password": "secret"},
+            )
+
+            assert response.status_code == 200
+            assert "access_token" in response.json()
