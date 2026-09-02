@@ -24,3 +24,11 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
+
+
+class GoogleLoginResponse(BaseModel):
+    """DTO for Google login API responses. Includes user profile."""
+
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

@@ -589,3 +589,234 @@ class TestUserRepoImplGoogleMethods:
                 google_id='google-sub-456',
                 profile_picture_url=None,
             )
+
+
+# ============================================================
+# WU3: Application Layer Tests
+# ============================================================
+
+class TestGoogleLoginRequestResponseDTOs:
+    """GoogleLoginRequest and GoogleLoginResponse DTOs."""
+
+    def test_google_login_request_dto(self):
+        from application.dtos.auth.AuthRequest import GoogleLoginRequest
+
+        dto = GoogleLoginRequest(credential="valid-credential-string")
+        assert dto.credential == "valid-credential-string"
+
+    def test_google_login_response_dto_no_password(self):
+        from application.dtos.auth.AuthResponse import GoogleLoginResponse, UserResponse
+        from datetime import datetime
+
+        user = UserResponse(
+            id="507f1f77bcf86cd799439011",
+            username="testuser",
+            email="test@example.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+        )
+        response = GoogleLoginResponse(
+            access_token="test-token",
+            token_type="bearer",
+            user=user,
+        )
+        assert response.access_token == "test-token"
+        assert response.token_type == "bearer"
+        assert response.user.username == "testuser"
+        data = response.model_dump()
+        assert "password" not in data
+        assert "hashed_password" not in data
+        assert "user" in data
+        assert "password" not in data["user"]
+        assert "hashed_password" not in data["user"]
+
+
+class TestGoogleLoginUseCase:
+    """GoogleLogin use case orchestration."""
+
+    @pytest.mark.asyncio
+    async def test_google_login_new_user(self):
+        from application.use_cases.auth.GoogleLogin import google_login
+        from unittest.mock import AsyncMock, MagicMock, patch
+        from datetime import datetime
+
+        mock_repo = AsyncMock()
+        mock_repo.get_by_google_id = AsyncMock(return_value=None)
+        mock_repo.get_by_email = AsyncMock(return_value=None)
+        mock_repo.get_by_username = AsyncMock(return_value=None)
+
+        new_user = MagicMock()
+        new_user.id = "new-id"
+        new_user.username = "johndoe"
+        mock_repo.add_google_user = AsyncMock(return_value=new_user)
+
+        mock_info = {
+            'sub': 'google-sub-123',
+            'email': 'john@gmail.com',
+            'email_verified': True,
+            'name': 'John Doe',
+            'picture': 'https://example.com/pic.jpg',
+        }
+
+        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
+            result = await google_login(mock_repo, 'credential', 'test-client-id')
+
+        assert result == new_user
+        mock_repo.add_google_user.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_google_login_existing_google_id(self):
+        from application.use_cases.auth.GoogleLogin import google_login
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_repo = AsyncMock()
+        existing_user = MagicMock()
+        existing_user.id = "existing-id"
+        mock_repo.get_by_google_id = AsyncMock(return_value=existing_user)
+
+        mock_info = {
+            'sub': 'google-sub-123',
+            'email': 'john@gmail.com',
+            'email_verified': True,
+            'name': 'John Doe',
+        }
+
+        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
+            result = await google_login(mock_repo, 'credential', 'test-client-id')
+
+        assert result == existing_user
+        mock_repo.add_google_user.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_google_login_email_link(self):
+        from application.use_cases.auth.GoogleLogin import google_login
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_repo = AsyncMock()
+        mock_repo.get_by_google_id = AsyncMock(return_value=None)
+
+        existing_user = MagicMock()
+        existing_user.id = "existing-local-id"
+        mock_repo.get_by_email = AsyncMock(return_value=existing_user)
+        mock_repo.link_google_account = AsyncMock(return_value=existing_user)
+
+        mock_info = {
+            'sub': 'google-sub-456',
+            'email': 'existing@example.com',
+            'email_verified': True,
+            'name': 'Existing User',
+        }
+
+        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
+            result = await google_login(mock_repo, 'credential', 'test-client-id')
+
+        assert result == existing_user
+        mock_repo.link_google_account.assert_awaited_once_with("existing-local-id", "google-sub-456")
+        mock_repo.add_google_user.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_google_login_username_collision(self):
+        from application.use_cases.auth.GoogleLogin import google_login
+        from unittest.mock import AsyncMock, MagicMock, patch
+        from domain.errors import Duplicate
+
+        mock_repo = AsyncMock()
+        mock_repo.get_by_google_id = AsyncMock(return_value=None)
+        mock_repo.get_by_email = AsyncMock(return_value=None)
+
+        # First username check returns existing user (collision)
+        collision_user = MagicMock()
+        mock_repo.get_by_username = AsyncMock(side_effect=[collision_user, None])
+
+        # First add_google_user raises Duplicate (race), second succeeds
+        new_user = MagicMock()
+        new_user.id = "new-user-id"
+        mock_repo.add_google_user = AsyncMock(side_effect=[
+            Duplicate(msg="Duplicate"),
+            new_user,
+        ])
+
+        mock_info = {
+            'sub': 'google-sub-789',
+            'email': 'john@gmail.com',
+            'email_verified': True,
+            'name': 'John Doe',
+        }
+
+        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
+            result = await google_login(mock_repo, 'credential', 'test-client-id')
+
+        assert result == new_user
+
+    @pytest.mark.asyncio
+    async def test_google_login_503_when_client_id_none(self):
+        from application.use_cases.auth.GoogleLogin import google_login
+        from domain.errors import GoogleLoginNotConfigured
+        from unittest.mock import AsyncMock
+
+        mock_repo = AsyncMock()
+
+        with pytest.raises(GoogleLoginNotConfigured):
+            await google_login(mock_repo, 'credential', None)
+
+
+class TestAuthenticateUserGuard:
+    """AuthenticateUser guard for passwordless Google accounts."""
+
+    @pytest.mark.asyncio
+    async def test_authenticate_guard_google_only_user(self):
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.errors import PasswordRequiredForLocalLogin
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from unittest.mock import AsyncMock, MagicMock
+
+        mock_repo = AsyncMock()
+        user_entity = MagicMock()
+        user_entity.username = "googleuser"
+        user_entity.auth_provider = AuthProviderEnum.google
+        user_entity.is_active = True
+
+        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
+        mock_repo.get_hashed_password = AsyncMock(return_value=None)
+
+        with pytest.raises(PasswordRequiredForLocalLogin):
+            await authenticate_user(mock_repo, "googleuser", "anypassword")
+
+    @pytest.mark.asyncio
+    async def test_authenticate_guard_hybrid_user(self):
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_repo = AsyncMock()
+        user_entity = MagicMock()
+        user_entity.username = "hybriduser"
+        user_entity.auth_provider = AuthProviderEnum.local
+        user_entity.is_active = True
+
+        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
+        mock_repo.get_hashed_password = AsyncMock(return_value="hashed_pw")
+
+        with patch('application.use_cases.auth.AuthenticateUser.verify_password', return_value=True):
+            result = await authenticate_user(mock_repo, "hybriduser", "password123")
+
+        assert result == user_entity
+
+    @pytest.mark.asyncio
+    async def test_authenticate_guard_inactive_google_user(self):
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.errors import InvalidCredentials
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from unittest.mock import AsyncMock, MagicMock
+
+        mock_repo = AsyncMock()
+        user_entity = MagicMock()
+        user_entity.username = "inactiveuser"
+        user_entity.auth_provider = AuthProviderEnum.google
+        user_entity.is_active = False
+
+        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
+        mock_repo.get_hashed_password = AsyncMock(return_value=None)
+
+        with pytest.raises(InvalidCredentials):
+            await authenticate_user(mock_repo, "inactiveuser", "anypassword")

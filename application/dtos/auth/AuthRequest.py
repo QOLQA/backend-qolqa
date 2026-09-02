@@ -60,3 +60,9 @@ class AdminUserUpdateRequest(BaseModel):
     profile_picture_url: Optional[str] = None
     is_active: Optional[bool] = None
     roles: Optional[List[RoleEnum]] = None
+
+
+class GoogleLoginRequest(BaseModel):
+    """DTO for Google OAuth login. Accepts the Google ID token credential."""
+
+    credential: str
