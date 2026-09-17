@@ -30,3 +30,21 @@ class InvalidToken(Exception):
     """Raised when a JWT token cannot be decoded or has been tampered with."""
     def __init__(self, msg: str = "Could not validate credentials") -> None:
         self.msg = msg
+
+
+class PasswordRequiredForLocalLogin(Exception):
+    """Raised when a user with auth_provider=google tries to log in via password and has no password set."""
+    def __init__(self, msg: str = "This account uses Google login. Set a password or continue with Google.") -> None:
+        self.msg = msg
+
+
+class InvalidGoogleToken(Exception):
+    """Raised when a Google ID token fails verification."""
+    def __init__(self, msg: str = "Invalid Google token") -> None:
+        self.msg = msg
+
+
+class GoogleLoginNotConfigured(Exception):
+    """Raised when GOOGLE_CLIENT_ID is not configured."""
+    def __init__(self, msg: str = "Google login is not configured") -> None:
+        self.msg = msg

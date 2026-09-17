@@ -58,3 +58,6 @@ interfaces/serviceAccount.json
 .gga
 .claude/
 skills-lock.json
+
+# SDD / OpenSpec artifacts — local change-tracked docs, not project source
+openspec/

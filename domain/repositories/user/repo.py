@@ -58,3 +58,31 @@ class IUserRepository(Repository[T, TCreate, TUpdate]):
         Obtiene un usuario por su email.
         '''
         pass
+
+    @abstractmethod
+    async def get_by_google_id(self, google_id: str) -> Optional[T]:
+        '''
+        Obtiene un usuario por su google_id.
+        '''
+        pass
+
+    @abstractmethod
+    async def link_google_account(self, user_id: str, google_id: str) -> T:
+        '''
+        Vincula una cuenta de Google a un usuario existente.
+        '''
+        pass
+
+    @abstractmethod
+    async def add_google_user(
+        self,
+        username: str,
+        email: str,
+        full_name: Optional[str],
+        google_id: str,
+        profile_picture_url: Optional[str],
+    ) -> T:
+        '''
+        Crea un nuevo usuario registrado vía Google (sin contraseña).
+        '''
+        pass

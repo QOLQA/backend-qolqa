@@ -3,6 +3,7 @@ from datetime import datetime
 from application.dtos.auth.AuthRequest import UserCreateRequest
 from application.dtos.auth.AuthResponse import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
+from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.enums.RoleEnum import RoleEnum
 
 
@@ -22,6 +23,8 @@ class UserMapper:
             profile_picture_url=raw.get('profile_picture_url'),
             roles=[RoleEnum(r) for r in raw.get('roles', [])] or [RoleEnum.user],
             token_version=raw.get('token_version', 0),
+            google_id=raw.get('google_id'),
+            auth_provider=AuthProviderEnum(raw.get('auth_provider', 'local')),
         )
 
     @staticmethod
@@ -38,6 +41,32 @@ class UserMapper:
             'profile_picture_url': None,
             'roles': [RoleEnum.user.value],
             'token_version': 0,
+            'google_id': None,
+            'auth_provider': 'local',
+        }
+
+    @staticmethod
+    def from_google_request(
+        username: str,
+        email: str,
+        full_name: str | None,
+        google_id: str,
+        profile_picture_url: str | None,
+    ) -> dict:
+        """Convert Google user info to a MongoDB-insertable dict (no password)."""
+        return {
+            'username': username,
+            'email': email.lower(),
+            'full_name': full_name,
+            'is_active': True,
+            'hashed_password': None,
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
+            'profile_picture_url': profile_picture_url,
+            'roles': [RoleEnum.user.value],
+            'token_version': 0,
+            'google_id': google_id,
+            'auth_provider': 'google',
         }
 
     @staticmethod

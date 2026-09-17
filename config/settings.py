@@ -35,6 +35,9 @@ class Settings(BaseSettings):
         default=10,
         description="Timeout for database operations in seconds"
     )
+
+    # Google OAuth
+    google_client_id: str | None = None
     
     # Request body size limit (in bytes)
     max_request_body_size: int = Field(
