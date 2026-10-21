@@ -51,6 +51,24 @@ class QueryRepositoryImpl(IQueryRepository[QueryEntity, QueryCreateRequest, Quer
         raws = await cursor.to_list(length=None)
         return [QueryMapper.to_entity_from_dict(raw) for raw in raws]
 
+    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[QueryEntity]:
+        """Retrieve all queries belonging to any of the given solutions.
+
+        `queries.solution_id` is stored as an ObjectId, so every id is converted
+        before being used in the query. Invalid ids are skipped.
+        """
+        oids = []
+        for solution_id in solution_ids:
+            if ObjectId.is_valid(str(solution_id)):
+                oids.append(ObjectId(str(solution_id)))
+
+        if not oids:
+            return []
+
+        cursor = self.collection.find({'solution_id': {'$in': oids}})
+        raws = await cursor.to_list(length=None)
+        return [QueryMapper.to_entity_from_dict(raw) for raw in raws]
+
     # ------------------------------------------------------------------ #
     # Write                                                                #
     # ------------------------------------------------------------------ #

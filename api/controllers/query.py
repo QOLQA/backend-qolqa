@@ -12,7 +12,7 @@ from application.use_cases.query.UpdateQuery import update_query
 from application.use_cases.query.DeleteQuery import delete_query
 from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
 from infrastructure.mappers import QueryMapper
-from infrastructure.repositories import QueryRepositoryImpl
+from infrastructure.repositories import QueryRepositoryImpl, SolutionRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
@@ -28,16 +28,22 @@ def get_query_repository(database=Depends(get_database)) -> QueryRepositoryImpl:
     return QueryRepositoryImpl(database)
 
 
+def get_solution_repository(database=Depends(get_database)) -> SolutionRepositoryImpl:
+    """Dependency: always returns the MongoDB solution implementation."""
+    return SolutionRepositoryImpl(database)
+
+
 @router.get('', response_model=list[QueryResponse])
 @limiter.limit("100/minute")
 async def get_all_queries_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> list[QueryResponse]:
-    """Get all queries (admin endpoint)."""
+    """Get all queries owned by the current user."""
     try:
-        entities = await get_all_queries(repository)
+        entities = await get_all_queries(repository, solution_repository, str(current_user.id))
 
         log_resource_operation(
             action="query.list",
@@ -60,10 +66,13 @@ async def get_queries_by_solution_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> list[QueryResponse]:
-    """Get all queries for a specific solution."""
+    """Get all queries for a specific solution owned by the current user."""
     try:
-        entities = await get_queries_by_solution(repository, solution_id)
+        entities = await get_queries_by_solution(
+            repository, solution_repository, solution_id, str(current_user.id)
+        )
 
         log_resource_operation(
             action="query.list_by_solution",
@@ -86,10 +95,13 @@ async def get_query_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> QueryResponse:
-    """Get a specific query by id."""
+    """Get a specific query by id — only if owned by the current user."""
     try:
-        entity = await get_query_by_id(repository, query_id)
+        entity = await get_query_by_id(
+            repository, solution_repository, query_id, str(current_user.id)
+        )
 
         log_resource_operation(
             action="query.read",
@@ -112,10 +124,13 @@ async def create_query_endpoint(
     query_create: QueryCreateRequest,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> QueryResponse:
-    """Create a new query."""
+    """Create a new query on a solution owned by the current user."""
     try:
-        entity = await create_query(repository, query_create)
+        entity = await create_query(
+            repository, solution_repository, query_create, str(current_user.id)
+        )
 
         log_resource_operation(
             action="query.create",
@@ -139,10 +154,13 @@ async def update_query_endpoint(
     query_update: QueryPartialUpdateRequest,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> QueryResponse:
-    """Update an existing query."""
+    """Update an existing query — only if owned by the current user."""
     try:
-        entity = await update_query(repository, query_id, query_update)
+        entity = await update_query(
+            repository, solution_repository, query_id, query_update, str(current_user.id)
+        )
 
         log_resource_operation(
             action="query.update",
@@ -165,10 +183,13 @@ async def delete_query_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ):
-    """Delete a query."""
+    """Delete a query — only if owned by the current user."""
     try:
-        await delete_query(repository, query_id)
+        await delete_query(
+            repository, solution_repository, query_id, str(current_user.id)
+        )
 
         log_resource_operation(
             action="query.delete",
@@ -191,10 +212,13 @@ async def delete_queries_by_solution_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: QueryRepositoryImpl = Depends(get_query_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ):
-    """Delete all queries for a specific solution."""
+    """Delete all queries for a specific solution owned by the current user."""
     try:
-        await delete_queries_by_solution(repository, solution_id)
+        await delete_queries_by_solution(
+            repository, solution_repository, solution_id, str(current_user.id)
+        )
 
         log_resource_operation(
             action="query.delete_by_solution",
