@@ -142,7 +142,7 @@ class TestJWTAuthentication:
                 "token_version": 0,
                 "exp": datetime.utcnow() - timedelta(minutes=30)
             },
-            settings.secret_key,
+            settings.secret_key.get_secret_value(),
             algorithm=settings.algorithm
         )
         

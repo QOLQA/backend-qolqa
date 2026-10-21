@@ -40,7 +40,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         "type": "access"
     })
 
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key.get_secret_value(), algorithm=settings.algorithm)
     return encoded_jwt
 
 
@@ -58,7 +58,7 @@ def decode_access_token(token: str) -> dict:
         InvalidToken: If token is invalid or expired
     """
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm])
         return payload
     except JWTError:
         raise InvalidToken()
