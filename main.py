@@ -137,14 +137,14 @@ if settings.type_db == TypeDB.sql:
   @contextlib.asynccontextmanager
   async def lifespan(app: FastAPI):
     await create_all_tables()
-    print(settings)
+    logger.info("Starting application (environment=%s, db=%s)", settings.environment, settings.type_db.value)
     yield
 
   app = FastAPI(lifespan=lifespan)
 else:
   @contextlib.asynccontextmanager
   async def lifespan(app: FastAPI):
-    print(settings)
+    logger.info("Starting application (environment=%s, db=%s)", settings.environment, settings.type_db.value)
     yield
 
   app = FastAPI(
