@@ -93,7 +93,9 @@ async def create_solution_endpoint(
             description=default_version_descriptions[0],
             solution_id=entity.id,
         )
-        version_entity = await create_version(version_repository, version_request)
+        version_entity = await create_version(
+            version_repository, solution_repository, version_request, str(current_user.id)
+        )
 
         # 3. Update last_version_saved on the solution
         update_request = SolutionPartialUpdateRequest(last_version_saved=version_entity.id)
@@ -218,7 +220,9 @@ async def create_version_for_solution_endpoint(
         version_create.solution_id = solution_id
 
         # Create the version
-        version_entity = await create_version(version_repository, version_create)
+        version_entity = await create_version(
+            version_repository, solution_repository, version_create, str(current_user.id)
+        )
 
         # Update last_version_saved in the solution
         update_request = SolutionPartialUpdateRequest(last_version_saved=version_entity.id)
@@ -262,7 +266,9 @@ async def update_solution_version_endpoint(
         await solution_repository.update(solution_id, update_solution_request)
 
         # Update the version
-        version_entity = await update_version(version_repository, version_id, version_update)
+        version_entity = await update_version(
+            version_repository, solution_repository, version_id, version_update, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.update",

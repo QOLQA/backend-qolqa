@@ -10,7 +10,7 @@ from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.UpdateVersion import update_version
 from application.use_cases.version.DeleteVersion import delete_version
 from infrastructure.mappers import VersionMapper
-from infrastructure.repositories import VersionRepositoryImpl
+from infrastructure.repositories import VersionRepositoryImpl, SolutionRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
@@ -26,16 +26,24 @@ def get_version_repository(database=Depends(get_database)) -> VersionRepositoryI
     return VersionRepositoryImpl(database)
 
 
+def get_solution_repository(database=Depends(get_database)) -> SolutionRepositoryImpl:
+    """Dependency: always returns the MongoDB solution implementation."""
+    return SolutionRepositoryImpl(database)
+
+
 @router.get('', response_model=list[VersionResponse])
 @limiter.limit("100/minute")
 async def get_all_versions_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: VersionRepositoryImpl = Depends(get_version_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> list[VersionResponse]:
-    """Get all versions."""
+    """Get all versions owned by the current user."""
     try:
-        entities = await get_all_versions(repository)
+        entities = await get_all_versions(
+            repository, solution_repository, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.list",
@@ -58,10 +66,13 @@ async def get_version_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: VersionRepositoryImpl = Depends(get_version_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> VersionResponse:
-    """Get a specific version by id."""
+    """Get a specific version by id — only if owned by the current user."""
     try:
-        entity = await get_version_by_id(repository, version_id)
+        entity = await get_version_by_id(
+            repository, solution_repository, version_id, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.read",
@@ -84,10 +95,13 @@ async def create_version_endpoint(
     version_create: VersionCreateRequest,
     current_user: User = Depends(get_current_user),
     repository: VersionRepositoryImpl = Depends(get_version_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> VersionResponse:
-    """Create a new version."""
+    """Create a new version on a solution owned by the current user."""
     try:
-        entity = await create_version(repository, version_create)
+        entity = await create_version(
+            repository, solution_repository, version_create, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.create",
@@ -111,10 +125,13 @@ async def update_version_endpoint(
     version_update: VersionPartialUpdateRequest,
     current_user: User = Depends(get_current_user),
     repository: VersionRepositoryImpl = Depends(get_version_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ) -> VersionResponse:
-    """Update an existing version."""
+    """Update an existing version — only if owned by the current user."""
     try:
-        entity = await update_version(repository, version_id, version_update)
+        entity = await update_version(
+            repository, solution_repository, version_id, version_update, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.update",
@@ -137,10 +154,13 @@ async def delete_version_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
     repository: VersionRepositoryImpl = Depends(get_version_repository),
+    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
 ):
-    """Delete a version."""
+    """Delete a version — only if owned by the current user."""
     try:
-        await delete_version(repository, version_id)
+        await delete_version(
+            repository, solution_repository, version_id, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.delete",

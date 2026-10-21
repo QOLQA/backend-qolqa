@@ -49,6 +49,21 @@ class VersionRepositoryImpl(IVersionRepository[VersionEntity, VersionCreateReque
         raws = await cursor.to_list(length=None)
         return [VersionMapper.to_entity(raw) for raw in raws]
 
+    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[VersionEntity]:
+        """Retrieve all versions belonging to any of the given solutions.
+
+        `versions.solution_id` is stored as a plain string, so the ids are used
+        as-is in the query (no ObjectId conversion).
+        """
+        ids = [str(solution_id) for solution_id in solution_ids]
+
+        if not ids:
+            return []
+
+        cursor = self.collection.find({'solution_id': {'$in': ids}})
+        raws = await cursor.to_list(length=None)
+        return [VersionMapper.to_entity(raw) for raw in raws]
+
     # ------------------------------------------------------------------ #
     # Write                                                                #
     # ------------------------------------------------------------------ #
