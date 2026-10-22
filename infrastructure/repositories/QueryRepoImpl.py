@@ -2,14 +2,13 @@ from typing import List
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from application.dtos.query.QueryRequest import QueryCreateRequest, QueryPartialUpdateRequest
 from domain.entities.QueryEntity import QueryEntity
 from domain.errors import Missing
 from domain.repositories.query.repo import IQueryRepository
 from infrastructure.mappers import QueryMapper
 
 
-class QueryRepositoryImpl(IQueryRepository[QueryEntity, QueryCreateRequest, QueryPartialUpdateRequest]):
+class QueryRepositoryImpl(IQueryRepository[QueryEntity]):
     """MongoDB implementation of IQueryRepository.
 
     All DB operations use the QueryMapper — zero inline mapping.
@@ -73,51 +72,29 @@ class QueryRepositoryImpl(IQueryRepository[QueryEntity, QueryCreateRequest, Quer
     # Write                                                                #
     # ------------------------------------------------------------------ #
 
-    async def add(self, entity_create: QueryCreateRequest) -> QueryEntity:
-        """Create a new query after verifying the parent solution exists."""
-        if not ObjectId.is_valid(entity_create.solution_id):
-            raise Missing(msg=f'Invalid solution id format: {entity_create.solution_id}')
+    async def save(self, entity: QueryEntity) -> QueryEntity:
+        """Save (create or update) a query entity."""
+        if not entity.id or not ObjectId.is_valid(entity.id):
+            # New entity - verify parent solution exists
+            if not ObjectId.is_valid(entity.solution_id):
+                raise Missing(msg=f'Invalid solution id format: {entity.solution_id}')
 
-        solution = await self.solutions_collection.find_one(
-            {'_id': ObjectId(entity_create.solution_id)}
-        )
-        if solution is None:
-            raise Missing(msg=f'The solution with id: {entity_create.solution_id} does not exist.')
+            solution = await self.solutions_collection.find_one(
+                {'_id': ObjectId(entity.solution_id)}
+            )
+            if solution is None:
+                raise Missing(msg=f'The solution with id: {entity.solution_id} does not exist.')
 
-        doc = QueryMapper.from_create_request(entity_create)
-        result = await self.collection.insert_one(doc)
+        doc = QueryMapper.to_persistence(entity)
 
-        return QueryEntity(
-            id=str(result.inserted_id),
-            full_query=entity_create.full_query,
-            collections=entity_create.collections,
-            highlighted_words=entity_create.highlighted_words,
-            solution_id=entity_create.solution_id,
-        )
-
-    async def update(self, id: str, entity_update: QueryPartialUpdateRequest) -> QueryEntity:
-        """Partially update a query. Returns the updated entity."""
-        if not ObjectId.is_valid(str(id)):
-            raise Missing(msg=f'Invalid query id format: {id}')
-
-        update_data = entity_update.model_dump(exclude_unset=True)
-        if not update_data:
-            # Nothing to change — return current state
-            return await self.get_by_id(id)
-
-        result = await self.collection.update_one(
-            {'_id': ObjectId(str(id))},
-            {'$set': update_data},
+        await self.collection.update_one(
+            {'_id': ObjectId(entity.id)} if entity.id and ObjectId.is_valid(entity.id) else {'solution_id': ObjectId(entity.solution_id), 'full_query': entity.full_query},
+            {'$set': doc},
+            upsert=True,
         )
 
-        if result.matched_count == 0:
-            raise Missing(msg=f'The query with id: {id} does not exist.')
-
-        return await self.get_by_id(id)
-
-    # ------------------------------------------------------------------ #
-    # Delete                                                               #
-    # ------------------------------------------------------------------ #
+        # Re-fetch
+        return await self.get_by_id(entity.id)
 
     async def delete(self, id: str) -> None:
         """Delete a query by id."""

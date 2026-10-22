@@ -3,7 +3,6 @@ from __future__ import annotations
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from application.dtos.auth.AuthRequest import UserCreateRequest, UserUpdateRequest, AdminUserUpdateRequest
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.errors import Duplicate, Missing, InvalidCredentials, PasswordRequiredForLocalLogin
@@ -13,7 +12,7 @@ from infrastructure.mappers import UserMapper
 from infrastructure.security.bcrypt_hasher import BcryptHasher
 
 
-class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpdateRequest]):
+class UserRepositoryImpl(IUserRepository[UserEntity]):
     """MongoDB implementation of IUserRepository.
 
     All DB operations use UserMapper — zero inline mapping.
@@ -120,51 +119,35 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
     # Write                                                                #
     # ------------------------------------------------------------------ #
 
-    async def add(self, entity_create: UserCreateRequest) -> UserEntity:
-        """Create a new user after checking for duplicate username/email.
+    async def save(self, entity: UserEntity) -> UserEntity:
+        """Save (create or update) a user entity.
 
-        Hashes the password internally — callers must NOT pre-hash.
+        Uses upsert: inserts if _id doesn't exist, updates if it does.
         """
-        # Duplicate checks
-        existing_username = await self.get_by_username(entity_create.username)
-        if existing_username:
-            raise Duplicate(msg=f'Username {entity_create.username} already exists')
+        # Duplicate checks for new users (only on create)
+        if not entity.id or not ObjectId.is_valid(entity.id):
+            # New user - check duplicates
+            existing_username = await self.get_by_username(entity.username)
+            if existing_username:
+                raise Duplicate(msg=f'Username {entity.username} already exists')
 
-        existing_email = await self.get_by_email(entity_create.email)
-        if existing_email:
-            raise Duplicate(msg=f'Email {entity_create.email} already exists')
+            existing_email = await self.get_by_email(entity.email)
+            if existing_email:
+                raise Duplicate(msg=f'Email {entity.email} already exists')
 
-        # Hash password before storage
-        hashed_password = self._hasher.hash(entity_create.password)
+        # Prepare document for upsert
+        # Get hashed_password from raw document if updating, or use existing if new
+        doc = UserMapper.to_persistence(entity)
 
-        # Build insertable document via mapper
-        doc = UserMapper.from_create_request(entity_create, hashed_password)
-
-        result = await self.collection.insert_one(doc)
-
-        return await self.get_by_id(str(result.inserted_id))
-
-    async def update(self, id: str, entity_update: UserUpdateRequest | AdminUserUpdateRequest) -> UserEntity:
-        """Partially update a user. Returns the updated entity."""
-        if not ObjectId.is_valid(str(id)):
-            raise Missing(msg=f'Invalid user id format: {id}')
-
-        # Verify exists
-        await self.get_by_id(id)
-
-        update_data = entity_update.model_dump(exclude_unset=True, mode='json')
-        if not update_data:
-            return await self.get_by_id(id)
-
-        result = await self.collection.update_one(
-            {'_id': ObjectId(str(id))},
-            {'$set': update_data},
+        # Use upsert to handle both create and update
+        await self.collection.update_one(
+            {'_id': ObjectId(entity.id)} if entity.id and ObjectId.is_valid(entity.id) else {'username': entity.username},
+            {'$set': doc},
+            upsert=True,
         )
 
-        if result.matched_count == 0:
-            raise Missing(msg=f'User with id {id} not found')
-
-        return await self.get_by_id(id)
+        # Re-fetch to get the generated _id if it was a new insert
+        return await self.get_by_username(entity.username)
 
     async def delete(self, id: str) -> None:
         """Delete a user by id."""

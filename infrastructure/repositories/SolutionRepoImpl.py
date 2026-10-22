@@ -4,14 +4,13 @@ from typing import List
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from application.dtos.solution.SolutionRequest import SolutionPartialUpdateRequest
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.errors import Missing
 from domain.repositories.solution.repo import ISolutionRepository
 from infrastructure.mappers import SolutionMapper
 
 
-class SolutionRepositoryImpl(ISolutionRepository[SolutionEntity, dict, SolutionPartialUpdateRequest]):
+class SolutionRepositoryImpl(ISolutionRepository[SolutionEntity]):
     """MongoDB implementation of ISolutionRepository.
 
     All DB operations use SolutionMapper — zero inline mapping.
@@ -58,37 +57,18 @@ class SolutionRepositoryImpl(ISolutionRepository[SolutionEntity, dict, SolutionP
     # Write                                                                #
     # ------------------------------------------------------------------ #
 
-    async def add(self, entity_create: dict) -> SolutionEntity:
-        """Insert a new solution document.
+    async def save(self, entity: SolutionEntity) -> SolutionEntity:
+        """Save (create or update) a solution entity."""
+        doc = SolutionMapper.to_persistence(entity)
 
-        Expects a MongoDB-insertable dict (produced by SolutionMapper.from_create_request).
-        """
-        result = await self.collection.insert_one(entity_create)
-        return await self.get_by_id(result.inserted_id)
-
-    async def update(self, id: str, entity_update: SolutionPartialUpdateRequest) -> SolutionEntity:
-        """Partially update a solution. Returns the updated entity."""
-        if not ObjectId.is_valid(str(id)):
-            raise Missing(msg=f'Invalid solution id format: {id}')
-
-        update_data = entity_update.model_dump(exclude_unset=True)
-
-        # Always stamp the update time
-        update_data['last_updated_at'] = datetime.utcnow()
-
-        result = await self.collection.update_one(
-            {'_id': ObjectId(str(id))},
-            {'$set': update_data},
+        await self.collection.update_one(
+            {'_id': ObjectId(entity.id)} if entity.id and ObjectId.is_valid(entity.id) else {'user_id': entity.user_id, 'name': entity.name},
+            {'$set': doc},
+            upsert=True,
         )
 
-        if result.matched_count == 0:
-            raise Missing(msg=f'The solution with id: {id} does not exist.')
-
-        return await self.get_by_id(id)
-
-    # ------------------------------------------------------------------ #
-    # Delete                                                               #
-    # ------------------------------------------------------------------ #
+        # Re-fetch
+        return await self.get_by_id(entity.id)
 
     async def delete(self, id: str) -> None:
         """Delete a solution by id."""

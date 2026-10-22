@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from application.dtos.auth.AuthRequest import UserCreateRequest
 from application.dtos.auth.AuthResponse import UserResponse
@@ -82,3 +83,24 @@ class UserMapper:
             profile_picture_url=entity.profile_picture_url,
             roles=entity.roles,
         )
+
+    @staticmethod
+    def to_persistence(entity: UserEntity) -> dict:
+        """Convert a domain UserEntity to a MongoDB-insertable/upsertable dict."""
+        doc = {
+            'username': entity.username,
+            'email': entity.email,
+            'full_name': entity.full_name,
+            'is_active': entity.is_active,
+            'created_at': entity.created_at,
+            'updated_at': datetime.utcnow(),
+            'profile_picture_url': entity.profile_picture_url,
+            'roles': [r.value for r in entity.roles],
+            'token_version': entity.token_version,
+            'google_id': entity.google_id,
+            'auth_provider': entity.auth_provider.value,
+        }
+        # Only include hashed_password if it exists (for updates)
+        # Note: hashed_password is not stored on UserEntity (domain purity)
+        # It's handled separately via get_hashed_password / verify_credentials
+        return doc

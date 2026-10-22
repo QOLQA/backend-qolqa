@@ -35,8 +35,8 @@ class QueryMapper:
         )
 
     @staticmethod
-    def to_document(entity: QueryEntity) -> dict:
-        """Convert a QueryEntity to a MongoDB-insertable dict.
+    def to_persistence(entity: QueryEntity) -> dict:
+        """Convert a QueryEntity to a MongoDB-insertable/upsertable dict.
 
         Converts string ids back to ObjectId for storage.
         """
@@ -46,6 +46,11 @@ class QueryMapper:
             'highlighted_words': entity.highlighted_words,
             'solution_id': ObjectId(entity.solution_id),
         }
+
+    @staticmethod
+    def to_document(entity: QueryEntity) -> dict:
+        """Alias for to_persistence (backward compatibility)."""
+        return QueryMapper.to_persistence(entity)
 
     @staticmethod
     def from_create_request(request: QueryCreateRequest) -> dict:

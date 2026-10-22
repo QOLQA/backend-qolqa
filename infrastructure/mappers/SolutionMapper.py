@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from application.dtos.solution.SolutionRequest import SolutionCreateRequest
 from application.dtos.solution.SolutionResponse import SolutionResponse
@@ -60,3 +60,14 @@ class SolutionMapper:
             last_updated_at=entity.last_updated_at,
             versions=version_responses,
         )
+
+    @staticmethod
+    def to_persistence(entity: SolutionEntity) -> dict:
+        """Convert a domain SolutionEntity to a MongoDB-insertable/upsertable dict."""
+        return {
+            'name': entity.name,
+            'user_id': entity.user_id,
+            'last_version_saved': entity.last_version_saved,
+            'src_img': entity.src_img,
+            'last_updated_at': datetime.utcnow(),
+        }
