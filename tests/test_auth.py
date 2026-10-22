@@ -299,9 +299,10 @@ class TestPasswordHashing:
     
     def test_hash_password(self):
         """Test password hashing"""
-        from infrastructure.password import get_password_hash
+        from infrastructure.security.bcrypt_hasher import BcryptHasher
         
-        hashed = get_password_hash("mypassword")
+        hasher = BcryptHasher()
+        hashed = hasher.hash("mypassword")
         
         assert hashed != "mypassword"
         assert len(hashed) > 0
@@ -309,20 +310,22 @@ class TestPasswordHashing:
     
     def test_verify_password_correct(self):
         """Test password verification with correct password"""
-        from infrastructure.password import get_password_hash, verify_password
+        from infrastructure.security.bcrypt_hasher import BcryptHasher
         
+        hasher = BcryptHasher()
         password = "mypassword"
-        hashed = get_password_hash(password)
+        hashed = hasher.hash(password)
         
-        assert verify_password(password, hashed) is True
+        assert hasher.verify(password, hashed) is True
     
     def test_verify_password_incorrect(self):
         """Test password verification with incorrect password"""
-        from infrastructure.password import get_password_hash, verify_password
+        from infrastructure.security.bcrypt_hasher import BcryptHasher
         
-        hashed = get_password_hash("mypassword")
+        hasher = BcryptHasher()
+        hashed = hasher.hash("mypassword")
         
-        assert verify_password("wrongpassword", hashed) is False
+        assert hasher.verify("wrongpassword", hashed) is False
 
 
 @pytest.mark.auth

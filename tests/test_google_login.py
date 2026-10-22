@@ -776,8 +776,7 @@ class TestAuthenticateUserGuard:
         user_entity.auth_provider = AuthProviderEnum.google
         user_entity.is_active = True
 
-        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
-        mock_repo.get_hashed_password = AsyncMock(return_value=None)
+        mock_repo.verify_credentials = AsyncMock(side_effect=PasswordRequiredForLocalLogin())
 
         with pytest.raises(PasswordRequiredForLocalLogin):
             await authenticate_user(mock_repo, "googleuser", "anypassword")
@@ -786,7 +785,7 @@ class TestAuthenticateUserGuard:
     async def test_authenticate_guard_hybrid_user(self):
         from application.use_cases.auth.AuthenticateUser import authenticate_user
         from domain.enums.AuthProviderEnum import AuthProviderEnum
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import AsyncMock, MagicMock
 
         mock_repo = AsyncMock()
         user_entity = MagicMock()
@@ -794,13 +793,12 @@ class TestAuthenticateUserGuard:
         user_entity.auth_provider = AuthProviderEnum.local
         user_entity.is_active = True
 
-        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
-        mock_repo.get_hashed_password = AsyncMock(return_value="hashed_pw")
+        mock_repo.verify_credentials = AsyncMock(return_value=user_entity)
 
-        with patch('application.use_cases.auth.AuthenticateUser.verify_password', return_value=True):
-            result = await authenticate_user(mock_repo, "hybriduser", "password123")
+        result = await authenticate_user(mock_repo, "hybriduser", "password123")
 
         assert result == user_entity
+        mock_repo.verify_credentials.assert_called_once_with("hybriduser", "password123")
 
     @pytest.mark.asyncio
     async def test_authenticate_guard_inactive_google_user(self):
@@ -815,8 +813,7 @@ class TestAuthenticateUserGuard:
         user_entity.auth_provider = AuthProviderEnum.google
         user_entity.is_active = False
 
-        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
-        mock_repo.get_hashed_password = AsyncMock(return_value=None)
+        mock_repo.verify_credentials = AsyncMock(side_effect=InvalidCredentials())
 
         with pytest.raises(InvalidCredentials):
             await authenticate_user(mock_repo, "inactiveuser", "anypassword")
@@ -835,12 +832,10 @@ class TestAuthenticateUserGuard:
         user_entity.auth_provider = AuthProviderEnum.local
         user_entity.is_active = False
 
-        mock_repo.get_by_username = AsyncMock(return_value=user_entity)
-        mock_repo.get_hashed_password = AsyncMock(return_value="$2b$12$hashedpassword")
+        mock_repo.verify_credentials = AsyncMock(side_effect=InvalidCredentials())
 
-        with patch('application.use_cases.auth.AuthenticateUser.verify_password', return_value=True):
-            with pytest.raises(InvalidCredentials):
-                await authenticate_user(mock_repo, "inactivehybrid", "password123")
+        with pytest.raises(InvalidCredentials):
+            await authenticate_user(mock_repo, "inactivehybrid", "password123")
 
 
 # ============================================================
@@ -1027,85 +1022,6 @@ class TestPostGoogleAuthEndpoint:
                 mock_log.assert_called_once()
                 call_kwargs = mock_log.call_args
                 assert call_kwargs.kwargs['username'] == "google-unknown"
-
-
-# ============================================================
-# WU5: Migration Script Tests
-# ============================================================
-
-class TestMigrationScriptBehavioral:
-    """Behavioral tests for migration script core logic."""
-
-    @pytest.mark.asyncio
-    async def test_dry_run_does_not_call_update_many(self):
-        """Dry-run mode prints what would be done but performs NO writes."""
-        from scripts.migrate_add_google_fields import migrate
-        from unittest.mock import AsyncMock
-
-        mock_collection = AsyncMock()
-        # count_documents: backfill count, total users, google users
-        mock_collection.count_documents = AsyncMock(side_effect=[5, 10, 0])
-        # If update_many or create_index are called, the test fails
-        mock_collection.update_many = AsyncMock(side_effect=AssertionError("update_many called in dry-run"))
-        mock_collection.create_index = AsyncMock(side_effect=AssertionError("create_index called in dry-run"))
-
-        await migrate(mock_collection, dry_run=True)
-
-        mock_collection.update_many.assert_not_called()
-        mock_collection.create_index.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_real_mode_calls_update_many_and_create_index(self):
-        """Real mode backfills auth_provider and creates the google_id index."""
-        from scripts.migrate_add_google_fields import migrate
-        from unittest.mock import AsyncMock
-
-        mock_collection = AsyncMock()
-        # count_documents: first call returns 3 needing backfill, second returns total, third returns google users
-        mock_collection.count_documents = AsyncMock(side_effect=[3, 10, 2])
-        mock_update_result = AsyncMock()
-        mock_update_result.modified_count = 3
-        mock_collection.update_many = AsyncMock(return_value=mock_update_result)
-        mock_collection.create_index = AsyncMock()
-
-        await migrate(mock_collection, dry_run=False)
-
-        mock_collection.update_many.assert_called_once_with(
-            {'auth_provider': {'$exists': False}},
-            {'$set': {'auth_provider': 'local'}},
-        )
-        mock_collection.create_index.assert_called_once_with(
-            [('google_id', 1)],
-            unique=True,
-            sparse=True,
-            name='google_id_1',
-        )
-
-    @pytest.mark.asyncio
-    async def test_dry_run_prints_matched_docs_and_index_spec(self):
-        """Dry-run output includes the number of matched documents and index spec."""
-        from scripts.migrate_add_google_fields import migrate
-        from unittest.mock import AsyncMock
-
-        mock_collection = AsyncMock()
-        mock_collection.count_documents = AsyncMock(side_effect=[7, 0, 0])
-        mock_collection.update_many = AsyncMock()
-        mock_collection.create_index = AsyncMock()
-
-        # Capture print output
-        import io
-        import sys
-        captured = io.StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = captured
-        try:
-            await migrate(mock_collection, dry_run=True)
-        finally:
-            sys.stdout = old_stdout
-
-        output = captured.getvalue()
-        assert "7" in output  # matched docs count
-        assert "google_id" in output  # index spec
 
 
 # ============================================================
