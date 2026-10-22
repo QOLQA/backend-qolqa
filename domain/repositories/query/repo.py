@@ -1,31 +1,45 @@
-from abc import abstractmethod
-from typing import Generic, TypeVar, List
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar, List, Optional
 
-from domain.repositories.user.repo import Repository
+from domain.entities.QueryEntity import QueryEntity
 
-T = TypeVar('T')
-TCreate = TypeVar('TCreate')
-TUpdate = TypeVar('TUpdate')
+Entity = TypeVar('Entity', bound=QueryEntity)
 
 
-class IQueryRepository(Repository[T, TCreate, TUpdate]):
-    @abstractmethod
-    async def get_by_solution_id(self, solution_id: str) -> List[T]:
-        '''
-        Recupera todas las queries asociadas a una solución.
-        '''
-        pass
+class IQueryRepository(ABC, Generic[Entity]):
+    """Query repository port (interface)."""
 
     @abstractmethod
-    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[T]:
-        '''
-        Recupera todas las queries asociadas a un conjunto de soluciones.
-        '''
-        pass
+    async def get_by_id(self, id: str) -> Optional[Entity]:
+        """Retrieve a query by ID."""
+        ...
+
+    @abstractmethod
+    async def get_all(self) -> List[Entity]:
+        """Retrieve all queries."""
+        ...
+
+    @abstractmethod
+    async def save(self, entity: Entity) -> Entity:
+        """Save (create or update) a query entity."""
+        ...
+
+    @abstractmethod
+    async def delete(self, id: str) -> None:
+        """Delete a query by ID."""
+        ...
+
+    @abstractmethod
+    async def get_by_solution_id(self, solution_id: str) -> List[Entity]:
+        """Retrieve all queries associated with a solution."""
+        ...
+
+    @abstractmethod
+    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[Entity]:
+        """Retrieve all queries belonging to any of the given solutions."""
+        ...
 
     @abstractmethod
     async def delete_by_solution_id(self, solution_id: str) -> None:
-        '''
-        Elimina todas las queries asociadas a una solución.
-        '''
-        pass
+        """Delete all queries associated with a solution."""
+        ...

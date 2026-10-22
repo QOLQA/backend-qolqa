@@ -1,31 +1,45 @@
-from abc import abstractmethod
-from typing import Generic, TypeVar, List
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar, List, Optional
 
-from domain.repositories.user.repo import Repository
+from domain.entities.VersionEntity import VersionEntity
 
-T = TypeVar('T')
-TCreate = TypeVar('TCreate')
-TUpdate = TypeVar('TUpdate')
+Entity = TypeVar('Entity', bound=VersionEntity)
 
 
-class IVersionRepository(Repository[T, TCreate, TUpdate]):
-    @abstractmethod
-    async def get_by_solution_id(self, solution_id: str) -> List[T]:
-        '''
-        Recupera todas las versiones asociadas a una solución.
-        '''
-        pass
+class IVersionRepository(ABC, Generic[Entity]):
+    """Version repository port (interface)."""
 
     @abstractmethod
-    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[T]:
-        '''
-        Recupera todas las versiones asociadas a un conjunto de soluciones.
-        '''
-        pass
+    async def get_by_id(self, id: str) -> Optional[Entity]:
+        """Retrieve a version by ID."""
+        ...
+
+    @abstractmethod
+    async def get_all(self) -> List[Entity]:
+        """Retrieve all versions."""
+        ...
+
+    @abstractmethod
+    async def save(self, entity: Entity) -> Entity:
+        """Save (create or update) a version entity."""
+        ...
+
+    @abstractmethod
+    async def delete(self, id: str) -> None:
+        """Delete a version by ID."""
+        ...
+
+    @abstractmethod
+    async def get_by_solution_id(self, solution_id: str) -> List[Entity]:
+        """Retrieve all versions associated with a solution."""
+        ...
+
+    @abstractmethod
+    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[Entity]:
+        """Retrieve all versions associated with a set of solutions."""
+        ...
 
     @abstractmethod
     async def delete_by_solution_id(self, solution_id: str) -> None:
-        '''
-        Elimina todas las versiones asociadas a una solución.
-        '''
-        pass
+        """Delete all versions associated with a solution."""
+        ...
