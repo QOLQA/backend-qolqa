@@ -2,8 +2,6 @@ import logging
 import pprint
 
 from fastapi import APIRouter, Depends, status, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from application.dtos.solution.SolutionRequest import SolutionCreateRequest, SolutionPartialUpdateRequest
 from application.dtos.solution.SolutionResponse import SolutionResponse
@@ -26,11 +24,11 @@ from api.handle_errors import handle_common_errors
 from domain.errors import Forbidden
 from infrastructure.db_factory import get_database
 from infrastructure.audit import log_resource_operation, log_access_denied
+from config.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 def get_solution_repository(database=Depends(get_database)) -> SolutionRepositoryImpl:
@@ -294,6 +292,7 @@ async def delete_solution_endpoint(
     solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
     version_repository: VersionRepositoryImpl = Depends(get_version_repository),
     query_repository: QueryRepositoryImpl = Depends(get_query_repository),
+    database=Depends(get_database),
 ) -> None:
     """Delete a solution and all associated versions and queries — only if owned by the current user."""
     try:
@@ -306,6 +305,7 @@ async def delete_solution_endpoint(
             current_user_id=str(current_user.id),
             version_repository=version_repository,
             query_repository=query_repository,
+            database=database,
         )
 
         log_resource_operation(
