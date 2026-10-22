@@ -7,8 +7,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI, status, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -19,6 +18,7 @@ from api.controllers.query import router as queries_router
 from api.controllers.version import router as versions_router
 from api.controllers.solution import router as solutions_router
 from config.settings import settings, TypeDB
+from config.rate_limiter import limiter
 from api.handle_errors import handle_common_errors
 from infrastructure.audit import log_rate_limit_exceeded
 from infrastructure.jwt import decode_access_token
@@ -44,10 +44,6 @@ class HealthResponse(BaseModel):
     service: str
     environment: str
     database: DatabaseHealthStatus
-
-
-# Configurar rate limiter
-limiter = Limiter(key_func=get_remote_address)
 
 # Custom rate limit exception handler with audit logging
 async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
@@ -142,8 +138,20 @@ if settings.type_db == TypeDB.sql:
 
   app = FastAPI(lifespan=lifespan)
 else:
+  from config.mongo import motor_client
   @contextlib.asynccontextmanager
   async def lifespan(app: FastAPI):
+    # Create MongoDB indexes on startup
+    db = motor_client['qolqa']
+    
+    # Users: unique username, unique email, unique sparse google_id
+    await db.users.create_index("username", unique=True, name="username_1")
+    await db.users.create_index("email", unique=True, name="email_1")
+    await db.users.create_index("google_id", unique=True, sparse=True, name="google_id_1")
+    
+    # Solutions: index on user_id for ownership queries
+    await db.solutions.create_index("user_id", name="user_id_1")
+    
     logger.info("Starting application (environment=%s, db=%s)", settings.environment, settings.type_db.value)
     yield
 
