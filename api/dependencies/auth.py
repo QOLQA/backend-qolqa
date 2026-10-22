@@ -7,9 +7,11 @@ from api.handle_errors import handle_common_errors
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
 from domain.errors import InvalidToken
+from domain.services.google_auth import IGoogleAuthService
 from infrastructure.jwt import decode_access_token, oauth2_scheme
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
 from infrastructure.security.bcrypt_hasher import BcryptHasher
+from infrastructure.services.google_auth import GoogleAuthService
 from application.use_cases.auth.GetUserById import get_user_by_id
 from infrastructure.db_factory import get_database
 
@@ -32,6 +34,11 @@ def get_token_data(token: str = Depends(oauth2_scheme)) -> dict:
 def get_password_hasher() -> BcryptHasher:
     """Provides the bcrypt password hasher."""
     return BcryptHasher()
+
+
+def get_google_auth_service() -> IGoogleAuthService:
+    """Provides the Google OAuth2 verification service."""
+    return GoogleAuthService()
 
 
 def get_user_repository(

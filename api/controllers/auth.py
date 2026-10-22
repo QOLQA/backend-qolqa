@@ -10,12 +10,13 @@ from application.dtos.auth.AuthResponse import UserResponse, TokenResponse, Goog
 from application.use_cases.auth.AuthenticateUser import authenticate_user
 from application.use_cases.auth.RegisterUser import register_user
 from application.use_cases.auth.GoogleLogin import google_login
+from domain.services.google_auth import IGoogleAuthService
+from api.dependencies.auth import get_current_user, get_user_repository, get_google_auth_service
 from infrastructure.token_service import create_user_token
 from infrastructure.mappers import UserMapper
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
 from api.handle_errors import handle_common_errors
-from api.dependencies.auth import get_current_user, get_user_repository
 from infrastructure.audit import log_registration, log_auth_attempt
 from config.settings import settings
 from config.rate_limiter import limiter
@@ -141,6 +142,7 @@ async def google_login_endpoint(
     request: Request,
     login_request: GoogleLoginRequest,
     repository: UserRepositoryImpl = Depends(get_user_repository),
+    google_auth: IGoogleAuthService = Depends(get_google_auth_service),
 ) -> GoogleLoginResponse:
     """
     Google OAuth login endpoint.
@@ -149,6 +151,7 @@ async def google_login_endpoint(
         request: FastAPI Request (for audit logging and rate limiting)
         login_request: GoogleLoginRequest DTO with Google ID token
         repository: UserRepositoryImpl dependency
+        google_auth: IGoogleAuthService for token verification
 
     Returns:
         GoogleLoginResponse with access token and user profile
@@ -159,6 +162,7 @@ async def google_login_endpoint(
     try:
         entity = await google_login(
             repository,
+            google_auth,
             login_request.credential,
             settings.google_client_id,
         )

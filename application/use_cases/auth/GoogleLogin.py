@@ -14,7 +14,7 @@ from domain.errors import (
     InvalidGoogleToken,
 )
 from domain.repositories.user.repo import IUserRepository
-from infrastructure.services.google_auth import verify_google_token
+from domain.services.google_auth import IGoogleAuthService, GoogleAuthInfo
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ def _sanitize_username(prefix: str) -> str:
 
 async def google_login(
     repository: IUserRepository,
+    google_auth: IGoogleAuthService,
     credential: str,
     client_id: str | None,
 ) -> UserEntity:
@@ -35,6 +36,7 @@ async def google_login(
 
     Args:
         repository: IUserRepository for DB operations
+        google_auth: IGoogleAuthService for token verification
         credential: Google ID token
         client_id: Google OAuth client ID (from settings)
 
@@ -49,13 +51,13 @@ async def google_login(
     if client_id is None:
         raise GoogleLoginNotConfigured()
 
-    # Step 1: Verify Google token
-    info = await verify_google_token(credential, client_id)
-    sub = info['sub']
-    email = info['email']
-    email_verified = info.get('email_verified', False)
-    name = info.get('name')
-    picture = info.get('picture')
+    # Step 1: Verify Google token via domain port
+    info: GoogleAuthInfo = await google_auth.verify_token(credential, client_id)
+    sub = info.sub
+    email = info.email
+    email_verified = info.email_verified
+    name = info.name
+    picture = info.picture
 
     # Step 2: Resolve by google_id
     existing = await repository.get_by_google_id(sub)

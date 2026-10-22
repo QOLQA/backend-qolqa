@@ -5,6 +5,7 @@ Strict TDD: tests written FIRST, implementation follows.
 """
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+from domain.services.google_auth import GoogleAuthInfo
 
 
 # ============================================================
@@ -658,8 +659,16 @@ class TestGoogleLoginUseCase:
             'picture': 'https://example.com/pic.jpg',
         }
 
-        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
-            result = await google_login(mock_repo, 'credential', 'test-client-id')
+        mock_google_auth = AsyncMock()
+        mock_google_auth.verify_token = AsyncMock(return_value=GoogleAuthInfo(
+            sub='google-sub-123',
+            email='john@gmail.com',
+            email_verified=True,
+            name='John Doe',
+            picture='https://example.com/pic.jpg',
+        ))
+
+        result = await google_login(mock_repo, mock_google_auth, 'credential', 'test-client-id')
 
         assert result == new_user
         mock_repo.add_google_user.assert_awaited_once()
@@ -667,22 +676,23 @@ class TestGoogleLoginUseCase:
     @pytest.mark.asyncio
     async def test_google_login_existing_google_id(self):
         from application.use_cases.auth.GoogleLogin import google_login
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import AsyncMock, MagicMock
+        from domain.services.google_auth import GoogleAuthInfo
 
         mock_repo = AsyncMock()
         existing_user = MagicMock()
         existing_user.id = "existing-id"
         mock_repo.get_by_google_id = AsyncMock(return_value=existing_user)
 
-        mock_info = {
-            'sub': 'google-sub-123',
-            'email': 'john@gmail.com',
-            'email_verified': True,
-            'name': 'John Doe',
-        }
+        mock_google_auth = AsyncMock()
+        mock_google_auth.verify_token = AsyncMock(return_value=GoogleAuthInfo(
+            sub='google-sub-123',
+            email='john@gmail.com',
+            email_verified=True,
+            name='John Doe',
+        ))
 
-        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
-            result = await google_login(mock_repo, 'credential', 'test-client-id')
+        result = await google_login(mock_repo, mock_google_auth, 'credential', 'test-client-id')
 
         assert result == existing_user
         mock_repo.add_google_user.assert_not_awaited()
@@ -690,7 +700,8 @@ class TestGoogleLoginUseCase:
     @pytest.mark.asyncio
     async def test_google_login_email_link(self):
         from application.use_cases.auth.GoogleLogin import google_login
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import AsyncMock, MagicMock
+        from domain.services.google_auth import GoogleAuthInfo
 
         mock_repo = AsyncMock()
         mock_repo.get_by_google_id = AsyncMock(return_value=None)
@@ -700,15 +711,15 @@ class TestGoogleLoginUseCase:
         mock_repo.get_by_email = AsyncMock(return_value=existing_user)
         mock_repo.link_google_account = AsyncMock(return_value=existing_user)
 
-        mock_info = {
-            'sub': 'google-sub-456',
-            'email': 'existing@example.com',
-            'email_verified': True,
-            'name': 'Existing User',
-        }
+        mock_google_auth = AsyncMock()
+        mock_google_auth.verify_token = AsyncMock(return_value=GoogleAuthInfo(
+            sub='google-sub-456',
+            email='existing@example.com',
+            email_verified=True,
+            name='Existing User',
+        ))
 
-        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
-            result = await google_login(mock_repo, 'credential', 'test-client-id')
+        result = await google_login(mock_repo, mock_google_auth, 'credential', 'test-client-id')
 
         assert result == existing_user
         mock_repo.link_google_account.assert_awaited_once_with("existing-local-id", "google-sub-456")
@@ -717,8 +728,9 @@ class TestGoogleLoginUseCase:
     @pytest.mark.asyncio
     async def test_google_login_username_collision(self):
         from application.use_cases.auth.GoogleLogin import google_login
-        from unittest.mock import AsyncMock, MagicMock, patch
+        from unittest.mock import AsyncMock, MagicMock
         from domain.errors import Duplicate
+        from domain.services.google_auth import GoogleAuthInfo
 
         mock_repo = AsyncMock()
         mock_repo.get_by_google_id = AsyncMock(return_value=None)
@@ -736,15 +748,15 @@ class TestGoogleLoginUseCase:
             new_user,
         ])
 
-        mock_info = {
-            'sub': 'google-sub-789',
-            'email': 'john@gmail.com',
-            'email_verified': True,
-            'name': 'John Doe',
-        }
+        mock_google_auth = AsyncMock()
+        mock_google_auth.verify_token = AsyncMock(return_value=GoogleAuthInfo(
+            sub='google-sub-789',
+            email='john@gmail.com',
+            email_verified=True,
+            name='John Doe',
+        ))
 
-        with patch('application.use_cases.auth.GoogleLogin.verify_google_token', new_callable=AsyncMock, return_value=mock_info):
-            result = await google_login(mock_repo, 'credential', 'test-client-id')
+        result = await google_login(mock_repo, mock_google_auth, 'credential', 'test-client-id')
 
         assert result == new_user
 
@@ -755,9 +767,10 @@ class TestGoogleLoginUseCase:
         from unittest.mock import AsyncMock
 
         mock_repo = AsyncMock()
+        mock_google_auth = AsyncMock()
 
         with pytest.raises(GoogleLoginNotConfigured):
-            await google_login(mock_repo, 'credential', None)
+            await google_login(mock_repo, mock_google_auth, 'credential', None)
 
 
 class TestAuthenticateUserGuard:
