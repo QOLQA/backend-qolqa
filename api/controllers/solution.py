@@ -1,5 +1,6 @@
 import logging
 import pprint
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, status, Request
 
@@ -96,8 +97,9 @@ async def create_solution_endpoint(
         )
 
         # 3. Update last_version_saved on the solution
-        update_request = SolutionPartialUpdateRequest(last_version_saved=version_entity.id)
-        updated_entity = await solution_repository.update(entity.id, update_request)
+        entity.last_version_saved = version_entity.id
+        entity.last_updated_at = datetime.utcnow()
+        updated_entity = await solution_repository.save(entity)
 
         logger.info("=" * 60)
         logger.info(">>>>>>>>>>>>> SOLUTION CREATED (clean arch):")
@@ -260,8 +262,9 @@ async def update_solution_version_endpoint(
             raise Forbidden(msg="Not authorized to modify this solution")
 
         # Update last_version_saved field in the solution
-        update_solution_request = SolutionPartialUpdateRequest(last_version_saved=version_id)
-        await solution_repository.update(solution_id, update_solution_request)
+        solution_entity.last_version_saved = version_id
+        solution_entity.last_updated_at = datetime.utcnow()
+        await solution_repository.save(solution_entity)
 
         # Update the version
         version_entity = await update_version(

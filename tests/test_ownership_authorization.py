@@ -157,7 +157,7 @@ class TestQueryUseCaseOwnership:
         solution_repository = AsyncMock()
 
         query_repository.get_by_id = AsyncMock(return_value=make_query())
-        query_repository.update = AsyncMock(return_value=make_query())
+        query_repository.save = AsyncMock(return_value=make_query())
         solution_repository.get_by_id = AsyncMock(return_value=make_solution(OWNER_ID))
 
         result = await update_query(
@@ -169,7 +169,7 @@ class TestQueryUseCaseOwnership:
         )
 
         assert result.id == QUERY_ID
-        query_repository.update.assert_awaited_once()
+        query_repository.save.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_delete_query_raises_forbidden_for_non_owner(self):
@@ -230,7 +230,7 @@ class TestQuerySolutionScopeOwnership:
         solution_repository = AsyncMock()
 
         solution_repository.get_by_id = AsyncMock(return_value=make_solution(OWNER_ID))
-        query_repository.add = AsyncMock(return_value=make_query())
+        query_repository.save = AsyncMock(return_value=make_query())
 
         result = await create_query(
             query_repository,
@@ -245,7 +245,7 @@ class TestQuerySolutionScopeOwnership:
         )
 
         assert result.id == QUERY_ID
-        query_repository.add.assert_awaited_once()
+        query_repository.save.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_get_queries_by_solution_raises_forbidden_for_non_owner(self):
@@ -456,7 +456,7 @@ class TestVersionUseCaseOwnership:
         solution_repository = AsyncMock()
 
         version_repository.get_by_id = AsyncMock(return_value=make_version())
-        version_repository.update = AsyncMock(return_value=make_version())
+        version_repository.save = AsyncMock(return_value=make_version())
         solution_repository.get_by_id = AsyncMock(return_value=make_solution(OWNER_ID))
 
         result = await update_version(
@@ -468,7 +468,7 @@ class TestVersionUseCaseOwnership:
         )
 
         assert result.id == VERSION_ID
-        version_repository.update.assert_awaited_once()
+        version_repository.save.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_update_version_cannot_be_reparented_to_foreign_solution(self):
@@ -557,7 +557,7 @@ class TestVersionSolutionScopeOwnership:
         solution_repository = AsyncMock()
 
         solution_repository.get_by_id = AsyncMock(return_value=make_solution(OWNER_ID))
-        version_repository.add = AsyncMock(return_value=make_version())
+        version_repository.save = AsyncMock(return_value=make_version())
 
         result = await create_version(
             version_repository,
@@ -571,7 +571,7 @@ class TestVersionSolutionScopeOwnership:
         )
 
         assert result.id == VERSION_ID
-        version_repository.add.assert_awaited_once()
+        version_repository.save.assert_awaited_once()
 
 
 @pytest.mark.unit
@@ -675,7 +675,7 @@ class TestVersionEndpointOwnership:
     @pytest.mark.asyncio
     async def test_create_version_returns_201_for_owner(self, authenticated_client, mock_user):
         with patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
-             patch('api.controllers.version.VersionRepositoryImpl.add', new_callable=AsyncMock) as mock_add:
+             patch('api.controllers.version.VersionRepositoryImpl.save', new_callable=AsyncMock) as mock_add:
             mock_get_solution.return_value = make_solution(str(mock_user.id))
             mock_add.return_value = make_version()
 
@@ -709,7 +709,7 @@ class TestVersionEndpointOwnership:
     async def test_update_version_returns_200_for_owner(self, authenticated_client, mock_user):
         with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
              patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
-             patch('api.controllers.version.VersionRepositoryImpl.update', new_callable=AsyncMock) as mock_update:
+             patch('api.controllers.version.VersionRepositoryImpl.save', new_callable=AsyncMock) as mock_update:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(str(mock_user.id))
             mock_update.return_value = make_version()

@@ -70,7 +70,7 @@ class TestSolutionsEndpoints:
         
         with patch('api.controllers.solution.create_solution', new_callable=AsyncMock) as mock_create, \
              patch('api.controllers.solution.create_version', new_callable=AsyncMock) as mock_create_version, \
-             patch('api.controllers.solution.SolutionRepositoryImpl.update', new_callable=AsyncMock) as mock_modify:
+             patch('api.controllers.solution.SolutionRepositoryImpl.save', new_callable=AsyncMock) as mock_modify:
             
             mock_create.return_value = expected_solution
             mock_create_version.return_value = mock_version
@@ -253,7 +253,7 @@ class TestVersionEndpoints:
         )
         
         with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
-             patch('api.controllers.solution.SolutionRepositoryImpl.update', new_callable=AsyncMock) as mock_modify_solution, \
+             patch('api.controllers.solution.SolutionRepositoryImpl.save', new_callable=AsyncMock) as mock_modify_solution, \
              patch('api.controllers.solution.update_version', new_callable=AsyncMock) as mock_modify_version:
             
             mock_get_one.return_value = mock_solution
