@@ -2,6 +2,7 @@ from application.dtos.version.VersionRequest import VersionCreateRequest
 from domain.entities.VersionEntity import VersionEntity
 from domain.repositories.solution.repo import ISolutionRepository
 from domain.repositories.version.repo import IVersionRepository
+from bson import ObjectId
 
 
 async def create_version(
@@ -18,4 +19,11 @@ async def create_version(
     solution = await solution_repository.get_by_id(request.solution_id)
     solution.assert_owned_by(current_user_id)
 
-    return await repository.add(request)
+    entity = VersionEntity.create(
+        id=str(ObjectId()),
+        submodels=request.submodels,
+        description=request.description,
+        solution_id=request.solution_id,
+    )
+
+    return await repository.save(entity)

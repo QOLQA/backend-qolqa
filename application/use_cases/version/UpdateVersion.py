@@ -25,5 +25,12 @@ async def update_version(
     if request.solution_id is not None and request.solution_id != entity.solution_id:
         target_solution = await solution_repository.get_by_id(request.solution_id)
         target_solution.assert_owned_by(current_user_id)
+        entity.solution_id = request.solution_id
 
-    return await repository.update(version_id, request)
+    if request.description is not None:
+        entity.description = request.description
+
+    if request.submodels is not None:
+        entity.submodels = request.submodels
+
+    return await repository.save(entity)

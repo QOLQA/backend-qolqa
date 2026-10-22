@@ -22,4 +22,13 @@ async def update_solution(
             msg=f'User {current_user_id} is not authorized to modify solution {solution_id}.'
         )
 
-    return await repository.update(solution_id, request)
+    if request.name is not None:
+        entity.update_name(request.name)
+
+    if request.last_version_saved is not None:
+        entity.update_last_version(request.last_version_saved)
+
+    if request.src_img is not None:
+        entity.update_image(request.src_img)
+
+    return await repository.save(entity)

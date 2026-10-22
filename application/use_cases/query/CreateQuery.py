@@ -2,6 +2,7 @@ from application.dtos.query.QueryRequest import QueryCreateRequest
 from domain.entities.QueryEntity import QueryEntity
 from domain.repositories.query.repo import IQueryRepository
 from domain.repositories.solution.repo import ISolutionRepository
+from bson import ObjectId
 
 
 async def create_query(
@@ -18,4 +19,12 @@ async def create_query(
     solution = await solution_repository.get_by_id(request.solution_id)
     solution.assert_owned_by(current_user_id)
 
-    return await repository.add(request)
+    entity = QueryEntity.create(
+        id=str(ObjectId()),
+        full_query=request.full_query,
+        solution_id=request.solution_id,
+        collections=request.collections,
+        highlighted_words=request.highlighted_words,
+    )
+
+    return await repository.save(entity)

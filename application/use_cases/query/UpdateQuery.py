@@ -21,4 +21,13 @@ async def update_query(
     solution = await solution_repository.get_by_id(entity.solution_id)
     solution.assert_owned_by(current_user_id)
 
-    return await repository.update(query_id, request)
+    if request.full_query is not None:
+        entity.update_query(request.full_query)
+
+    if request.collections is not None:
+        entity.update_collections(request.collections)
+
+    if request.highlighted_words is not None:
+        entity.update_highlighted_words(request.highlighted_words)
+
+    return await repository.save(entity)
