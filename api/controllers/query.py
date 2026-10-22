@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, status, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from application.dtos.query.QueryRequest import QueryCreateRequest, QueryPartialUpdateRequest
 from application.dtos.query.QueryResponse import QueryResponse
@@ -18,9 +16,9 @@ from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from infrastructure.db_factory import get_database
 from infrastructure.audit import log_resource_operation
+from config.rate_limiter import limiter
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 def get_query_repository(database=Depends(get_database)) -> QueryRepositoryImpl:
