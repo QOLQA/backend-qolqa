@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import List, Optional
 
 from application.dtos.solution.SolutionRequest import SolutionCreateRequest
-from application.dtos.solution.SolutionResponse import SolutionResponse
-from application.dtos.version.VersionResponse import VersionResponse
+from infra.presentation.dtos.solution.response import SolutionResponse
+from infra.presentation.dtos.version.response import VersionResponse
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.entities.VersionEntity import VersionEntity
 

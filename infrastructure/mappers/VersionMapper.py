@@ -1,5 +1,5 @@
-from application.dtos.version.VersionRequest import VersionCreateRequest
-from application.dtos.version.VersionResponse import VersionResponse
+from infra.presentation.dtos.version.request import VersionCreateRequest
+from infra.presentation.dtos.version.response import VersionResponse
 from domain.entities.VersionEntity import VersionEntity, Submodel, Node, Position, Column, Edge, NestedNode
 
 

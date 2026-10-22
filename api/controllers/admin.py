@@ -7,8 +7,8 @@ from typing import List
 from bson import ObjectId
 from fastapi import APIRouter, Depends, status
 
-from application.dtos.auth.AuthRequest import AdminUserUpdateRequest
-from application.dtos.auth.AuthResponse import UserResponse
+from infra.presentation.dtos.auth.request import AdminUserUpdateRequest
+from infra.presentation.dtos.auth.response import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
 from infrastructure.mappers import UserMapper

@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 
-from application.dtos.version.VersionResponse import VersionResponse
+from infra.presentation.dtos.version.response import VersionResponse
 
 
 class SolutionResponse(BaseModel):

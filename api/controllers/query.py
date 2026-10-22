@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status, Request
 
-from application.dtos.query.QueryRequest import QueryCreateRequest, QueryPartialUpdateRequest
-from application.dtos.query.QueryResponse import QueryResponse
+from infra.presentation.dtos.query.request import QueryCreateRequest, QueryPartialUpdateRequest
+from application.dtos.query.commands import CreateQueryCommand, UpdateQueryCommand
+from infra.presentation.dtos.query.response import QueryResponse
 from application.use_cases.query.GetAllQueries import get_all_queries
 from application.use_cases.query.GetQueryById import get_query_by_id
 from application.use_cases.query.GetQueriesBySolution import get_queries_by_solution
@@ -126,8 +127,15 @@ async def create_query_endpoint(
 ) -> QueryResponse:
     """Create a new query on a solution owned by the current user."""
     try:
+        command = CreateQueryCommand(
+            full_query=query_create.full_query,
+            collections=query_create.collections,
+            highlighted_words=query_create.highlighted_words,
+            solution_id=query_create.solution_id,
+            current_user_id=str(current_user.id),
+        )
         entity = await create_query(
-            repository, solution_repository, query_create, str(current_user.id)
+            repository, solution_repository, command
         )
 
         log_resource_operation(
@@ -156,8 +164,13 @@ async def update_query_endpoint(
 ) -> QueryResponse:
     """Update an existing query — only if owned by the current user."""
     try:
+        command = UpdateQueryCommand(
+            full_query=query_update.full_query,
+            collections=query_update.collections,
+            highlighted_words=query_update.highlighted_words,
+        )
         entity = await update_query(
-            repository, solution_repository, query_id, query_update, str(current_user.id)
+            repository, solution_repository, query_id, command, str(current_user.id)
         )
 
         log_resource_operation(

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status, Request
 
-from application.dtos.version.VersionRequest import VersionCreateRequest, VersionPartialUpdateRequest
-from application.dtos.version.VersionResponse import VersionResponse
+from infra.presentation.dtos.version.request import VersionCreateRequest, VersionPartialUpdateRequest
+from application.dtos.version.commands import CreateVersionCommand, UpdateVersionCommand
+from application.dtos.version.commands import CreateVersionCommand, UpdateVersionCommand
+from infra.presentation.dtos.version.response import VersionResponse
 from application.use_cases.version.GetAllVersions import get_all_versions
 from application.use_cases.version.GetVersionById import get_version_by_id
 from application.use_cases.version.CreateVersion import create_version
@@ -13,6 +15,8 @@ from domain.entities.auth.UserEntity import UserEntity as User
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from infrastructure.db_factory import get_database
+from infrastructure.audit import log_resource_operation
+from config.rate_limiter import limiter
 from infrastructure.audit import log_resource_operation
 from config.rate_limiter import limiter
 
@@ -97,8 +101,14 @@ async def create_version_endpoint(
 ) -> VersionResponse:
     """Create a new version on a solution owned by the current user."""
     try:
+        command = CreateVersionCommand(
+            submodels=version_create.submodels,
+            description=version_create.description,
+            solution_id=version_create.solution_id,
+            current_user_id=str(current_user.id),
+        )
         entity = await create_version(
-            repository, solution_repository, version_create, str(current_user.id)
+            repository, solution_repository, command
         )
 
         log_resource_operation(
@@ -127,8 +137,13 @@ async def update_version_endpoint(
 ) -> VersionResponse:
     """Update an existing version — only if owned by the current user."""
     try:
+        command = UpdateVersionCommand(
+            submodels=version_update.submodels,
+            description=version_update.description,
+            solution_id=version_update.solution_id,
+        )
         entity = await update_version(
-            repository, solution_repository, version_id, version_update, str(current_user.id)
+            repository, solution_repository, version_id, command, str(current_user.id)
         )
 
         log_resource_operation(

@@ -4,8 +4,8 @@ Handles profile update and account deletion for the authenticated user.
 """
 from fastapi import APIRouter, Depends, status
 
-from application.dtos.auth.AuthRequest import UserUpdateRequest
-from application.dtos.auth.AuthResponse import UserResponse
+from infra.presentation.dtos.auth.request import UserUpdateRequest
+from infra.presentation.dtos.auth.response import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
 from infrastructure.mappers import UserMapper
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl

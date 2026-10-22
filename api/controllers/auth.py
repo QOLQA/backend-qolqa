@@ -5,8 +5,8 @@ Handles login, registration, and user profile endpoints.
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
-from application.dtos.auth.AuthRequest import UserCreateRequest, GoogleLoginRequest
-from application.dtos.auth.AuthResponse import UserResponse, TokenResponse, GoogleLoginResponse
+from infra.presentation.dtos.auth.request import UserCreateRequest, GoogleLoginRequest
+from infra.presentation.dtos.auth.response import UserResponse, TokenResponse, GoogleLoginResponse
 from application.use_cases.auth.AuthenticateUser import authenticate_user
 from application.use_cases.auth.RegisterUser import register_user
 from application.use_cases.auth.GoogleLogin import google_login

@@ -15,6 +15,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 
 from application.dtos.query.QueryRequest import QueryCreateRequest, QueryPartialUpdateRequest
+from application.dtos.query.commands import CreateQueryCommand
 from application.dtos.version.VersionRequest import VersionCreateRequest, VersionPartialUpdateRequest
 from application.use_cases.query.CreateQuery import create_query
 from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
@@ -23,6 +24,7 @@ from application.use_cases.query.GetAllQueries import get_all_queries
 from application.use_cases.query.GetQueriesBySolution import get_queries_by_solution
 from application.use_cases.query.GetQueryById import get_query_by_id
 from application.use_cases.query.UpdateQuery import update_query
+from application.dtos.version.commands import CreateVersionCommand
 from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.DeleteVersion import delete_version
 from application.use_cases.version.GetAllVersions import get_all_versions
@@ -213,13 +215,13 @@ class TestQuerySolutionScopeOwnership:
             await create_query(
                 query_repository,
                 solution_repository,
-                QueryCreateRequest(
+                CreateQueryCommand(
                     full_query="SELECT * FROM users",
                     collections=["users"],
                     highlighted_words=[],
                     solution_id=SOLUTION_ID,
+                    current_user_id=OWNER_ID,
                 ),
-                OWNER_ID,
             )
 
         query_repository.add.assert_not_awaited()
@@ -235,13 +237,13 @@ class TestQuerySolutionScopeOwnership:
         result = await create_query(
             query_repository,
             solution_repository,
-            QueryCreateRequest(
+            CreateQueryCommand(
                 full_query="SELECT * FROM users",
                 collections=["users"],
                 highlighted_words=[],
                 solution_id=SOLUTION_ID,
+                current_user_id=OWNER_ID,
             ),
-            OWNER_ID,
         )
 
         assert result.id == QUERY_ID
@@ -541,12 +543,12 @@ class TestVersionSolutionScopeOwnership:
             await create_version(
                 version_repository,
                 solution_repository,
-                VersionCreateRequest(
+                CreateVersionCommand(
                     submodels=[],
                     description="Test version",
                     solution_id=SOLUTION_ID,
+                    current_user_id=OWNER_ID,
                 ),
-                OWNER_ID,
             )
 
         version_repository.add.assert_not_awaited()
@@ -562,12 +564,12 @@ class TestVersionSolutionScopeOwnership:
         result = await create_version(
             version_repository,
             solution_repository,
-            VersionCreateRequest(
+            CreateVersionCommand(
                 submodels=[],
                 description="Test version",
                 solution_id=SOLUTION_ID,
+                current_user_id=OWNER_ID,
             ),
-            OWNER_ID,
         )
 
         assert result.id == VERSION_ID

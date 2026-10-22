@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from application.dtos.auth.AuthRequest import UserCreateRequest
-from application.dtos.auth.AuthResponse import UserResponse
+from infra.presentation.dtos.auth.request import UserCreateRequest
+from infra.presentation.dtos.auth.response import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.enums.RoleEnum import RoleEnum

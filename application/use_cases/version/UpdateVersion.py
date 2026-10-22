@@ -1,4 +1,4 @@
-from application.dtos.version.VersionRequest import VersionPartialUpdateRequest
+from application.dtos.version.commands import UpdateVersionCommand
 from domain.entities.VersionEntity import VersionEntity
 from domain.repositories.solution.repo import ISolutionRepository
 from domain.repositories.version.repo import IVersionRepository
@@ -8,7 +8,7 @@ async def update_version(
     repository: IVersionRepository,
     solution_repository: ISolutionRepository,
     version_id: str,
-    request: VersionPartialUpdateRequest,
+    command: UpdateVersionCommand,
     current_user_id: str,
 ) -> VersionEntity:
     """Partially update a version and return the updated entity.
@@ -22,15 +22,15 @@ async def update_version(
     solution = await solution_repository.get_by_id(entity.solution_id)
     solution.assert_owned_by(current_user_id)
 
-    if request.solution_id is not None and request.solution_id != entity.solution_id:
-        target_solution = await solution_repository.get_by_id(request.solution_id)
+    if command.solution_id is not None and command.solution_id != entity.solution_id:
+        target_solution = await solution_repository.get_by_id(command.solution_id)
         target_solution.assert_owned_by(current_user_id)
-        entity.solution_id = request.solution_id
+        entity.reparent_to_solution(command.solution_id)
 
-    if request.description is not None:
-        entity.description = request.description
+    if command.description is not None:
+        entity.update_description(command.description)
 
-    if request.submodels is not None:
-        entity.submodels = request.submodels
+    if command.submodels is not None:
+        entity.update_submodels(command.submodels)
 
     return await repository.save(entity)

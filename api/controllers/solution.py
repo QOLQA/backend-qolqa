@@ -4,10 +4,12 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, status, Request
 
-from application.dtos.solution.SolutionRequest import SolutionCreateRequest, SolutionPartialUpdateRequest
-from application.dtos.solution.SolutionResponse import SolutionResponse
-from application.dtos.version.VersionRequest import VersionCreateRequest, VersionPartialUpdateRequest
-from application.dtos.version.VersionResponse import VersionResponse
+from infra.presentation.dtos.solution.request import SolutionCreateRequest, SolutionPartialUpdateRequest
+from application.dtos.solution.commands import CreateSolutionCommand, UpdateSolutionCommand
+from infra.presentation.dtos.solution.response import SolutionResponse
+from infra.presentation.dtos.version.request import VersionCreateRequest, VersionPartialUpdateRequest
+from application.dtos.version.commands import CreateVersionCommand
+from infra.presentation.dtos.version.response import VersionResponse
 from application.use_cases.solution.GetAllSolutionsForUser import get_all_solutions_for_user
 from application.use_cases.solution.GetSolutionById import get_solution_by_id
 from application.use_cases.solution.CreateSolution import create_solution
@@ -19,7 +21,7 @@ from infrastructure.mappers import SolutionMapper, VersionMapper
 from infrastructure.repositories import SolutionRepositoryImpl, VersionRepositoryImpl
 from infrastructure.repositories.QueryRepoImpl import QueryRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
-from application.dtos.version.VersionRequest import default_version_descriptions
+from infra.presentation.dtos.version.request import default_version_descriptions
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from domain.errors import Forbidden
@@ -83,17 +85,24 @@ async def create_solution_endpoint(
 ) -> SolutionResponse:
     """Create a new solution with an initial version for the current user."""
     try:
-        # 1. Create the solution (user_id injected by use case via mapper)
-        entity = await create_solution(solution_repository, solution_create, str(current_user.id))
+        # 1. Create the solution
+        command = CreateSolutionCommand(
+            name=solution_create.name,
+            last_version_saved=solution_create.last_version_saved,
+            src_img=solution_create.src_img,
+            user_id=str(current_user.id),
+        )
+        entity = await create_solution(solution_repository, command)
 
         # 2. Create the initial version
-        version_request = VersionCreateRequest(
+        version_command = CreateVersionCommand(
             submodels=[],
             description=default_version_descriptions[0],
             solution_id=entity.id,
+            current_user_id=str(current_user.id),
         )
         version_entity = await create_version(
-            version_repository, solution_repository, version_request, str(current_user.id)
+            version_repository, solution_repository, version_command
         )
 
         # 3. Update last_version_saved on the solution
@@ -177,10 +186,15 @@ async def update_solution_endpoint(
 ) -> SolutionResponse:
     """Update a solution — only if owned by the current user."""
     try:
+        command = UpdateSolutionCommand(
+            name=solution_update.name,
+            last_version_saved=solution_update.last_version_saved,
+            src_img=solution_update.src_img,
+        )
         entity = await update_solution(
             solution_repository,
             id,
-            solution_update,
+            command,
             str(current_user.id),
         )
 

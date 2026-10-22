@@ -1,4 +1,4 @@
-from application.dtos.solution.SolutionRequest import SolutionPartialUpdateRequest
+from application.dtos.solution.commands import UpdateSolutionCommand
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.errors import Forbidden
 from domain.repositories.solution.repo import ISolutionRepository
@@ -7,7 +7,7 @@ from domain.repositories.solution.repo import ISolutionRepository
 async def update_solution(
     repository: ISolutionRepository,
     solution_id: str,
-    request: SolutionPartialUpdateRequest,
+    command: UpdateSolutionCommand,
     current_user_id: str,
 ) -> SolutionEntity:
     """Partially update a solution.
@@ -22,13 +22,13 @@ async def update_solution(
             msg=f'User {current_user_id} is not authorized to modify solution {solution_id}.'
         )
 
-    if request.name is not None:
-        entity.update_name(request.name)
+    if command.name is not None:
+        entity.update_name(command.name)
 
-    if request.last_version_saved is not None:
-        entity.update_last_version(request.last_version_saved)
+    if command.last_version_saved is not None:
+        entity.update_last_version(command.last_version_saved)
 
-    if request.src_img is not None:
-        entity.update_image(request.src_img)
+    if command.src_img is not None:
+        entity.update_image(command.src_img)
 
     return await repository.save(entity)
