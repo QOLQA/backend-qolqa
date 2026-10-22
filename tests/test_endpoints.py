@@ -14,7 +14,7 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_all_solutions_empty(self, authenticated_client, mock_user, auth_headers):
         """Test getting all solutions when database is empty"""
-        with patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
+        with patch('infra.presentation.routers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             mock_get_all.return_value = []
 
             response = await authenticated_client.get("/solutions", headers=auth_headers)
@@ -36,7 +36,7 @@ class TestSolutionsEndpoints:
             SolutionEntity(id=str(ObjectId()), user_id=str(mock_user.id), name=solution_data_2["name"], versions=[])
         ]
         
-        with patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
+        with patch('infra.presentation.routers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
             mock_get_all.return_value = mock_solutions
             
             response = await authenticated_client.get("/solutions", headers=auth_headers)
@@ -68,9 +68,9 @@ class TestSolutionsEndpoints:
             submodels=[]
         )
         
-        with patch('api.controllers.solution.create_solution', new_callable=AsyncMock) as mock_create, \
-             patch('api.controllers.solution.create_version', new_callable=AsyncMock) as mock_create_version, \
-             patch('api.controllers.solution.SolutionRepositoryImpl.save', new_callable=AsyncMock) as mock_modify:
+        with patch('infra.presentation.routers.solution.create_solution', new_callable=AsyncMock) as mock_create, \
+             patch('infra.presentation.routers.solution.create_version', new_callable=AsyncMock) as mock_create_version, \
+             patch('infra.presentation.routers.solution.SolutionRepositoryImpl.save', new_callable=AsyncMock) as mock_modify:
             
             mock_create.return_value = expected_solution
             mock_create_version.return_value = mock_version
@@ -120,8 +120,8 @@ class TestSolutionsEndpoints:
             versions=[]
         )
         
-        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
-             patch('api.controllers.solution.VersionRepositoryImpl.get_by_solution_id', new_callable=AsyncMock) as mock_get_versions:
+        with patch('infra.presentation.routers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
+             patch('infra.presentation.routers.solution.VersionRepositoryImpl.get_by_solution_id', new_callable=AsyncMock) as mock_get_versions:
             
             mock_get_one.return_value = expected_solution
             mock_get_versions.return_value = []
@@ -137,7 +137,7 @@ class TestSolutionsEndpoints:
         """Test getting a non-existent solution"""
         from domain.errors import NotFoundError
         
-        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one:
+        with patch('infra.presentation.routers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
             
             response = await authenticated_client.get("/solutions/nonexistent", headers=auth_headers)
@@ -159,7 +159,7 @@ class TestSolutionsEndpoints:
             versions=[]
         )
         
-        with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_modify:
+        with patch('infra.presentation.routers.solution.update_solution', new_callable=AsyncMock) as mock_modify:
             
             mock_modify.return_value = updated_solution
             
@@ -190,7 +190,7 @@ class TestSolutionsEndpoints:
             versions=[]
         )
         
-        with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_modify:
+        with patch('infra.presentation.routers.solution.update_solution', new_callable=AsyncMock) as mock_modify:
             
             mock_modify.return_value = updated_solution
             
@@ -209,7 +209,7 @@ class TestSolutionsEndpoints:
         """Test updating a solution with invalid ID"""
         from domain.errors import NotFoundError
         
-        with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
+        with patch('infra.presentation.routers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
             
             response = await authenticated_client.patch(
@@ -252,9 +252,9 @@ class TestVersionEndpoints:
             submodels=[]
         )
         
-        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
-             patch('api.controllers.solution.SolutionRepositoryImpl.save', new_callable=AsyncMock) as mock_modify_solution, \
-             patch('api.controllers.solution.update_version', new_callable=AsyncMock) as mock_modify_version:
+        with patch('infra.presentation.routers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one, \
+             patch('infra.presentation.routers.solution.SolutionRepositoryImpl.save', new_callable=AsyncMock) as mock_modify_solution, \
+             patch('infra.presentation.routers.solution.update_version', new_callable=AsyncMock) as mock_modify_version:
             
             mock_get_one.return_value = mock_solution
             mock_modify_solution.return_value = mock_solution
@@ -275,7 +275,7 @@ class TestVersionEndpoints:
         """Test updating version for non-existent solution"""
         from domain.errors import NotFoundError
         
-        with patch('api.controllers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one:
+        with patch('infra.presentation.routers.solution.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_one:
             mock_get_one.side_effect = NotFoundError("Solution not found")
             
             response = await authenticated_client.patch(
@@ -367,7 +367,7 @@ class TestEndpointErrorHandling:
     @pytest.mark.asyncio
     async def test_database_error_handling(self, authenticated_client, mock_solution_data, auth_headers):
         """Test proper error handling for database errors"""
-        with patch('api.controllers.solution.create_solution', new_callable=AsyncMock) as mock_create:
+        with patch('infra.presentation.routers.solution.create_solution', new_callable=AsyncMock) as mock_create:
             mock_create.side_effect = Exception("Database connection error")
             
             response = await authenticated_client.post("/solutions", json=mock_solution_data, headers=auth_headers)

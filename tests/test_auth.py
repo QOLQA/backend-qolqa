@@ -14,11 +14,11 @@ class TestJWTAuthentication:
     async def test_login_success(self, async_client):
         """Test successful user login and JWT token generation"""
         # Mock use case functions (clean architecture paths)
-        with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
-             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+        with patch('infra.presentation.routers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
+             patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             
             from domain.entities.auth.UserEntity import UserEntity
-            from application.dtos.auth.AuthResponse import TokenResponse
+            from infra.presentation.dtos.auth.response import TokenResponse
             from datetime import datetime
             
             mock_entity = UserEntity(
@@ -52,7 +52,7 @@ class TestJWTAuthentication:
         """Test login with invalid credentials"""
         from domain.errors import InvalidCredentials
 
-        with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
+        with patch('infra.presentation.routers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
             mock_auth.side_effect = InvalidCredentials()
 
             response = await async_client.post(
@@ -174,7 +174,7 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_new_user_success(self, async_client):
         """Test successful user registration"""
-        with patch('api.controllers.auth.register_user', new_callable=AsyncMock) as mock_register:
+        with patch('infra.presentation.routers.auth.register_user', new_callable=AsyncMock) as mock_register:
             from domain.entities.auth.UserEntity import UserEntity
             from datetime import datetime
             
@@ -206,7 +206,7 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_duplicate_username(self, async_client):
         """Test registration with existing username"""
-        with patch('api.controllers.auth.register_user', new_callable=AsyncMock) as mock_register:
+        with patch('infra.presentation.routers.auth.register_user', new_callable=AsyncMock) as mock_register:
             from domain.errors import Duplicate
             mock_register.side_effect = Duplicate(msg="Username already exists")
             
@@ -440,7 +440,7 @@ class TestAuthorizationRoles:
         fastapi_app.dependency_overrides[get_current_user] = override_current_user
 
         try:
-            with patch('api.controllers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
+            with patch('infra.presentation.routers.solution.update_solution', new_callable=AsyncMock) as mock_get_one:
                 from domain.errors import Forbidden
                 mock_get_one.side_effect = Forbidden(msg="Not authorized to modify this solution")
                 other_solution_id = str(ObjectId())

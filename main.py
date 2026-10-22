@@ -11,12 +11,12 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from api.controllers.auth import router as auth_router
-from api.controllers.user import router as user_router
-from api.controllers.admin import router as admin_router
-from api.controllers.query import router as queries_router
-from api.controllers.version import router as versions_router
-from api.controllers.solution import router as solutions_router
+from infra.presentation.routers.auth import router as auth_router
+from infra.presentation.routers.user import router as user_router
+from infra.presentation.routers.admin import router as admin_router
+from infra.presentation.routers.query import router as queries_router
+from infra.presentation.routers.version import router as versions_router
+from infra.presentation.routers.solution import router as solutions_router
 from config.settings import settings, TypeDB
 from config.rate_limiter import limiter
 from api.handle_errors import handle_common_errors

@@ -904,7 +904,7 @@ class TestPostGoogleAuthEndpoint:
         from datetime import datetime
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
-        from application.dtos.auth.AuthResponse import TokenResponse
+        from infra.presentation.dtos.auth.response import TokenResponse
 
         mock_user = UserEntity(
             id=str(ObjectId()),
@@ -916,8 +916,8 @@ class TestPostGoogleAuthEndpoint:
             roles=[],
         )
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
-             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             mock_use_case.return_value = mock_user
             mock_token.return_value = TokenResponse(access_token="google-jwt-token", token_type="bearer")
 
@@ -938,7 +938,7 @@ class TestPostGoogleAuthEndpoint:
     async def test_post_google_auth_invalid_token_401(self, async_client):
         from domain.errors import InvalidGoogleToken
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
             mock_use_case.side_effect = InvalidGoogleToken()
 
             response = await async_client.post(
@@ -952,7 +952,7 @@ class TestPostGoogleAuthEndpoint:
     async def test_post_google_auth_unset_client_id_503(self, async_client):
         from domain.errors import GoogleLoginNotConfigured
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
             mock_use_case.side_effect = GoogleLoginNotConfigured()
 
             response = await async_client.post(
@@ -967,7 +967,7 @@ class TestPostGoogleAuthEndpoint:
         from datetime import datetime
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
-        from application.dtos.auth.AuthResponse import TokenResponse
+        from infra.presentation.dtos.auth.response import TokenResponse
 
         existing_user = UserEntity(
             id=str(ObjectId()),
@@ -979,8 +979,8 @@ class TestPostGoogleAuthEndpoint:
             roles=[],
         )
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
-             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             mock_use_case.return_value = existing_user
             mock_token.return_value = TokenResponse(access_token="existing-jwt", token_type="bearer")
 
@@ -1000,8 +1000,8 @@ class TestPostGoogleAuthEndpoint:
         exc = InvalidGoogleToken()
         exc.email = "user@example.com"
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
-             patch('api.controllers.auth.log_auth_attempt') as mock_log:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('infra.presentation.routers.auth.log_auth_attempt') as mock_log:
             mock_use_case.side_effect = exc
 
             response = await async_client.post(
@@ -1020,8 +1020,8 @@ class TestPostGoogleAuthEndpoint:
         """Failed google login audit log uses 'google-unknown' when exception has no email."""
         from domain.errors import InvalidGoogleToken
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
-             patch('api.controllers.auth.log_auth_attempt') as mock_log:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('infra.presentation.routers.auth.log_auth_attempt') as mock_log:
             mock_use_case.side_effect = InvalidGoogleToken()
 
             response = await async_client.post(
@@ -1041,6 +1041,7 @@ class TestPostGoogleAuthEndpoint:
 # WU6: Integration Tests
 # ============================================================
 
+@pytest.mark.integration
 class TestGoogleLoginIntegration:
     """End-to-end integration tests for Google login."""
 
@@ -1050,7 +1051,7 @@ class TestGoogleLoginIntegration:
         from datetime import datetime
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
-        from application.dtos.auth.AuthResponse import TokenResponse
+        from infra.presentation.dtos.auth.response import TokenResponse
 
         mock_user = UserEntity(
             id=str(ObjectId()),
@@ -1062,8 +1063,8 @@ class TestGoogleLoginIntegration:
             roles=[],
         )
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
-             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             mock_use_case.return_value = mock_user
             mock_token.return_value = TokenResponse(access_token="integration-jwt", token_type="bearer")
 
@@ -1091,7 +1092,7 @@ class TestGoogleLoginIntegration:
         from datetime import datetime
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
-        from application.dtos.auth.AuthResponse import TokenResponse
+        from infra.presentation.dtos.auth.response import TokenResponse
 
         existing_user = UserEntity(
             id=str(ObjectId()),
@@ -1103,8 +1104,8 @@ class TestGoogleLoginIntegration:
             roles=[],
         )
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
-             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+             patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             mock_use_case.return_value = existing_user
             mock_token.return_value = TokenResponse(access_token="existing-jwt", token_type="bearer")
 
@@ -1124,7 +1125,7 @@ class TestGoogleLoginIntegration:
         """Invalid Google token returns 401."""
         from domain.errors import InvalidGoogleToken
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
             mock_use_case.side_effect = InvalidGoogleToken()
 
             response = await async_client.post(
@@ -1142,7 +1143,7 @@ class TestGoogleLoginIntegration:
         """Unset GOOGLE_CLIENT_ID returns 503."""
         from domain.errors import GoogleLoginNotConfigured
 
-        with patch('api.controllers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
+        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
             mock_use_case.side_effect = GoogleLoginNotConfigured()
 
             response = await async_client.post(
@@ -1191,10 +1192,10 @@ class TestGoogleLoginIntegration:
         from datetime import datetime
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
-        from application.dtos.auth.AuthResponse import TokenResponse
+        from infra.presentation.dtos.auth.response import TokenResponse
 
         with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
-             patch('api.controllers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
+             patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             mock_auth.return_value = UserEntity(
                 id=str(ObjectId()),
                 username="testuser",
