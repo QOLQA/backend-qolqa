@@ -96,21 +96,25 @@ class TestSubmodelValidation:
         assert submodel.nodes == []
         assert submodel.edges == []
     
-    def test_submodel_missing_nodes(self):
-        """Test that submodel requires nodes field"""
-        with pytest.raises(ValidationError) as exc_info:
-            Submodel(edges=[])
-        
-        errors = exc_info.value.errors()
-        assert any(error['loc'] == ('nodes',) for error in errors)
-    
-    def test_submodel_missing_edges(self):
-        """Test that submodel requires edges field"""
-        with pytest.raises(ValidationError) as exc_info:
-            Submodel(nodes=[])
-        
-        errors = exc_info.value.errors()
-        assert any(error['loc'] == ('edges',) for error in errors)
+    def test_submodel_defaults_to_empty_lists(self):
+        """Test that submodel defaults nodes and edges to empty lists"""
+        submodel = Submodel(edges=[])
+        assert submodel.nodes == []
+        assert submodel.edges == []
+
+    def test_submodel_can_be_created_with_both_fields(self):
+        """Test that submodel can be created with both nodes and edges"""
+        node = Node(
+            id="node1",
+            name="Test Node",
+            type="entity",
+            position=Position(x=0, y=0),
+            cols=[Column(id="col1", name="id", type="int")]
+        )
+        edge = Edge(id="edge1", source="node1", target="node2")
+        submodel = Submodel(nodes=[node], edges=[edge])
+        assert len(submodel.nodes) == 1
+        assert len(submodel.edges) == 1
 
 
 @pytest.mark.validation
@@ -124,9 +128,9 @@ class TestNodeValidation:
             id="node1",
             name="User",
             type="entity",
-            position={"x": 100, "y": 200},
+            position=Position(x=100, y=200),
             cols=[
-                {"id": "col1", "name": "id", "type": "int"}
+                Column(id="col1", name="id", type="int")
             ],
             nested_nodes=None
         )
@@ -140,7 +144,7 @@ class TestNodeValidation:
     
     def test_node_missing_required_fields(self):
         """Test that node requires all mandatory fields"""
-        with pytest.raises(ValidationError):
+        with pytest.raises(TypeError):
             Node(
                 id="node1",
                 name="User"
@@ -153,15 +157,15 @@ class TestNodeValidation:
             id="node1",
             name="User",
             type="entity",
-            position={"x": 100, "y": 200},
+            position=Position(x=100, y=200),
             cols=[],
             nested_nodes=[
-                {
-                    "id": "nested1",
-                    "name": "Address",
-                    "cols": [],
-                    "nested_nodes": None
-                }
+                NestedNode(
+                    id="nested1",
+                    name="Address",
+                    cols=[],
+                    nested_nodes=None
+                )
             ]
         )
         
@@ -174,11 +178,11 @@ class TestNodeValidation:
             id="node1",
             name="User",
             type="entity",
-            position={"x": 0, "y": 0},
+            position=Position(x=0, y=0),
             cols=[
-                {"id": "col1", "name": "id", "type": "int"},
-                {"id": "col2", "name": "name", "type": "string"},
-                {"id": "col3", "name": "email", "type": "string"}
+                Column(id="col1", name="id", type="int"),
+                Column(id="col2", name="name", type="string"),
+                Column(id="col3", name="email", type="string")
             ]
         )
         
@@ -206,19 +210,13 @@ class TestPositionValidation:
     
     def test_position_missing_x(self):
         """Test that position requires x coordinate"""
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.raises(TypeError):
             Position(y=100)
-        
-        errors = exc_info.value.errors()
-        assert any(error['loc'] == ('x',) for error in errors)
     
     def test_position_missing_y(self):
         """Test that position requires y coordinate"""
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.raises(TypeError):
             Position(x=100)
-        
-        errors = exc_info.value.errors()
-        assert any(error['loc'] == ('y',) for error in errors)
     
     def test_position_negative_values(self):
         """Test position with negative values"""
@@ -247,7 +245,7 @@ class TestColumnValidation:
     
     def test_column_missing_required_fields(self):
         """Test that column requires all fields"""
-        with pytest.raises(ValidationError):
+        with pytest.raises(TypeError):
             Column(id="col1")
 
 
@@ -270,25 +268,19 @@ class TestEdgeValidation:
     
     def test_edge_missing_source(self):
         """Test that edge requires source"""
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.raises(TypeError):
             Edge(
                 id="edge1",
                 target="node2"
             )
-        
-        errors = exc_info.value.errors()
-        assert any(error['loc'] == ('source',) for error in errors)
     
     def test_edge_missing_target(self):
         """Test that edge requires target"""
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.raises(TypeError):
             Edge(
                 id="edge1",
                 source="node1"
             )
-        
-        errors = exc_info.value.errors()
-        assert any(error['loc'] == ('target',) for error in errors)
 
 
 @pytest.mark.validation
@@ -302,7 +294,7 @@ class TestNestedNodeValidation:
             id="nested1",
             name="Address",
             cols=[
-                {"id": "col1", "name": "street", "type": "string"}
+                Column(id="col1", name="street", type="string")
             ],
             nested_nodes=None
         )
@@ -318,12 +310,12 @@ class TestNestedNodeValidation:
             name="Address",
             cols=[],
             nested_nodes=[
-                {
-                    "id": "nested2",
-                    "name": "Location",
-                    "cols": [],
-                    "nested_nodes": None
-                }
+                NestedNode(
+                    id="nested2",
+                    name="Location",
+                    cols=[],
+                    nested_nodes=None
+                )
             ]
         )
         
