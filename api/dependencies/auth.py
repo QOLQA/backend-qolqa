@@ -9,6 +9,7 @@ from domain.enums.RoleEnum import RoleEnum
 from domain.errors import InvalidToken
 from infrastructure.jwt import decode_access_token, oauth2_scheme
 from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+from infrastructure.security.bcrypt_hasher import BcryptHasher
 from application.use_cases.auth.GetUserById import get_user_by_id
 from infrastructure.db_factory import get_database
 
@@ -28,8 +29,16 @@ def get_token_data(token: str = Depends(oauth2_scheme)) -> dict:
         )
 
 
-def get_user_repository(database=Depends(get_database)) -> UserRepositoryImpl:
-    return UserRepositoryImpl(database)
+def get_password_hasher() -> BcryptHasher:
+    """Provides the bcrypt password hasher."""
+    return BcryptHasher()
+
+
+def get_user_repository(
+    database=Depends(get_database),
+    hasher=Depends(get_password_hasher),
+) -> UserRepositoryImpl:
+    return UserRepositoryImpl(database, hasher=hasher)
 
 
 async def get_current_user(

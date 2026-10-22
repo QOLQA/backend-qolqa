@@ -2,7 +2,7 @@
 Google Login use case.
 
 Orchestrates: verify → resolve → create/link → return entity.
-Lives in application/ — imports infrastructure via constructor injection.
+Lives in application/ — depends on domain interfaces only.
 """
 import re
 import logging
@@ -13,7 +13,7 @@ from domain.errors import (
     GoogleLoginNotConfigured,
     InvalidGoogleToken,
 )
-from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
+from domain.repositories.user.repo import IUserRepository
 from infrastructure.services.google_auth import verify_google_token
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def _sanitize_username(prefix: str) -> str:
 
 
 async def google_login(
-    repository: UserRepositoryImpl,
+    repository: IUserRepository,
     credential: str,
     client_id: str | None,
 ) -> UserEntity:
@@ -34,7 +34,7 @@ async def google_login(
     Authenticate or create a user via Google OAuth.
 
     Args:
-        repository: UserRepositoryImpl for DB operations
+        repository: IUserRepository for DB operations
         credential: Google ID token
         client_id: Google OAuth client ID (from settings)
 

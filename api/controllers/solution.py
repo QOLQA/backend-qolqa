@@ -2,8 +2,6 @@ import logging
 import pprint
 
 from fastapi import APIRouter, Depends, status, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from application.dtos.solution.SolutionRequest import SolutionCreateRequest, SolutionPartialUpdateRequest
 from application.dtos.solution.SolutionResponse import SolutionResponse
@@ -26,11 +24,11 @@ from api.handle_errors import handle_common_errors
 from domain.errors import Forbidden
 from infrastructure.db_factory import get_database
 from infrastructure.audit import log_resource_operation, log_access_denied
+from config.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 def get_solution_repository(database=Depends(get_database)) -> SolutionRepositoryImpl:
@@ -93,7 +91,9 @@ async def create_solution_endpoint(
             description=default_version_descriptions[0],
             solution_id=entity.id,
         )
-        version_entity = await create_version(version_repository, version_request)
+        version_entity = await create_version(
+            version_repository, solution_repository, version_request, str(current_user.id)
+        )
 
         # 3. Update last_version_saved on the solution
         update_request = SolutionPartialUpdateRequest(last_version_saved=version_entity.id)
@@ -218,7 +218,9 @@ async def create_version_for_solution_endpoint(
         version_create.solution_id = solution_id
 
         # Create the version
-        version_entity = await create_version(version_repository, version_create)
+        version_entity = await create_version(
+            version_repository, solution_repository, version_create, str(current_user.id)
+        )
 
         # Update last_version_saved in the solution
         update_request = SolutionPartialUpdateRequest(last_version_saved=version_entity.id)
@@ -262,7 +264,9 @@ async def update_solution_version_endpoint(
         await solution_repository.update(solution_id, update_solution_request)
 
         # Update the version
-        version_entity = await update_version(version_repository, version_id, version_update)
+        version_entity = await update_version(
+            version_repository, solution_repository, version_id, version_update, str(current_user.id)
+        )
 
         log_resource_operation(
             action="version.update",
@@ -288,6 +292,7 @@ async def delete_solution_endpoint(
     solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
     version_repository: VersionRepositoryImpl = Depends(get_version_repository),
     query_repository: QueryRepositoryImpl = Depends(get_query_repository),
+    database=Depends(get_database),
 ) -> None:
     """Delete a solution and all associated versions and queries — only if owned by the current user."""
     try:
@@ -300,6 +305,7 @@ async def delete_solution_endpoint(
             current_user_id=str(current_user.id),
             version_repository=version_repository,
             query_repository=query_repository,
+            database=database,
         )
 
         log_resource_operation(

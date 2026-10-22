@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from domain.entities.VersionEntity import VersionEntity
+from domain.errors import Forbidden
 
 
 class SolutionEntity(BaseModel):
@@ -15,3 +16,8 @@ class SolutionEntity(BaseModel):
     src_img: str = Field(default="http://unknown.es", max_length=500)
     last_updated_at: Optional[datetime] = None
     versions: List[VersionEntity] = []
+
+    def assert_owned_by(self, user_id: str) -> None:
+        """Raise Forbidden when this solution is not owned by user_id."""
+        if self.user_id != user_id:
+            raise Forbidden(msg=f'User {user_id} is not authorized to access solution {self.id}.')

@@ -14,6 +14,7 @@ os.environ['TYPE_DB'] = 'mongo'
 
 from main import app
 from infrastructure.db_factory import get_database
+from config.rate_limiter import limiter
 
 
 def get_mock_database() -> MagicMock:
@@ -39,6 +40,15 @@ def get_mock_database() -> MagicMock:
 async def override_get_database() -> AsyncGenerator[MagicMock, None]:
     """FastAPI dependency override — yields a mock DB instead of real MongoDB."""
     yield get_mock_database()
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset rate limiter storage before each test to avoid cross-test contamination."""
+    # SlowAPI's MemoryStorage stores limits in limiter._storage
+    if hasattr(limiter, '_storage') and hasattr(limiter._storage, 'storage'):
+        limiter._storage.storage.clear()
+    yield
 
 
 @pytest.fixture

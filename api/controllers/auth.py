@@ -4,8 +4,6 @@ Handles login, registration, and user profile endpoints.
 """
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from application.dtos.auth.AuthRequest import UserCreateRequest, GoogleLoginRequest
 from application.dtos.auth.AuthResponse import UserResponse, TokenResponse, GoogleLoginResponse
@@ -20,9 +18,9 @@ from api.handle_errors import handle_common_errors
 from api.dependencies.auth import get_current_user, get_user_repository
 from infrastructure.audit import log_registration, log_auth_attempt
 from config.settings import settings
+from config.rate_limiter import limiter
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post('/register', response_model=UserResponse, status_code=status.HTTP_201_CREATED)

@@ -61,3 +61,4 @@ skills-lock.json
 
 # SDD / OpenSpec artifacts — local change-tracked docs, not project source
 openspec/
+odd/
