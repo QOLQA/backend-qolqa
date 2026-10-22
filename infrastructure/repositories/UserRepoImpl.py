@@ -4,11 +4,13 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from application.dtos.auth.AuthRequest import UserCreateRequest, UserUpdateRequest, AdminUserUpdateRequest
-from infrastructure.password import get_password_hash
 from domain.entities.auth.UserEntity import UserEntity
-from domain.errors import Duplicate, Missing
+from domain.enums.AuthProviderEnum import AuthProviderEnum
+from domain.errors import Duplicate, Missing, InvalidCredentials, PasswordRequiredForLocalLogin
 from domain.repositories.user.repo import IUserRepository
+from domain.security.password import IPasswordHasher
 from infrastructure.mappers import UserMapper
+from infrastructure.security.bcrypt_hasher import BcryptHasher
 
 
 class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpdateRequest]):
@@ -16,11 +18,16 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
 
     All DB operations use UserMapper — zero inline mapping.
     All domain errors are raised as Missing/Duplicate, never HTTPException.
-    Password hashing is handled internally in add().
+    Password hashing is delegated to injected IPasswordHasher.
     """
 
-    def __init__(self, database: AsyncIOMotorDatabase) -> None:
+    def __init__(
+        self,
+        database: AsyncIOMotorDatabase,
+        hasher: IPasswordHasher | None = None,
+    ) -> None:
         self.collection = database['users']
+        self._hasher = hasher or BcryptHasher()
 
     # ------------------------------------------------------------------ #
     # Read                                                                 #
@@ -76,6 +83,39 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
             return None
         return raw.get('hashed_password')
 
+    async def verify_credentials(self, username: str, password: str) -> UserEntity:
+        """Verify user credentials by username or email and password.
+
+        Uses injected IPasswordHasher for verification.
+        """
+        # Try username first, then fall back to email
+        user_entity = await self.get_by_username(username)
+
+        if not user_entity:
+            user_entity = await self.get_by_email(username)
+
+        if not user_entity:
+            raise InvalidCredentials()
+
+        # Retrieve hashed_password from the raw document
+        hashed_password = await self.get_hashed_password(user_entity.username)
+
+        # Guard: Google-only account has no password — cannot log in via /login
+        if (
+            user_entity.auth_provider == AuthProviderEnum.google
+            and user_entity.is_active
+            and hashed_password is None
+        ):
+            raise PasswordRequiredForLocalLogin()
+
+        if hashed_password is None or not self._hasher.verify(password, hashed_password):
+            raise InvalidCredentials()
+
+        if not user_entity.is_active:
+            raise InvalidCredentials()
+
+        return user_entity
+
     # ------------------------------------------------------------------ #
     # Write                                                                #
     # ------------------------------------------------------------------ #
@@ -95,7 +135,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity, UserCreateRequest, UserUpda
             raise Duplicate(msg=f'Email {entity_create.email} already exists')
 
         # Hash password before storage
-        hashed_password = get_password_hash(entity_create.password)
+        hashed_password = self._hasher.hash(entity_create.password)
 
         # Build insertable document via mapper
         doc = UserMapper.from_create_request(entity_create, hashed_password)

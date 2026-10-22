@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional
 
+from domain.errors import InvalidCredentials, PasswordRequiredForLocalLogin
+from domain.enums.AuthProviderEnum import AuthProviderEnum
+
 # Definir un tipo generico T para representar el modelo
 T = TypeVar('T')
 TCreate = TypeVar('TCreate')
@@ -84,5 +87,23 @@ class IUserRepository(Repository[T, TCreate, TUpdate]):
     ) -> T:
         '''
         Crea un nuevo usuario registrado vía Google (sin contraseña).
+        '''
+        pass
+
+    @abstractmethod
+    async def verify_credentials(self, username: str, password: str) -> T:
+        '''
+        Verify user credentials by username or email and password.
+        
+        Args:
+            username: Username or email to authenticate
+            password: Plain text password
+            
+        Returns:
+            UserEntity if authentication successful
+            
+        Raises:
+            InvalidCredentials: If username/password combination is invalid or user is inactive
+            PasswordRequiredForLocalLogin: If user has no local password (Google-only account)
         '''
         pass
