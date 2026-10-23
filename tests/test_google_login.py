@@ -916,7 +916,7 @@ class TestPostGoogleAuthEndpoint:
             roles=[],
         )
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_use_case, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             mock_use_case.return_value = mock_user
             mock_token.return_value = TokenResponse(access_token="google-jwt-token", token_type="bearer")
@@ -937,29 +937,27 @@ class TestPostGoogleAuthEndpoint:
     @pytest.mark.asyncio
     async def test_post_google_auth_invalid_token_401(self, async_client):
         from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch, AsyncMock
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
-            mock_use_case.side_effect = InvalidGoogleToken()
-
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
+            mock_google_login.side_effect = InvalidGoogleToken()
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "bad-token"},
             )
-
             assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_post_google_auth_unset_client_id_503(self, async_client):
         from domain.errors import GoogleLoginNotConfigured
+        from unittest.mock import patch, AsyncMock
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
-            mock_use_case.side_effect = GoogleLoginNotConfigured()
-
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
+            mock_google_login.side_effect = GoogleLoginNotConfigured()
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "any-token"},
             )
-
             assert response.status_code == 503
 
     @pytest.mark.asyncio
@@ -968,6 +966,7 @@ class TestPostGoogleAuthEndpoint:
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
+        from unittest.mock import patch, AsyncMock
 
         existing_user = UserEntity(
             id=str(ObjectId()),
@@ -979,16 +978,14 @@ class TestPostGoogleAuthEndpoint:
             roles=[],
         )
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
-            mock_use_case.return_value = existing_user
+            mock_google_login.return_value = existing_user
             mock_token.return_value = TokenResponse(access_token="existing-jwt", token_type="bearer")
-
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "valid-token"},
             )
-
             assert response.status_code == 200
             assert response.json()["user"]["username"] == "existinggoogle"
 
@@ -996,19 +993,18 @@ class TestPostGoogleAuthEndpoint:
     async def test_post_google_auth_failure_logs_email_from_exception(self, async_client):
         """Failed google login audit log uses email from exception, not hardcoded string."""
         from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch, AsyncMock
 
         exc = InvalidGoogleToken()
         exc.email = "user@example.com"
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login, \
              patch('infra.presentation.routers.auth.log_auth_attempt') as mock_log:
-            mock_use_case.side_effect = exc
-
+            mock_google_login.side_effect = exc
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "bad-token"},
             )
-
             assert response.status_code == 401
             mock_log.assert_called_once()
             call_kwargs = mock_log.call_args
@@ -1019,11 +1015,11 @@ class TestPostGoogleAuthEndpoint:
     async def test_post_google_auth_failure_logs_unknown_when_no_email(self, async_client):
         """Failed google login audit log uses 'google-unknown' when exception has no email."""
         from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch, AsyncMock
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login, \
              patch('infra.presentation.routers.auth.log_auth_attempt') as mock_log:
-            mock_use_case.side_effect = InvalidGoogleToken()
-
+            mock_google_login.side_effect = InvalidGoogleToken()
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "bad-token"},
@@ -1052,6 +1048,7 @@ class TestGoogleLoginIntegration:
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
+        from unittest.mock import patch, AsyncMock
 
         mock_user = UserEntity(
             id=str(ObjectId()),
@@ -1063,16 +1060,14 @@ class TestGoogleLoginIntegration:
             roles=[],
         )
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
-            mock_use_case.return_value = mock_user
+            mock_google_login.return_value = mock_user
             mock_token.return_value = TokenResponse(access_token="integration-jwt", token_type="bearer")
-
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "valid-google-credential"},
             )
-
             # Rate limiting may apply; accept 200 or 429
             assert response.status_code in (200, 429)
             if response.status_code == 200:
@@ -1093,6 +1088,7 @@ class TestGoogleLoginIntegration:
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
+        from unittest.mock import patch, AsyncMock
 
         existing_user = UserEntity(
             id=str(ObjectId()),
@@ -1104,16 +1100,14 @@ class TestGoogleLoginIntegration:
             roles=[],
         )
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case, \
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
-            mock_use_case.return_value = existing_user
+            mock_google_login.return_value = existing_user
             mock_token.return_value = TokenResponse(access_token="existing-jwt", token_type="bearer")
-
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "valid-google-credential"},
             )
-
             assert response.status_code in (200, 429)
             if response.status_code == 200:
                 data = response.json()
@@ -1124,15 +1118,14 @@ class TestGoogleLoginIntegration:
     async def test_integration_invalid_token_returns_401(self, async_client):
         """Invalid Google token returns 401."""
         from domain.errors import InvalidGoogleToken
+        from unittest.mock import patch, AsyncMock
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
-            mock_use_case.side_effect = InvalidGoogleToken()
-
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
+            mock_google_login.side_effect = InvalidGoogleToken()
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "bad-token"},
             )
-
             # Rate limiting may apply; accept 401 or 429
             assert response.status_code in (401, 429)
             if response.status_code == 401:
@@ -1142,15 +1135,14 @@ class TestGoogleLoginIntegration:
     async def test_integration_unset_client_id_returns_503(self, async_client):
         """Unset GOOGLE_CLIENT_ID returns 503."""
         from domain.errors import GoogleLoginNotConfigured
+        from unittest.mock import patch, AsyncMock
 
-        with patch('infra.presentation.routers.auth.google_login', new_callable=AsyncMock) as mock_use_case:
-            mock_use_case.side_effect = GoogleLoginNotConfigured()
-
+        with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
+            mock_google_login.side_effect = GoogleLoginNotConfigured()
             response = await async_client.post(
                 "/auth/google",
                 json={"credential": "any-token"},
             )
-
             # Rate limiting may apply; accept 503 or 429
             assert response.status_code in (503, 429)
             if response.status_code == 503:
@@ -1159,12 +1151,18 @@ class TestGoogleLoginIntegration:
     @pytest.mark.asyncio
     async def test_integration_register_unaffected(self, async_client):
         """POST /register still works (regression test)."""
+        # The async_client fixture already provides a mocked database
+        # Just verify the endpoint accepts valid input and returns 201
         from datetime import datetime
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
+        from unittest.mock import AsyncMock, patch
 
-        with patch('api.controllers.auth.register_user', new_callable=AsyncMock) as mock_register:
-            mock_register.return_value = UserEntity(
+        # Configure the mock database to return a user on save
+        # The async_client fixture's mock database needs to be configured
+        # We'll mock the repository's save method directly
+        with patch('infrastructure.repositories.UserRepoImpl.UserRepositoryImpl.save', new_callable=AsyncMock) as mock_save:
+            mock_user = UserEntity(
                 id=str(ObjectId()),
                 username="newuser",
                 email="new@example.com",
@@ -1173,7 +1171,8 @@ class TestGoogleLoginIntegration:
                 roles=[],
                 token_version=0,
             )
-
+            mock_save.return_value = mock_user
+            
             response = await async_client.post(
                 "/auth/register",
                 json={
@@ -1182,7 +1181,6 @@ class TestGoogleLoginIntegration:
                     "password": "SecurePass123",
                 },
             )
-
             assert response.status_code == 201
             assert response.json()["username"] == "newuser"
 
@@ -1193,24 +1191,25 @@ class TestGoogleLoginIntegration:
         from bson import ObjectId
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
+        from unittest.mock import patch, AsyncMock
 
-        with patch('api.controllers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
+        mock_user = UserEntity(
+            id=str(ObjectId()),
+            username="testuser",
+            email="test@example.com",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            roles=[],
+            token_version=0,
+        )
+
+        with patch('application.use_cases.auth.AuthenticateUser.authenticate_user', new_callable=AsyncMock) as mock_auth, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
-            mock_auth.return_value = UserEntity(
-                id=str(ObjectId()),
-                username="testuser",
-                email="test@example.com",
-                is_active=True,
-                created_at=datetime.utcnow(),
-                roles=[],
-                token_version=0,
-            )
+            mock_auth.return_value = mock_user
             mock_token.return_value = TokenResponse(access_token="login-jwt", token_type="bearer")
-
             response = await async_client.post(
                 "/auth/login",
                 data={"username": "testuser", "password": "secret"},
             )
-
             assert response.status_code == 200
             assert "access_token" in response.json()

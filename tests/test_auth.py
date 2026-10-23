@@ -14,7 +14,7 @@ class TestJWTAuthentication:
     async def test_login_success(self, async_client):
         """Test successful user login and JWT token generation"""
         # Mock use case functions (clean architecture paths)
-        with patch('infra.presentation.routers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth, \
+        with patch('application.use_cases.auth.AuthenticateUser.authenticate_user', new_callable=AsyncMock) as mock_auth, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             
             from domain.entities.auth.UserEntity import UserEntity
@@ -52,7 +52,7 @@ class TestJWTAuthentication:
         """Test login with invalid credentials"""
         from domain.errors import InvalidCredentials
 
-        with patch('infra.presentation.routers.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
+        with patch('application.use_cases.auth.AuthenticateUser.authenticate_user', new_callable=AsyncMock) as mock_auth:
             mock_auth.side_effect = InvalidCredentials()
 
             response = await async_client.post(
@@ -174,10 +174,9 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_new_user_success(self, async_client):
         """Test successful user registration"""
-        with patch('infra.presentation.routers.auth.register_user', new_callable=AsyncMock) as mock_register:
-            from domain.entities.auth.UserEntity import UserEntity
-            from datetime import datetime
-            
+        from domain.entities.auth.UserEntity import UserEntity
+        from datetime import datetime
+        with patch('application.use_cases.auth.RegisterUser.register_user', new_callable=AsyncMock) as mock_register:
             mock_register.return_value = UserEntity(
                 id="507f1f77bcf86cd799439011",
                 username="newuser",
@@ -206,8 +205,8 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_duplicate_username(self, async_client):
         """Test registration with existing username"""
-        with patch('infra.presentation.routers.auth.register_user', new_callable=AsyncMock) as mock_register:
-            from domain.errors import Duplicate
+        from domain.errors import Duplicate
+        with patch('application.use_cases.auth.RegisterUser.register_user', new_callable=AsyncMock) as mock_register:
             mock_register.side_effect = Duplicate(msg="Username already exists")
             
             user_data = {

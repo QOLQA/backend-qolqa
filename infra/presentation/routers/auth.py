@@ -1,5 +1,5 @@
 """
-Authentication controller (Clean Architecture)
+Authentication router (Clean Architecture)
 Handles login, registration, and user profile endpoints.
 """
 from fastapi import APIRouter, Depends, status, Request
@@ -7,14 +7,17 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from infra.presentation.dtos.auth.request import UserCreateRequest, GoogleLoginRequest
 from infra.presentation.dtos.auth.response import UserResponse, TokenResponse, GoogleLoginResponse
-from application.use_cases.auth.AuthenticateUser import authenticate_user
-from application.use_cases.auth.RegisterUser import register_user
-from application.use_cases.auth.GoogleLogin import google_login
-from domain.services.google_auth import IGoogleAuthService
-from api.dependencies.auth import get_current_user, get_user_repository, get_google_auth_service
+from application.dtos.auth.commands import RegisterCommand, AuthenticateCommand, GoogleLoginCommand
+from infra.presentation.dependencies import (
+    get_register_user_use_case,
+    get_authenticate_user_use_case,
+    get_google_login_use_case,
+    get_get_user_by_id_use_case,
+    get_current_user,
+    get_google_auth_service,
+)
 from infrastructure.token_service import create_user_token
 from infrastructure.mappers import UserMapper
-from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
 from api.handle_errors import handle_common_errors
 from infrastructure.audit import log_registration, log_auth_attempt
@@ -29,25 +32,20 @@ router = APIRouter()
 async def register(
     request: Request,
     user_create: UserCreateRequest,
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    register_use_case=Depends(get_register_user_use_case),
 ) -> UserResponse:
-    """
-    Register a new user.
-
-    Args:
-        request: FastAPI Request (for audit logging)
-        user_create: UserCreateRequest DTO
-        repository: UserRepositoryImpl dependency
-
-    Returns:
-        UserResponse with the created user data (no password fields)
-    """
+    """Register a new user."""
     try:
-        entity = await register_user(repository, user_create)
+        command = RegisterCommand(
+            username=user_create.username,
+            email=user_create.email,
+            password=user_create.password,
+            full_name=user_create.full_name,
+        )
+        entity = await register_use_case(command)
 
         response = UserMapper.to_response(entity)
 
-        # Audit log: successful registration
         log_registration(
             user_id=entity.id,
             username=entity.username,
@@ -58,7 +56,6 @@ async def register(
 
         return response
     except Exception as exc:
-        # Audit log: failed registration
         log_auth_attempt(
             username=user_create.username,
             success=False,
@@ -74,32 +71,18 @@ async def register(
 async def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    auth_use_case=Depends(get_authenticate_user_use_case),
 ) -> TokenResponse:
-    """
-    Login endpoint — OAuth2 compatible.
-
-    Args:
-        request: FastAPI Request (for audit logging and rate limiting)
-        form_data: OAuth2 form data (username and password)
-        repository: UserRepositoryImpl dependency
-
-    Returns:
-        TokenResponse with JWT access token
-
-    Raises:
-        HTTPException: If authentication fails
-    """
+    """Login endpoint — OAuth2 compatible."""
     try:
-        entity = await authenticate_user(
-            repository,
-            form_data.username,
-            form_data.password,
+        command = AuthenticateCommand(
+            username=form_data.username,
+            password=form_data.password,
         )
+        entity = await auth_use_case(command)
 
         token = await create_user_token(entity)
 
-        # Audit log: successful login
         log_auth_attempt(
             username=entity.username,
             success=True,
@@ -109,7 +92,6 @@ async def login(
 
         return token
     except Exception as exc:
-        # Log failed or unexpected errors before delegating to error handler
         log_auth_attempt(
             username=form_data.username,
             success=False,
@@ -124,15 +106,7 @@ async def login(
 async def get_current_user_profile(
     current_user: User = Depends(get_current_user),
 ) -> UserResponse:
-    """
-    Get current user profile.
-
-    Args:
-        current_user: Current authenticated user
-
-    Returns:
-        UserResponse with user profile information
-    """
+    """Get current user profile."""
     return UserMapper.to_response(current_user)
 
 
@@ -141,36 +115,19 @@ async def get_current_user_profile(
 async def google_login_endpoint(
     request: Request,
     login_request: GoogleLoginRequest,
-    repository: UserRepositoryImpl = Depends(get_user_repository),
-    google_auth: IGoogleAuthService = Depends(get_google_auth_service),
+    google_use_case=Depends(get_google_login_use_case),
 ) -> GoogleLoginResponse:
-    """
-    Google OAuth login endpoint.
-
-    Args:
-        request: FastAPI Request (for audit logging and rate limiting)
-        login_request: GoogleLoginRequest DTO with Google ID token
-        repository: UserRepositoryImpl dependency
-        google_auth: IGoogleAuthService for token verification
-
-    Returns:
-        GoogleLoginResponse with access token and user profile
-
-    Raises:
-        HTTPException: If Google client not configured, token invalid, or account issues
-    """
+    """Google OAuth login endpoint."""
     try:
-        entity = await google_login(
-            repository,
-            google_auth,
-            login_request.credential,
-            settings.google_client_id,
+        command = GoogleLoginCommand(
+            credential=login_request.credential,
+            client_id=settings.google_client_id,
         )
+        entity = await google_use_case(repository=None, command=command)
 
         token = await create_user_token(entity)
         user_response = UserMapper.to_response(entity)
 
-        # Audit log: successful Google login
         log_auth_attempt(
             username=entity.username,
             success=True,
@@ -184,8 +141,6 @@ async def google_login_endpoint(
             user=user_response,
         )
     except Exception as exc:
-        # Log failed or unexpected errors before delegating to error handler
-        # Extract email from token info when available, else use marker
         log_email = getattr(exc, 'email', None) or "google-unknown"
         log_auth_attempt(
             username=log_email,
