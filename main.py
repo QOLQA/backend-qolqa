@@ -19,9 +19,9 @@ from infra.presentation.routers.version import router as versions_router
 from infra.presentation.routers.solution import router as solutions_router
 from config.settings import settings, TypeDB
 from config.rate_limiter import limiter
-from api.handle_errors import handle_common_errors
-from infrastructure.audit import log_rate_limit_exceeded
-from infrastructure.jwt import decode_access_token
+from infra.presentation.handle_errors import handle_common_errors
+from infra.persistence.audit import log_rate_limit_exceeded
+from infra.persistence.jwt import decode_access_token
 
 # Configure logging
 logging.basicConfig(

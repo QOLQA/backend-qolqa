@@ -3,7 +3,7 @@ from typing import List
 from pydantic import Field
 
 from domain.entities.VersionEntity import Submodel
-from infrastructure.base import MongoBaseModel, PyObjectId
+from ..base import MongoBaseModel, PyObjectId
 
 
 class VersionDocument(MongoBaseModel):

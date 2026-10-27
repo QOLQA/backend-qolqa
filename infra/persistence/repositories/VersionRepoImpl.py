@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from domain.entities.VersionEntity import VersionEntity
 from domain.errors import Missing
 from domain.repositories.version.repo import IVersionRepository
-from infrastructure.mappers import VersionMapper
+from ..mappers import VersionMapper
 
 
 class VersionRepositoryImpl(IVersionRepository[VersionEntity]):

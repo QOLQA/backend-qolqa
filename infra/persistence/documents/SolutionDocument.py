@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field
 
 from domain.entities.VersionEntity import Submodel
-from infrastructure.base import MongoBaseModel
+from ..base import MongoBaseModel
 
 
 class EmbeddedVersion(MongoBaseModel):

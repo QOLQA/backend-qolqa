@@ -16,11 +16,11 @@ from infra.presentation.dependencies import (
     get_current_user,
     get_google_auth_service,
 )
-from infrastructure.token_service import create_user_token
-from infrastructure.mappers import UserMapper
+from infra.persistence.token_service import create_user_token
+from infra.persistence.mappers import UserMapper
 from domain.entities.auth.UserEntity import UserEntity as User
-from api.handle_errors import handle_common_errors
-from infrastructure.audit import log_registration, log_auth_attempt
+from infra.presentation.handle_errors import handle_common_errors
+from infra.persistence.audit import log_registration, log_auth_attempt
 from config.settings import settings
 from config.rate_limiter import limiter
 

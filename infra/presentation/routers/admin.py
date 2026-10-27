@@ -11,10 +11,10 @@ from infra.presentation.dtos.auth.request import AdminUserUpdateRequest
 from infra.presentation.dtos.auth.response import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
-from infrastructure.mappers import UserMapper
-from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
-from api.dependencies.auth import require_admin, get_user_repository
-from api.handle_errors import handle_common_errors
+from infra.persistence.mappers import UserMapper
+from infra.persistence.repositories import UserRepositoryImpl
+from infra.presentation.dependencies.auth import require_admin, get_user_repository
+from infra.presentation.handle_errors import handle_common_errors
 
 router = APIRouter()
 

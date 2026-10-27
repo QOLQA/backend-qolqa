@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.errors import Missing
 from domain.repositories.solution.repo import ISolutionRepository
-from infrastructure.mappers import SolutionMapper
+from ..mappers import SolutionMapper
 
 
 class SolutionRepositoryImpl(ISolutionRepository[SolutionEntity]):

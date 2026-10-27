@@ -10,13 +10,13 @@ from application.use_cases.query.CreateQuery import create_query
 from application.use_cases.query.UpdateQuery import update_query
 from application.use_cases.query.DeleteQuery import delete_query
 from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
-from infrastructure.mappers import QueryMapper
-from infrastructure.repositories import QueryRepositoryImpl, SolutionRepositoryImpl
+from infra.persistence.mappers import QueryMapper
+from infra.persistence.repositories import QueryRepositoryImpl, SolutionRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
-from api.controllers.auth import get_current_user
-from api.handle_errors import handle_common_errors
-from infrastructure.db_factory import get_database
-from infrastructure.audit import log_resource_operation
+from infra.presentation.dependencies.auth import get_current_user
+from infra.presentation.handle_errors import handle_common_errors
+from infra.persistence.db_factory import get_database
+from infra.persistence.audit import log_resource_operation
 from config.rate_limiter import limiter
 
 router = APIRouter()

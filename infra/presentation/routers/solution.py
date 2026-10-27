@@ -17,16 +17,15 @@ from application.use_cases.solution.UpdateSolution import update_solution
 from application.use_cases.solution.DeleteSolution import delete_solution
 from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.UpdateVersion import update_version
-from infrastructure.mappers import SolutionMapper, VersionMapper
-from infrastructure.repositories import SolutionRepositoryImpl, VersionRepositoryImpl
-from infrastructure.repositories.QueryRepoImpl import QueryRepositoryImpl
+from infra.persistence.mappers import SolutionMapper, VersionMapper
+from infra.persistence.repositories import SolutionRepositoryImpl, VersionRepositoryImpl, QueryRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
 from infra.presentation.dtos.version.request import default_version_descriptions
-from api.controllers.auth import get_current_user
-from api.handle_errors import handle_common_errors
+from infra.presentation.dependencies.auth import get_current_user
+from infra.presentation.handle_errors import handle_common_errors
 from domain.errors import Forbidden
-from infrastructure.db_factory import get_database
-from infrastructure.audit import log_resource_operation, log_access_denied
+from infra.persistence.db_factory import get_database
+from infra.persistence.audit import log_resource_operation, log_access_denied
 from config.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)

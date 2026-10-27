@@ -9,22 +9,22 @@ from infra.presentation.dependencies.auth import get_user_repository
 
 # Repository dependencies
 def get_solution_repository(database=Depends(get_database)):
-    from infrastructure.repositories import SolutionRepositoryImpl
+    from infra.persistence.repositories import SolutionRepositoryImpl
     return SolutionRepositoryImpl(database)
 
 
 def get_version_repository(database=Depends(get_database)):
-    from infrastructure.repositories import VersionRepositoryImpl
+    from infra.persistence.repositories import VersionRepositoryImpl
     return VersionRepositoryImpl(database)
 
 
 def get_query_repository(database=Depends(get_database)):
-    from infrastructure.repositories import QueryRepositoryImpl
+    from infra.persistence.repositories import QueryRepositoryImpl
     return QueryRepositoryImpl(database)
 
 
 def get_google_auth_service():
-    from infrastructure.services.google_auth import GoogleAuthService
+    from infra.persistence.services.google_auth import GoogleAuthService
     return GoogleAuthService()
 
 
@@ -169,24 +169,3 @@ def get_get_query_by_id_use_case(
 ):
     from application.use_cases.query.GetQueryById import get_query_by_id
     return get_query_by_id
-
-
-# Repository dependencies
-def get_solution_repository(database=Depends(get_database)):
-    from infrastructure.repositories import SolutionRepositoryImpl
-    return SolutionRepositoryImpl(database)
-
-
-def get_version_repository(database=Depends(get_database)):
-    from infrastructure.repositories import VersionRepositoryImpl
-    return VersionRepositoryImpl(database)
-
-
-def get_query_repository(database=Depends(get_database)):
-    from infrastructure.repositories import QueryRepositoryImpl
-    return QueryRepositoryImpl(database)
-
-
-def get_google_auth_service():
-    from infrastructure.services.google_auth import GoogleAuthService
-    return GoogleAuthService()

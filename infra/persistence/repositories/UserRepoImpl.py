@@ -8,8 +8,8 @@ from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.errors import Duplicate, Missing, InvalidCredentials, PasswordRequiredForLocalLogin
 from domain.repositories.user.repo import IUserRepository
 from domain.security.password import IPasswordHasher
-from infrastructure.mappers import UserMapper
-from infrastructure.security.bcrypt_hasher import BcryptHasher
+from ..mappers import UserMapper
+from ..security.bcrypt_hasher import BcryptHasher
 
 
 class UserRepositoryImpl(IUserRepository[UserEntity]):

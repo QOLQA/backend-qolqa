@@ -10,7 +10,7 @@ from datetime import timedelta
 from infra.presentation.dtos.auth.response import TokenResponse
 from config.settings import settings
 from domain.entities.auth.UserEntity import UserEntity
-from infrastructure.jwt import create_access_token
+from .jwt import create_access_token
 
 
 async def create_user_token(user: UserEntity) -> TokenResponse:

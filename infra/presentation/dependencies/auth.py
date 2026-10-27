@@ -3,15 +3,15 @@ Authentication and authorization dependencies for presentation layer.
 """
 from fastapi import Depends, HTTPException, status
 
-from api.handle_errors import handle_common_errors
+from infra.presentation.handle_errors import handle_common_errors
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
 from domain.errors import InvalidToken
 from domain.services.google_auth import IGoogleAuthService
-from infrastructure.jwt import decode_access_token, oauth2_scheme
-from infrastructure.repositories.UserRepoImpl import UserRepositoryImpl
-from infrastructure.security.bcrypt_hasher import BcryptHasher
-from infrastructure.services.google_auth import GoogleAuthService
+from infra.persistence.jwt import decode_access_token, oauth2_scheme
+from infra.persistence.repositories import UserRepositoryImpl
+from infra.persistence.security import BcryptHasher
+from infra.persistence.services.google_auth import GoogleAuthService
 from application.use_cases.auth.GetUserById import get_user_by_id
 from infra.presentation.dependencies.common import get_database
 

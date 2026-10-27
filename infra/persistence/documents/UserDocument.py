@@ -5,7 +5,7 @@ from pydantic import Field
 
 from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.enums.RoleEnum import RoleEnum
-from infrastructure.base import MongoBaseModel
+from ..base import MongoBaseModel
 
 
 class UserDocument(MongoBaseModel):

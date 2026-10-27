@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import Field
 
-from infrastructure.base import MongoBaseModel, PyObjectId
+from ..base import MongoBaseModel, PyObjectId
 
 
 class QueryDocument(MongoBaseModel):
