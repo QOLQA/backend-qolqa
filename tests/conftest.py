@@ -13,7 +13,7 @@ os.environ['DATABASE_URL'] = 'mongodb://localhost:27017/test_db'
 os.environ['TYPE_DB'] = 'mongo'
 
 from main import app
-from infrastructure.db_factory import get_database
+from infra.persistence.db_factory import get_database
 from config.rate_limiter import limiter
 
 
@@ -73,7 +73,7 @@ async def authenticated_client(mock_user) -> AsyncGenerator[AsyncClient, None]:
     Overrides get_current_user dependency so tests bypass JWT + DB validation.
     """
     from domain.entities.auth.UserEntity import UserEntity
-    from api.dependencies.auth import get_current_user
+    from infra.presentation.dependencies.auth import get_current_user
 
     mock_entity = UserEntity(
         id=str(mock_user.id),
@@ -192,7 +192,7 @@ def mock_user() -> _types.SimpleNamespace:
 @pytest.fixture
 def valid_jwt_token(mock_user):
     """Generate a valid JWT token for testing"""
-    from infrastructure.jwt import create_access_token
+    from infra.persistence.jwt import create_access_token
 
     token_data = {
         "sub": mock_user.username,

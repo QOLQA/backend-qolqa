@@ -75,7 +75,7 @@ class TestJWTAuthentication:
         from datetime import datetime
         from bson import ObjectId
         from main import app as fastapi_app
-        from api.dependencies.auth import get_current_user
+        from infra.presentation.dependencies.auth import get_current_user
         from domain.entities.auth.UserEntity import UserEntity
 
         user_id = str(ObjectId())
@@ -96,7 +96,7 @@ class TestJWTAuthentication:
         fastapi_app.dependency_overrides[get_current_user] = override_current_user
 
         try:
-            with patch('api.controllers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
+            with patch('infra.presentation.routers.solution.get_all_solutions_for_user', new_callable=AsyncMock) as mock_get_all:
                 mock_get_all.return_value = []
 
                 response = await async_client.get(
@@ -252,7 +252,7 @@ class TestJWTUtilities:
     
     def test_create_access_token(self):
         """Test JWT token creation"""
-        from infrastructure.jwt import create_access_token
+        from infra.persistence.jwt import create_access_token
         
         token = create_access_token(data={"sub": "user123"})
         
@@ -262,7 +262,7 @@ class TestJWTUtilities:
     
     def test_decode_token_valid(self):
         """Test decoding valid JWT token"""
-        from infrastructure.jwt import create_access_token, decode_access_token
+        from infra.persistence.jwt import create_access_token, decode_access_token
         
         token = create_access_token(data={"sub": "user123", "user_id": "456"})
         payload = decode_access_token(token)
@@ -273,7 +273,7 @@ class TestJWTUtilities:
     
     def test_decode_token_invalid(self):
         """Test decoding invalid JWT token raises domain error (not HTTPException)"""
-        from infrastructure.jwt import decode_access_token
+        from infra.persistence.jwt import decode_access_token
         from domain.errors import InvalidToken
 
         with pytest.raises(InvalidToken):
@@ -281,7 +281,7 @@ class TestJWTUtilities:
     
     def test_token_includes_expiration(self):
         """Test that generated tokens include expiration time"""
-        from infrastructure.jwt import create_access_token, decode_access_token
+        from infra.persistence.jwt import create_access_token, decode_access_token
         
         token = create_access_token(data={"sub": "user123"})
         payload = decode_access_token(token)
@@ -298,7 +298,7 @@ class TestPasswordHashing:
     
     def test_hash_password(self):
         """Test password hashing"""
-        from infrastructure.security.bcrypt_hasher import BcryptHasher
+        from infra.persistence.security import BcryptHasher
         
         hasher = BcryptHasher()
         hashed = hasher.hash("mypassword")
@@ -309,7 +309,7 @@ class TestPasswordHashing:
     
     def test_verify_password_correct(self):
         """Test password verification with correct password"""
-        from infrastructure.security.bcrypt_hasher import BcryptHasher
+        from infra.persistence.security import BcryptHasher
         
         hasher = BcryptHasher()
         password = "mypassword"
@@ -319,7 +319,7 @@ class TestPasswordHashing:
     
     def test_verify_password_incorrect(self):
         """Test password verification with incorrect password"""
-        from infrastructure.security.bcrypt_hasher import BcryptHasher
+        from infra.persistence.security import BcryptHasher
         
         hasher = BcryptHasher()
         hashed = hasher.hash("mypassword")
@@ -337,7 +337,7 @@ class TestAuthorizationRoles:
         from datetime import datetime
         from bson import ObjectId
         from main import app as fastapi_app
-        from api.dependencies.auth import get_current_user, require_admin
+        from infra.presentation.dependencies.auth import get_current_user, require_admin
         from domain.entities.auth.UserEntity import UserEntity
         from domain.enums.RoleEnum import RoleEnum
 
@@ -361,7 +361,7 @@ class TestAuthorizationRoles:
         fastapi_app.dependency_overrides[require_admin] = override_require_admin
 
         try:
-            with patch('api.controllers.admin.UserRepositoryImpl.get_all', new_callable=AsyncMock) as mock_get_all:
+            with patch('infra.presentation.routers.admin.UserRepositoryImpl.get_all', new_callable=AsyncMock) as mock_get_all:
                 mock_get_all.return_value = []
                 response = await async_client.get("/admin/users")
         finally:
@@ -376,9 +376,9 @@ class TestAuthorizationRoles:
         from datetime import datetime
         from bson import ObjectId
         from main import app as fastapi_app
-        from api.dependencies.auth import get_current_user
+        from infra.presentation.dependencies.auth import get_current_user
         from domain.entities.auth.UserEntity import UserEntity
-        from infrastructure.jwt import create_access_token
+        from infra.persistence.jwt import create_access_token
 
         regular_user = UserEntity(
             id=str(ObjectId()),
@@ -418,7 +418,7 @@ class TestAuthorizationRoles:
         from datetime import datetime
         from bson import ObjectId
         from main import app as fastapi_app
-        from api.dependencies.auth import get_current_user
+        from infra.presentation.dependencies.auth import get_current_user
         from domain.entities.auth.UserEntity import UserEntity
 
         user1_id = str(ObjectId())

@@ -298,8 +298,8 @@ class TestQueryEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_get_query_returns_403_for_non_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
-             patch('api.controllers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
+             patch('infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_query.return_value = make_query()
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
@@ -309,8 +309,8 @@ class TestQueryEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_get_query_returns_200_for_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
-             patch('api.controllers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
+             patch('infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_query.return_value = make_query()
             mock_get_solution.return_value = make_solution(str(mock_user.id))
 
@@ -321,8 +321,8 @@ class TestQueryEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_delete_query_returns_403_for_non_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
-             patch('api.controllers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
+             patch('infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_query.return_value = make_query()
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
@@ -332,9 +332,9 @@ class TestQueryEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_delete_query_returns_204_for_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
-             patch('api.controllers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
-             patch('api.controllers.query.QueryRepositoryImpl.delete', new_callable=AsyncMock) as mock_delete:
+        with patch('infra.presentation.routers.query.QueryRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_query, \
+             patch('infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
+             patch('infra.presentation.routers.query.QueryRepositoryImpl.delete', new_callable=AsyncMock) as mock_delete:
             mock_get_query.return_value = make_query()
             mock_get_solution.return_value = make_solution(str(mock_user.id))
 
@@ -345,7 +345,7 @@ class TestQueryEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_create_query_returns_403_for_non_owner_solution(self, authenticated_client, mock_user):
-        with patch('api.controllers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
             response = await authenticated_client.post(
@@ -362,7 +362,7 @@ class TestQueryEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_get_queries_by_solution_returns_403_for_non_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
             response = await authenticated_client.get(f"/queries/solution/{SOLUTION_ID}")
@@ -584,7 +584,7 @@ class TestForbiddenErrorMapping:
     async def test_handle_common_errors_maps_forbidden_to_403(self):
         from fastapi import HTTPException
 
-        from api.handle_errors import handle_common_errors
+        from infra.presentation.handle_errors import handle_common_errors
 
         with pytest.raises(HTTPException) as exc_info:
             await handle_common_errors(Forbidden(msg='Not authorized'), None)
@@ -599,8 +599,8 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_get_version_returns_403_for_non_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
-             patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
+             patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
@@ -610,8 +610,8 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_get_version_returns_200_for_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
-             patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
+             patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(str(mock_user.id))
 
@@ -622,8 +622,8 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_get_all_versions_returns_only_own_versions(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.SolutionRepositoryImpl.get_all_for_user', new_callable=AsyncMock) as mock_solutions, \
-             patch('api.controllers.version.VersionRepositoryImpl.get_by_solution_ids', new_callable=AsyncMock) as mock_versions:
+        with patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_all_for_user', new_callable=AsyncMock) as mock_solutions, \
+             patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_solution_ids', new_callable=AsyncMock) as mock_versions:
             mock_solutions.return_value = [make_solution(str(mock_user.id))]
             mock_versions.return_value = [make_version()]
 
@@ -636,8 +636,8 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_delete_version_returns_403_for_non_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
-             patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
+             patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
@@ -647,9 +647,9 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_delete_version_returns_204_for_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
-             patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
-             patch('api.controllers.version.VersionRepositoryImpl.delete', new_callable=AsyncMock) as mock_delete:
+        with patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
+             patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
+             patch('infra.presentation.routers.version.VersionRepositoryImpl.delete', new_callable=AsyncMock) as mock_delete:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(str(mock_user.id))
 
@@ -660,7 +660,7 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_create_version_returns_403_for_non_owner_solution(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
             response = await authenticated_client.post(
@@ -676,8 +676,8 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_create_version_returns_201_for_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
-             patch('api.controllers.version.VersionRepositoryImpl.save', new_callable=AsyncMock) as mock_add:
+        with patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
+             patch('infra.presentation.routers.version.VersionRepositoryImpl.save', new_callable=AsyncMock) as mock_add:
             mock_get_solution.return_value = make_solution(str(mock_user.id))
             mock_add.return_value = make_version()
 
@@ -695,8 +695,8 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_update_version_returns_403_for_non_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
-             patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
+        with patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
+             patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(OTHER_USER_ID)
 
@@ -709,9 +709,9 @@ class TestVersionEndpointOwnership:
 
     @pytest.mark.asyncio
     async def test_update_version_returns_200_for_owner(self, authenticated_client, mock_user):
-        with patch('api.controllers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
-             patch('api.controllers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
-             patch('api.controllers.version.VersionRepositoryImpl.save', new_callable=AsyncMock) as mock_update:
+        with patch('infra.presentation.routers.version.VersionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_version, \
+             patch('infra.presentation.routers.version.SolutionRepositoryImpl.get_by_id', new_callable=AsyncMock) as mock_get_solution, \
+             patch('infra.presentation.routers.version.VersionRepositoryImpl.save', new_callable=AsyncMock) as mock_update:
             mock_get_version.return_value = make_version()
             mock_get_solution.return_value = make_solution(str(mock_user.id))
             mock_update.return_value = make_version()

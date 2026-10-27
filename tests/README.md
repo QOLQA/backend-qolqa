@@ -10,9 +10,12 @@ Este directorio contiene todos los tests para el backend de QOLQA.
 
 ### Tests de Integración
 - **test_endpoints.py**: Tests de integración para los endpoints de la API
+- **test_ownership_authorization.py**: Tests de ownership y autorización (admin, users, solutions, versions, queries)
+- **test_rate_limiting.py**: Tests de rate limiting
+- **test_google_login.py**: Tests completos de Google Login (dominio, mapper, repo, use case, DTOs, endpoint)
 
-### Tests de Autenticación (Preparados para JWT)
-- **test_auth.py**: Tests preparados para futura implementación de JWT
+### Tests de Autenticación (JWT Implementado ✅)
+- **test_auth.py**: Tests de JWT, bcrypt, login, registro, roles, token_version
 
 ## Ejecutar Tests
 
@@ -34,8 +37,14 @@ pytest -m validation
 # Solo tests de integración
 pytest -m integration
 
-# Solo tests de autenticación (actualmente skipped)
+# Solo tests de autenticación
 pytest -m auth
+
+# Tests de ownership/autorización
+pytest tests/test_ownership_authorization.py -v
+
+# Tests de Google Login
+pytest tests/test_google_login.py -v
 ```
 
 ### Ejecutar tests de un archivo específico
@@ -43,11 +52,15 @@ pytest -m auth
 pytest tests/test_solution_validation.py
 pytest tests/test_version_validation.py
 pytest tests/test_endpoints.py
+pytest tests/test_auth.py
+pytest tests/test_google_login.py
+pytest tests/test_ownership_authorization.py
+pytest tests/test_rate_limiting.py
 ```
 
 ### Ejecutar con cobertura
 ```bash
-pytest --cov=. --cov-report=html
+pytest --cov=. --cov-report=term-missing
 ```
 
 ### Ejecutar tests con más detalle
@@ -63,48 +76,58 @@ Los tests están organizados con los siguientes marcadores:
 - `@pytest.mark.validation`: Tests de validación de modelos
 - `@pytest.mark.integration`: Tests de integración de endpoints
 - `@pytest.mark.unit`: Tests unitarios
-- `@pytest.mark.auth`: Tests de autenticación (preparados para JWT)
+- `@pytest.mark.auth`: Tests de autenticación JWT
 
 ## Fixtures Disponibles
 
 Ver `conftest.py` para todas las fixtures disponibles:
 
 - `client`: Cliente de prueba síncrono
-- `async_client`: Cliente de prueba asíncrono
+- `async_client`: Cliente de prueba asíncrono (con DB mockeada)
+- `authenticated_client`: Cliente con usuario autenticado mockeado
 - `mock_solution_data`: Datos mock para soluciones
 - `mock_version_data`: Datos mock para versiones
-- `mock_user_credentials`: Credenciales mock (para JWT futuro)
-- `auth_headers`: Headers de autorización (para JWT futuro)
+- `mock_user`: Usuario mock para autenticación
+- `valid_jwt_token`: JWT token válido para testing
+- `auth_headers`: Headers de autorización con JWT válido
+- `mock_user_credentials`: Credenciales mock para tests de login
 
 ## Tests de Autenticación JWT
 
-Los tests en `test_auth.py` están marcados con `@pytest.mark.skip` porque la funcionalidad JWT aún no está implementada. Estos tests sirven como:
+Los tests en `test_auth.py` están **habilitados y pasan** (JWT completamente implementado):
+- Login exitoso y generación de token
+- Credenciales inválidas (401)
+- Credenciales faltantes (422)
+- Acceso a endpoint protegido con token válido
+- Acceso sin token (401)
+- Token inválido (401)
+- Expiración de token (401)
+- Registro de usuario exitoso (201)
+- Username duplicado (409)
+- Contraseña débil (422)
+- Email inválido (422)
+- Hash y verificación de contraseñas bcrypt
+- Creación y decodificación de JWT
+- Roles de admin (200) vs usuario regular (403)
+- Ownership de soluciones (403 si no es owner)
 
-1. **Documentación** de lo que se necesitará implementar
-2. **Guía** para el desarrollo futuro de autenticación
-3. **Especificación** de los requisitos de seguridad
+## Tests de Google Login
 
-Cuando implementes JWT, simplemente remueve los decoradores `@pytest.mark.skip` y completa la lógica.
-
-## Próximos Pasos para JWT
-
-1. Instalar dependencias JWT:
-   ```bash
-   pip install python-jose[cryptography] passlib[bcrypt]
-   ```
-
-2. Crear módulos de autenticación:
-   - `auth/jwt.py`: Utilidades para crear y validar tokens
-   - `auth/password.py`: Hash y verificación de contraseñas
-   - `auth/router.py`: Endpoints de login/register
-
-3. Actualizar modelos:
-   - Crear modelo `User` con campos: username, email, hashed_password, roles
-   - Agregar campo `user_id` a Solution para ownership
-
-4. Habilitar tests:
-   - Remover `@pytest.mark.skip` de los tests en `test_auth.py`
-   - Implementar la lógica real en lugar de los TODOs
+Los tests en `test_google_login.py` cubren:
+- Errores de dominio (PasswordRequiredForLocalLogin, InvalidGoogleToken, GoogleLoginNotConfigured)
+- AuthProviderEnum (local, google)
+- UserEntity con campos google_id y auth_provider
+- IUserRepository métodos Google (get_by_google_id, link_google_account, add_google_user)
+- UserDocument campos nullable y valores Google
+- UserMapper extensiones para Google
+- verify_google_token (éxito, bad signature, wrong audience, expired, malformed, email_not_verified, missing sub/email)
+- UserRepoImpl métodos Google (get_by_google_id, link_google_account, add_google_user con recuperación de carrera)
+- DTOs GoogleLoginRequest/Response
+- Caso de uso GoogleLogin (nuevo usuario, google_id existente, linking por email, colisión username, client_id no configurado)
+- Guard AuthenticateUser (usuario solo Google, híbrido, inactivos)
+- handle_common_errors para excepciones Google (403, 401, 503)
+- Endpoint POST /auth/google (happy path, token inválido, client_id no configurado, usuario existente)
+- Tests de integración full flow
 
 ## Convenciones de Testing
 
@@ -113,3 +136,4 @@ Cuando implementes JWT, simplemente remueve los decoradores `@pytest.mark.skip` 
 - Mockear servicios externos y base de datos
 - Tests independientes entre sí
 - Cada test debe probar una sola cosa
+- Estructura mirror: `tests/infra/presentation/routers/test_<router>.py` para tests de endpoints
