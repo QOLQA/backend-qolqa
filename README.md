@@ -61,35 +61,42 @@ The **Qolqa Backend** is a high-performance REST API built with **FastAPI** that
 The backend follows **Clean Architecture** principles with strict layer separation:
 
 ```
-api/                  → FastAPI controllers (DTOs, request/response handling)
-├── controllers/      → Route handlers (auth, solution, version, query)
-└── handle_errors.py  → Centralized error handling
-
-application/          → Use cases and orchestration
-├── use_cases/        → Business logic orchestration
-├── dtos/             → Data Transfer Objects (Pydantic models)
-└── repositories/     → Repository interfaces (contracts)
-
 domain/               → Pure business logic (framework-agnostic)
 ├── entities/         → Domain models (Solution, Version, Query, User)
+├── enums/            → Domain enumerations (RoleEnum, AuthProviderEnum)
+├── errors/           → Domain errors (Missing, Duplicate, Forbidden, etc.)
 └── repositories/     → Repository contracts (abstract interfaces)
 
-infrastructure/       → External concerns (database, auth, logging)
-├── repositories/     → MongoDB repository implementations
-├── documents/        → MongoDB document models
-├── mappers/          → Entity ↔ Document conversion
-└── audit/            → Logging and monitoring
+application/          → Use cases and orchestration
+├── use_cases/        → Business logic orchestration (one file per use case)
+└── dtos/             → Application DTOs (Commands/Queries, pure dataclasses)
+
+infra/
+├── persistence/      → External concerns (database, auth, logging)
+│   ├── repositories/ → MongoDB repository implementations
+│   ├── documents/    → MongoDB document models (Pydantic)
+│   ├── mappers/      → Entity ↔ Document conversion
+│   ├── security/     → Password hashing (bcrypt)
+│   ├── services/     → External services (Google OAuth)
+│   └── jwt.py, token_service.py, password.py, audit.py, db_factory.py, base.py
+└── presentation/     → FastAPI HTTP layer
+    ├── routers/      → Route handlers (auth, user, admin, solution, version, query)
+    ├── dtos/         → Request/Response schemas (Pydantic with HTTP validation)
+    ├── dependencies/ → FastAPI Depends (DI for use cases, auth, repositories)
+    └── handle_errors.py → Centralized error handling (domain errors → HTTP)
 
 config/               → Settings, environment, database connection
-tests/                → Unit and integration tests
+scripts/              → Standalone maintenance/migration scripts
+tests/                → Unit and integration tests (mirror source tree)
 ```
 
 **Key architectural decisions:**
 
-- **Strict layer isolation**: Domain layer has ZERO dependencies on infrastructure
+- **Strict layer isolation**: Domain layer has ZERO dependencies on infrastructure/presentation
 - **Dependency Inversion**: Application depends on abstractions (repository interfaces), not concrete implementations
-- **DTOs at boundaries**: Pydantic models validate data at API layer, pure entities in domain
-- **Clean separation**: Business logic (domain) vs. technical concerns (infrastructure)
+- **DTO separation**: Application DTOs (Commands/Queries) are pure dataclasses; Presentation DTOs (Request/Response) use Pydantic with HTTP validation
+- **Clean separation**: Business logic (domain) vs. technical concerns (infra.persistence) vs. HTTP adapters (infra.presentation)
+- **Error boundary**: Domain errors raised in repositories; translated to HTTP only in infra.presentation
 
 ---
 
@@ -228,26 +235,44 @@ docker run -p 8000:8000 --env-file .env qolqa-backend
 
 ```
 backend-qolqa/
-├── api/                    # API layer (FastAPI controllers)
-│   ├── controllers/        # Route handlers
-│   └── handle_errors.py    # Error handling
-├── application/            # Application layer (use cases)
-│   ├── use_cases/          # Business logic orchestration
-│   ├── dtos/               # Data Transfer Objects
-│   └── repositories/       # Repository interfaces
 ├── domain/                 # Domain layer (pure business logic)
-│   ├── entities/           # Domain models
-│   └── repositories/       # Repository contracts
-├── infrastructure/         # Infrastructure layer (MongoDB, auth)
-│   ├── repositories/       # Repository implementations
-│   ├── documents/          # MongoDB document models
-│   ├── mappers/            # Entity ↔ Document mappers
-│   └── audit/              # Logging and monitoring
+│   ├── entities/           # Domain models (Solution, Version, Query, User, Token)
+│   ├── enums/              # Domain enums (RoleEnum, AuthProviderEnum)
+│   ├── errors.py           # Domain errors (Missing, Duplicate, Forbidden, etc.)
+│   └── repositories/       # Repository contracts (interfaces)
+├── application/            # Application layer (use cases)
+│   ├── use_cases/          # Business logic orchestration (auth, query, solution, version)
+│   └── dtos/               # Application DTOs (Commands/Queries, frozen dataclasses)
+├── infra/
+│   ├── persistence/        # Infrastructure adapters (MongoDB, auth, logging)
+│   │   ├── repositories/   # MongoDB implementations (UserRepoImpl, etc.)
+│   │   ├── documents/      # MongoDB document models (Pydantic)
+│   │   ├── mappers/        # Entity ↔ Document conversion
+│   │   ├── security/       # Password hashing (BcryptHasher)
+│   │   ├── services/       # External services (GoogleAuthService)
+│   │   ├── jwt.py          # JWT creation/validation
+│   │   ├── token_service.py # Token assembly with roles & token_version
+│   │   ├── password.py     # Password hashing interface
+│   │   ├── audit.py        # JSON-lines audit logging
+│   │   ├── db_factory.py   # Runtime DB backend resolution
+│   │   └── base.py         # Pydantic bases (MongoBaseModel, PyObjectId)
+│   └── presentation/       # FastAPI HTTP layer
+│       ├── routers/        # Route handlers (auth, user, admin, solution, version, query)
+│       ├── dtos/           # Request/Response schemas (Pydantic + HTTP validation)
+│       ├── dependencies/   # FastAPI Depends (DI for use cases, auth, repositories)
+│       └── handle_errors.py # Centralized error handling
 ├── config/                 # Settings and configuration
-├── tests/                  # Test suite
-├── main.py                 # Application entry point
+│   ├── settings.py         # Pydantic Settings (env-driven)
+│   ├── mongo.py            # AsyncIOMotorClient singleton
+│   ├── sql.py              # Scaffold SQLAlchemy (not functional)
+│   └── rate_limiter.py     # SlowAPI limiter config
+├── scripts/                # Standalone maintenance/migration scripts (--dry-run support)
+├── tests/                  # Test suite (mirrors source tree)
+├── main.py                 # Application entry point (composition root)
 ├── requirements.txt        # Python dependencies
-└── Dockerfile              # Docker configuration
+├── Dockerfile              # Docker configuration
+├── pytest.ini              # Pytest configuration
+└── AGENTS.md               # Code review rules for this project
 ```
 
 ---
