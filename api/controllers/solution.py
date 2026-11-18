@@ -20,7 +20,7 @@ from infrastructure.mappers import SolutionMapper, VersionMapper
 from infrastructure.repositories import SolutionRepositoryImpl, VersionRepositoryImpl
 from infrastructure.repositories.QueryRepoImpl import QueryRepositoryImpl
 from domain.entities.auth.UserEntity import UserEntity as User
-from application.dtos.version.VersionRequest import default_version_descriptions
+from application.dtos.version.VersionRequest import INITIAL_VERSION_DESCRIPTION
 from api.controllers.auth import get_current_user
 from api.handle_errors import handle_common_errors
 from domain.errors import Forbidden
@@ -90,7 +90,7 @@ async def create_solution_endpoint(
         # 2. Create the initial version
         version_request = VersionCreateRequest(
             submodels=[],
-            description=default_version_descriptions[0],
+            description=INITIAL_VERSION_DESCRIPTION,
             solution_id=entity.id,
         )
         version_entity = await create_version(version_repository, version_request)

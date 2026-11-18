@@ -3,12 +3,9 @@ from pydantic import BaseModel, Field, field_validator
 
 from domain.entities.VersionEntity import Submodel
 
-default_version_descriptions = [
-    "version 1",
-    "version 2",
-    "version 3",
-    "version 4"
-]
+# Matches the frontend naming convention "<base> vX.Y" used to derive
+# the names of duplicated and new versions.
+INITIAL_VERSION_DESCRIPTION = "project v1.0"
 
 
 class VersionCreateRequest(BaseModel):
