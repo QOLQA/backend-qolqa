@@ -45,9 +45,11 @@ async def override_get_database() -> AsyncGenerator[MagicMock, None]:
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
     """Reset rate limiter storage before each test to avoid cross-test contamination."""
-    # SlowAPI's MemoryStorage stores limits in limiter._storage
-    if hasattr(limiter, '_storage') and hasattr(limiter._storage, 'storage'):
-        limiter._storage.storage.clear()
+    if hasattr(limiter, "_storage"):
+        if hasattr(limiter._storage, "reset"):
+            limiter._storage.reset()
+        elif hasattr(limiter._storage, "storage"):
+            limiter._storage.storage.clear()
     yield
 
 

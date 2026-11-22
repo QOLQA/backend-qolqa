@@ -44,33 +44,29 @@ class TestRateLimiting:
         assert response.status_code in [201, 404, 409, 429, 500]
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Event loop cerrado después de múltiples tests - problema conocido de pytest-asyncio")
-    async def test_rate_limit_different_ips(self):
-        """Test que rate limit es por IP (diferentes IPs tienen límites independientes)"""
-        # Este test es más conceptual ya que en tests todos vienen de la misma "IP"
-        # pero verifica que el sistema está configurado para usar IP
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.post(
-                "/auth/login",
-                data={"username": "test", "password": "test"}
-            )
-            # Simplemente verificar que el endpoint responde
-            assert response.status_code in [401, 404, 429, 500]
+    async def test_rate_limit_different_ips(self, async_client):
+        """Test que rate limit es por IP (diferentes IPs tienen límites independientes)."""
+        response_1 = await async_client.post(
+            "/auth/login",
+            data={"username": "test", "password": "test"},
+            headers={"X-Forwarded-For": "10.0.0.1"},
+        )
+        response_2 = await async_client.post(
+            "/auth/login",
+            data={"username": "test", "password": "test"},
+            headers={"X-Forwarded-For": "10.0.0.2"},
+        )
+        assert response_1.status_code in [401, 404, 429, 500]
+        assert response_2.status_code in [401, 404, 429, 500]
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Event loop cerrado después de múltiples tests - problema conocido de pytest-asyncio")
-    async def test_rate_limit_headers(self):
-        """Test que los headers de rate limit están presentes (si están configurados)"""
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            response = await client.post(
-                "/auth/login",
-                data={"username": "test", "password": "test"}
-            )
-            # SlowAPI puede agregar headers como X-RateLimit-*
-            # Este test solo verifica que el endpoint responde
-            assert response.status_code in [401, 404, 429, 500]
+    async def test_rate_limit_headers(self, async_client):
+        """Test que los headers de rate limit están presentes (si están configurados)."""
+        response = await async_client.post(
+            "/auth/login",
+            data={"username": "test", "password": "test"},
+        )
+        assert response.status_code in [401, 404, 429, 500]
     
     @pytest.mark.asyncio
     async def test_solutions_read_rate_limit(self, async_client):
@@ -98,22 +94,33 @@ class TestRateLimitRecovery:
     """Tests para verificar que rate limits se resetean correctamente"""
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Event loop cerrado después de múltiples tests - problema conocido de pytest-asyncio")
-    async def test_rate_limit_resets(self):
-        """Test conceptual: rate limits deberían resetearse después del tiempo"""
-        # En un test real necesitaríamos esperar el tiempo de ventana
-        # Este test solo verifica que el mecanismo básico funciona
-        transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            # Primera request
-            response = await client.post(
+    async def test_rate_limit_resets(self, async_client):
+        """Test que el rate limit se resetea después del tiempo de ventana."""
+        import time
+        from unittest.mock import patch
+
+        # Agotar el límite con requests consecutivos (login: 5/minute)
+        for _ in range(5):
+            await async_client.post(
                 "/auth/login",
-                data={"username": "test", "password": "test"}
+                data={"username": "test_reset", "password": "test"},
             )
-            assert response.status_code in [401, 404, 429, 500]
-            
-            # En producción, después de 1 minuto el límite se resetearía
-            # En tests no esperamos, solo verificamos que el sistema funciona
+
+        # La siguiente request debería recibir 429 (rate limit agotado)
+        response_limited = await async_client.post(
+            "/auth/login",
+            data={"username": "test_reset", "password": "test"},
+        )
+        assert response_limited.status_code == 429
+
+        # Simular el paso del tiempo (65 segundos > ventana de 1 minuto)
+        with patch("time.time", return_value=time.time() + 65):
+            response_after_reset = await async_client.post(
+                "/auth/login",
+                data={"username": "test_reset", "password": "test"},
+            )
+            # Después de resetear el tiempo, ya no debería ser 429
+            assert response_after_reset.status_code in [401, 404, 500]
 
 
 class TestRateLimitConfiguration:
