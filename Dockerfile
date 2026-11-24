@@ -1,126 +1,81 @@
-# ========================================
-# Multi-stage Dockerfile optimized for AWS ECS/Fargate
-# ========================================
+# syntax=docker/dockerfile:1
 
 # ========================================
-# Stage 1: Base - Common dependencies
+# Stage 1: Base runtime mínima
 # ========================================
 FROM python:3.12-slim AS base
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-	PYTHONDONTWRITEBYTECODE=1 \
-	PIP_NO_CACHE_DIR=1 \
-	PIP_DISABLE_PIP_VERSION_CHECK=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /code
-
-# Install system dependencies with specific versions for reproducibility
-# Only essential packages to keep image small
-RUN apt-get update && apt-get install -y --no-install-recommends \
-	curl \
-	&& apt-get clean \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& rm -rf /tmp/* /var/tmp/*
 
 # ========================================
 # Stage 2: Dependencies Builder
 # ========================================
 FROM base AS builder
 
-# Install build dependencies (only needed during build)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-	build-essential=12.* \
-	gcc=4:* \
-	&& rm -rf /var/lib/apt/lists/*
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy only requirements first (better layer caching)
+# Crear entorno virtual aislado
+RUN python -m venv /opt/venv
+
 COPY requirements.txt .
 
-# Install Python dependencies
-# Use --no-cache-dir to reduce image size
-RUN pip install --upgrade pip==24.* && \
-	pip install --no-cache-dir -r requirements.txt
+# Usar caché de BuildKit (no ocupa espacio en la imagen final, pero acelera builds)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 # ========================================
-# Stage 3: Development (for docker-compose)
+# Stage 3: Development (para docker compose watch)
 # ========================================
 FROM base AS development
 
-# Copy dependencies from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /opt/venv /opt/venv
 
-# Copy application code
-COPY . .
+RUN groupadd -r appuser && useradd -r -g appuser -u 1000 appuser && \
+    mkdir -p /code/logs && \
+    chown -R appuser:appuser /code
 
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser && \
-	chown -R appuser:appuser /code && \
-	mkdir -p /code/logs && \
-	chown -R appuser:appuser /code/logs
+COPY --chown=appuser:appuser . .
 
 USER appuser
 
 EXPOSE 8000
 
-# Development command with hot-reload
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # ========================================
-# Stage 4: Production (for AWS ECS)
+# Stage 4: Production (Optimizado para Render / ECS)
 # ========================================
 FROM base AS production
 
-# Copy only runtime dependencies (not build tools)
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copiar únicamente el entorno virtual compilado
+COPY --from=builder /opt/venv /opt/venv
 
-# Create non-root user and necessary directories
-RUN groupadd -r appuser && \
-	useradd -r -g appuser -u 1000 appuser && \
-	mkdir -p /code/logs && \
-	chown -R appuser:appuser /code
+RUN groupadd -r appuser && useradd -r -g appuser -u 1000 appuser && \
+    mkdir -p /code/logs && \
+    chown -R appuser:appuser /code
 
-# Set working directory
-WORKDIR /code
-
-# Copy application code (respects .dockerignore)
-# This is separate from deps for better caching
+# Copiar código fuente (asegúrate de excluir .env, tests y .git en .dockerignore)
 COPY --chown=appuser:appuser . .
 
-# Remove any accidentally copied sensitive files as extra safety
-RUN rm -f .env .env.* || true && \
-	rm -rf tests/ __pycache__/ .pytest_cache/ || true && \
-	rm -rf .git/ .github/ || true
-
-# Switch to non-root user
 USER appuser
 
-# Expose port
 EXPOSE 8000
 
-# Healthcheck for AWS ECS
-# ECS will use this to determine if container is healthy
+# Healthcheck nativo en Python (sin necesidad de instalar curl)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-	CMD curl -f http://localhost:8000/health || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Labels for better container management
 LABEL maintainer="qolqa-team" \
-	app.name="qolqa-backend" \
-	app.version="1.0.0" \
-	app.description="QOLQA Backend API"
+      app.name="qolqa-backend" \
+      app.version="1.0.0" \
+      app.description="QOLQA Backend API"
 
-# Production command with multiple workers
-# Workers calculated based on CPU: (2 × CPU cores) + 1
-# For Fargate 0.5 vCPU: 2 workers
-# For Fargate 1 vCPU: 3 workers
-# Override in ECS task definition for larger instances
-CMD ["uvicorn", "main:app", \
-	"--host", "0.0.0.0", \
-	"--port", "8000", \
-	"--workers", "2", \
-	"--log-level", "info", \
-	"--access-log", \
-	"--proxy-headers", \
-	"--forwarded-allow-ips", "*"]
+# Usar shell form o variable ${PORT:-8000} para compatibilidad total con Render y ECS
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --log-level info --access-log --proxy-headers --forwarded-allow-ips '*'"]

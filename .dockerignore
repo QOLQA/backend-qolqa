@@ -14,12 +14,19 @@
 .gitlab-ci.yml
 .travis.yml
 
-# Documentation
+# Agentes / editores / IA
+.agents
+.atl
+.claude
+.cursor
+
+# Documentación
 *.md
 docs/
 README.md
 SECURITY_ANALYSIS.md
 REPORTE_SEGURIDAD_ACTUALIZADO.md
+AGENTS.md
 
 # Environment files (CRITICAL - prevents credential leaks)
 .env
@@ -46,11 +53,17 @@ coverage.xml
 dist/
 build/
 
-# Virtual environments
+# Python version / venv
+.python-version
 venv/
 env/
 ENV/
 .venv
+
+# ODD / specs / skills
+odd/
+openspec/
+skills-lock.json
 
 # IDE
 .vscode/
@@ -98,3 +111,7 @@ interfaces/serviceAccount.json
 *.sql
 *.sqlite
 *.db
+
+# Next.js / Vercel (por si hay build compartido en el repo)
+.next
+.vercel
