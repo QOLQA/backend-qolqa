@@ -1,4 +1,3 @@
-from typing import List
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -6,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from domain.entities.VersionEntity import VersionEntity
 from domain.errors import Missing
 from domain.repositories.version.repo import IVersionRepository
+
 from ..mappers import VersionMapper
 
 
@@ -36,19 +36,19 @@ class VersionRepositoryImpl(IVersionRepository[VersionEntity]):
 
         return VersionMapper.to_entity(raw)
 
-    async def get_all(self) -> List[VersionEntity]:
+    async def get_all(self) -> list[VersionEntity]:
         """Retrieve all versions."""
         cursor = self.collection.find()
         raws = await cursor.to_list(length=None)
         return [VersionMapper.to_entity(raw) for raw in raws]
 
-    async def get_by_solution_id(self, solution_id: str) -> List[VersionEntity]:
+    async def get_by_solution_id(self, solution_id: str) -> list[VersionEntity]:
         """Retrieve all versions for a given solution."""
         cursor = self.collection.find({'solution_id': solution_id})
         raws = await cursor.to_list(length=None)
         return [VersionMapper.to_entity(raw) for raw in raws]
 
-    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[VersionEntity]:
+    async def get_by_solution_ids(self, solution_ids: list[str]) -> list[VersionEntity]:
         """Retrieve all versions belonging to any of the given solutions.
 
         `versions.solution_id` is stored as a plain string, so the ids are used

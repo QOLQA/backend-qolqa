@@ -8,10 +8,15 @@ Uses asyncio.to_thread to keep the event loop free during sync verification.
 import asyncio
 import logging
 
-from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 
-from domain.services.google_auth import IGoogleAuthService, GoogleAuthInfo, InvalidGoogleToken, GoogleLoginNotConfigured
+from domain.services.google_auth import (
+    GoogleAuthInfo,
+    GoogleLoginNotConfigured,
+    IGoogleAuthService,
+    InvalidGoogleToken,
+)
 
 logger = logging.getLogger(__name__)
 

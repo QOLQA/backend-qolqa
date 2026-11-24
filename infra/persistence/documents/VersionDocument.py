@@ -1,9 +1,9 @@
-from typing import List
 
 from pydantic import Field
 
 from domain.entities.VersionEntity import Submodel
-from ..base import MongoBaseModel, PyObjectId
+
+from ..base import MongoBaseModel
 
 
 class VersionDocument(MongoBaseModel):
@@ -14,6 +14,6 @@ class VersionDocument(MongoBaseModel):
     the existing collection schema observed in repository_nosql.py).
     """
 
-    submodels: List[Submodel] = Field(default=[])
+    submodels: list[Submodel] = Field(default=[])
     description: str
     solution_id: str

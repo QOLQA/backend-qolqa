@@ -10,23 +10,15 @@ Cubre:
 Los repositorios se mockean a nivel de repository (AsyncMock), nunca a nivel de Motor,
 siguiendo las convenciones de testing del proyecto.
 """
-import pytest
-from bson import ObjectId
-from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from bson import ObjectId
 from fastapi import status
-from httpx import AsyncClient
-from main import app
 
 from domain.entities.QueryEntity import QueryEntity
 from domain.entities.SolutionEntity import SolutionEntity
-from domain.entities.auth.UserEntity import UserEntity
-from domain.errors import NotFoundError, Forbidden
-from infra.persistence.db_factory import get_database
-from infra.presentation.dependencies.auth import get_current_user
-from tests.conftest import override_get_database
-
+from domain.errors import NotFoundError
 
 QUERY_ID = str(ObjectId())
 SOLUTION_ID = str(ObjectId())

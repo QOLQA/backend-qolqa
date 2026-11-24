@@ -2,27 +2,33 @@
 Authentication router (Clean Architecture)
 Handles login, registration, and user profile endpoints.
 """
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from infra.presentation.dtos.auth.request import UserCreateRequest, GoogleLoginRequest
-from infra.presentation.dtos.auth.response import UserResponse, TokenResponse, GoogleLoginResponse
-from application.dtos.auth.commands import RegisterCommand, AuthenticateCommand, GoogleLoginCommand
-from infra.presentation.dependencies import (
-    get_register_user_use_case,
-    get_authenticate_user_use_case,
-    get_google_login_use_case,
-    get_get_user_by_id_use_case,
-    get_current_user,
-    get_google_auth_service,
+from application.dtos.auth.commands import (
+    AuthenticateCommand,
+    GoogleLoginCommand,
+    RegisterCommand,
 )
-from infra.persistence.token_service import create_user_token
-from infra.persistence.mappers import UserMapper
-from domain.entities.auth.UserEntity import UserEntity as User
-from infra.presentation.handle_errors import handle_common_errors
-from infra.persistence.audit import log_registration, log_auth_attempt
-from config.settings import settings
 from config.rate_limiter import limiter
+from config.settings import settings
+from domain.entities.auth.UserEntity import UserEntity as User
+from infra.persistence.audit import log_auth_attempt, log_registration
+from infra.persistence.mappers import UserMapper
+from infra.persistence.token_service import create_user_token
+from infra.presentation.dependencies import (
+    get_authenticate_user_use_case,
+    get_current_user,
+    get_google_login_use_case,
+    get_register_user_use_case,
+)
+from infra.presentation.dtos.auth.request import GoogleLoginRequest, UserCreateRequest
+from infra.presentation.dtos.auth.response import (
+    GoogleLoginResponse,
+    TokenResponse,
+    UserResponse,
+)
+from infra.presentation.handle_errors import handle_common_errors
 
 router = APIRouter()
 

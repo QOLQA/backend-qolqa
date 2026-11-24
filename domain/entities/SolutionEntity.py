@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
 
 from domain.entities.VersionEntity import VersionEntity
 from domain.errors import Forbidden
@@ -15,8 +14,8 @@ class SolutionEntity:
     user_id: str
     last_version_saved: str = "unknown"
     src_img: str = "http://unknown.es"
-    last_updated_at: Optional[datetime] = None
-    versions: List[VersionEntity] = field(default_factory=list)
+    last_updated_at: datetime | None = None
+    versions: list[VersionEntity] = field(default_factory=list)
 
     # ------------------------------------------------------------------ #
     # Factory Methods

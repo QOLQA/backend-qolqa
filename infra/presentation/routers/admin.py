@@ -2,28 +2,27 @@
 Admin controller.
 Handles user management operations restricted to admin role.
 """
-from typing import List
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, status
 
-from infra.presentation.dtos.auth.request import AdminUserUpdateRequest
-from infra.presentation.dtos.auth.response import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
 from infra.persistence.mappers import UserMapper
 from infra.persistence.repositories import UserRepositoryImpl
-from infra.presentation.dependencies.auth import require_admin, get_user_repository
+from infra.presentation.dependencies.auth import get_user_repository, require_admin
+from infra.presentation.dtos.auth.request import AdminUserUpdateRequest
+from infra.presentation.dtos.auth.response import UserResponse
 from infra.presentation.handle_errors import handle_common_errors
 
 router = APIRouter()
 
 
-@router.get('/users', response_model=List[UserResponse])
+@router.get('/users', response_model=list[UserResponse])
 async def list_users(
     _: UserEntity = Depends(require_admin),
     repository: UserRepositoryImpl = Depends(get_user_repository),
-) -> List[UserResponse]:
+) -> list[UserResponse]:
     """List all users. Admin only."""
     try:
         users = await repository.get_all()

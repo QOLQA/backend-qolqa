@@ -3,7 +3,6 @@ Auth Commands - Frozen dataclasses for application use cases.
 These are agnostic of HTTP/Pydantic and used by use cases.
 """
 from dataclasses import dataclass
-from typing import List, Optional
 
 from domain.enums.RoleEnum import RoleEnum
 
@@ -14,26 +13,26 @@ class CreateUserCommand:
     username: str
     email: str
     password: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
 
 
 @dataclass(frozen=True)
 class UpdateUserCommand:
     """Command to update user information (self-service)."""
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    is_active: Optional[bool] = None
-    profile_picture_url: Optional[str] = None
+    email: str | None = None
+    full_name: str | None = None
+    is_active: bool | None = None
+    profile_picture_url: str | None = None
 
 
 @dataclass(frozen=True)
 class AdminUpdateUserCommand:
     """Command for admin to update any user."""
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    profile_picture_url: Optional[str] = None
-    is_active: Optional[bool] = None
-    roles: Optional[List[RoleEnum]] = None
+    email: str | None = None
+    full_name: str | None = None
+    profile_picture_url: str | None = None
+    is_active: bool | None = None
+    roles: list[RoleEnum] | None = None
 
 
 @dataclass(frozen=True)
@@ -42,7 +41,7 @@ class RegisterCommand:
     username: str
     email: str
     password: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -56,4 +55,4 @@ class AuthenticateCommand:
 class GoogleLoginCommand:
     """Command for Google OAuth login."""
     credential: str
-    client_id: Optional[str] = None
+    client_id: str | None = None

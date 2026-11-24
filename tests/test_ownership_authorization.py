@@ -11,20 +11,27 @@ other user's queries and versions. These tests pin the ownership rules:
 Repositories are mocked at the repository level (AsyncMock), never at the
 Motor level, per the project testing conventions.
 """
-import pytest
 from unittest.mock import AsyncMock, patch
 
-from application.dtos.query.QueryRequest import QueryCreateRequest, QueryPartialUpdateRequest
+import pytest
+
 from application.dtos.query.commands import CreateQueryCommand
-from application.dtos.version.VersionRequest import VersionCreateRequest, VersionPartialUpdateRequest
+from application.dtos.query.QueryRequest import (
+    QueryPartialUpdateRequest,
+)
+from application.dtos.version.commands import CreateVersionCommand
+from application.dtos.version.VersionRequest import (
+    VersionPartialUpdateRequest,
+)
 from application.use_cases.query.CreateQuery import create_query
-from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
+from application.use_cases.query.DeleteQueriesBySolution import (
+    delete_queries_by_solution,
+)
 from application.use_cases.query.DeleteQuery import delete_query
 from application.use_cases.query.GetAllQueries import get_all_queries
 from application.use_cases.query.GetQueriesBySolution import get_queries_by_solution
 from application.use_cases.query.GetQueryById import get_query_by_id
 from application.use_cases.query.UpdateQuery import update_query
-from application.dtos.version.commands import CreateVersionCommand
 from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.DeleteVersion import delete_version
 from application.use_cases.version.GetAllVersions import get_all_versions
@@ -34,7 +41,6 @@ from domain.entities.QueryEntity import QueryEntity
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.entities.VersionEntity import VersionEntity
 from domain.errors import Forbidden
-
 
 OWNER_ID = "507f1f77bcf86cd799439011"
 OTHER_USER_ID = "507f1f77bcf86cd799439099"

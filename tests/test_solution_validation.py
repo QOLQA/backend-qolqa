@@ -4,7 +4,13 @@ Tests Pydantic model validation, field requirements, and data types
 """
 import pytest
 from pydantic import ValidationError
-from application.dtos.solution.SolutionRequest import SolutionCreateRequest as SolutionCreate, SolutionPartialUpdateRequest as SolutionPartialUpdate
+
+from application.dtos.solution.SolutionRequest import (
+    SolutionCreateRequest as SolutionCreate,
+)
+from application.dtos.solution.SolutionRequest import (
+    SolutionPartialUpdateRequest as SolutionPartialUpdate,
+)
 
 
 @pytest.mark.validation

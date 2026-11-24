@@ -3,7 +3,6 @@ from infra.presentation.dtos.version.request import (
     VersionPartialUpdateRequest,
     default_version_descriptions,
 )
-
 from infra.presentation.dtos.version.response import (
     VersionResponse,
 )
@@ -11,6 +10,6 @@ from infra.presentation.dtos.version.response import (
 __all__ = [
     "VersionCreateRequest",
     "VersionPartialUpdateRequest",
-    "default_version_descriptions",
     "VersionResponse",
+    "default_version_descriptions",
 ]

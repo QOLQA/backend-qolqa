@@ -1,4 +1,4 @@
-from typing import List
+
 from pydantic import BaseModel, Field
 
 
@@ -7,8 +7,8 @@ class QueryResponse(BaseModel):
 
     id: str = Field(min_length=1, serialization_alias="_id")
     full_query: str
-    collections: List[str]
-    highlighted_words: List[str]
+    collections: list[str]
+    highlighted_words: list[str]
     solution_id: str
 
     class Config:

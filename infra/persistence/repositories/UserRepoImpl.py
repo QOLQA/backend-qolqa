@@ -5,9 +5,15 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.AuthProviderEnum import AuthProviderEnum
-from domain.errors import Duplicate, Missing, InvalidCredentials, PasswordRequiredForLocalLogin
+from domain.errors import (
+    Duplicate,
+    InvalidCredentials,
+    Missing,
+    PasswordRequiredForLocalLogin,
+)
 from domain.repositories.user.repo import IUserRepository
 from domain.security.password import IPasswordHasher
+
 from ..mappers import UserMapper
 from ..security.bcrypt_hasher import BcryptHasher
 

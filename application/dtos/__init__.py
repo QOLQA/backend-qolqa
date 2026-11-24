@@ -3,58 +3,54 @@
 
 # Auth
 from application.dtos.auth.commands import (
-    CreateUserCommand,
-    UpdateUserCommand,
     AdminUpdateUserCommand,
-    RegisterCommand,
     AuthenticateCommand,
+    CreateUserCommand,
     GoogleLoginCommand,
+    RegisterCommand,
+    UpdateUserCommand,
+)
+from application.dtos.auth.queries import (
+    GetUserByEmailQuery,
+    GetUserByUsernameQuery,
+    GetUserQuery,
 )
 
-from application.dtos.auth.queries import (
-    GetUserQuery,
-    GetUserByUsernameQuery,
-    GetUserByEmailQuery,
+# Query
+from application.dtos.query.commands import (
+    CreateQueryCommand,
+    DeleteQueriesBySolutionCommand,
+    DeleteQueryCommand,
+    UpdateQueryCommand,
+)
+from application.dtos.query.queries import (
+    GetAllQueriesQuery,
+    GetQueriesBySolutionQuery,
+    GetQueryQuery,
 )
 
 # Solution
 from application.dtos.solution.commands import (
     CreateSolutionCommand,
-    UpdateSolutionCommand,
     DeleteSolutionCommand,
+    UpdateSolutionCommand,
 )
-
 from application.dtos.solution.queries import (
-    GetSolutionQuery,
     GetAllSolutionsQuery,
+    GetSolutionQuery,
     GetSolutionWithVersionsQuery,
 )
 
 # Version
 from application.dtos.version.commands import (
     CreateVersionCommand,
-    UpdateVersionCommand,
     DeleteVersionCommand,
+    UpdateVersionCommand,
 )
-
 from application.dtos.version.queries import (
-    GetVersionQuery,
     GetAllVersionsQuery,
+    GetVersionQuery,
     GetVersionsBySolutionQuery,
-)
-
-# Query
-from application.dtos.query.commands import (
-    CreateQueryCommand,
-    UpdateQueryCommand,
-    DeleteQueryCommand,
-    DeleteQueriesBySolutionCommand,
-)
-
-from application.dtos.query.queries import (
-    GetQueryQuery,
-    GetAllQueriesQuery,
-    GetQueriesBySolutionQuery,
 )
 
 __all__ = [

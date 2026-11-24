@@ -5,8 +5,10 @@ Other use cases are in infra/presentation/dependencies/use_cases.py
 """
 from fastapi import Depends
 
-from infra.presentation.dependencies.auth import get_user_repository, get_current_user, require_admin
-from infra.presentation.dependencies.common import get_database
+from infra.presentation.dependencies.auth import (
+    get_user_repository,
+)
+
 
 # Auth use cases
 def get_register_user_use_case(

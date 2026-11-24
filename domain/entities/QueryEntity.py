@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -8,8 +7,8 @@ class QueryEntity:
 
     id: str
     full_query: str
-    collections: List[str] = field(default_factory=list)
-    highlighted_words: List[str] = field(default_factory=list)
+    collections: list[str] = field(default_factory=list)
+    highlighted_words: list[str] = field(default_factory=list)
     solution_id: str = ""
 
     # ------------------------------------------------------------------ #
@@ -22,8 +21,8 @@ class QueryEntity:
         id: str,
         full_query: str,
         solution_id: str,
-        collections: List[str] = None,
-        highlighted_words: List[str] = None,
+        collections: list[str] = None,
+        highlighted_words: list[str] = None,
     ) -> "QueryEntity":
         """Create a new query."""
         if not full_query or not full_query.strip():
@@ -55,14 +54,14 @@ class QueryEntity:
             raise ValueError("full_query cannot exceed 10000 characters")
         self.full_query = full_query.strip()
 
-    def update_collections(self, collections: List[str]) -> None:
+    def update_collections(self, collections: list[str]) -> None:
         """Update the collections list."""
         if collections is None:
             self.collections = []
         else:
             self.collections = [c.strip() for c in collections if c and c.strip()]
 
-    def update_highlighted_words(self, highlighted_words: List[str]) -> None:
+    def update_highlighted_words(self, highlighted_words: list[str]) -> None:
         """Update the highlighted words list."""
         if highlighted_words is None:
             self.highlighted_words = []

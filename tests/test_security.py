@@ -2,8 +2,8 @@
 Tests de seguridad: Validación de ObjectIds y prevención de NoSQL injection
 """
 import pytest
-from fastapi import HTTPException
 from bson import ObjectId
+from fastapi import HTTPException
 
 from tests.helpers.mongo_utils import get_object_id, sanitize_query_filters
 

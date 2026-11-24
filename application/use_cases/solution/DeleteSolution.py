@@ -1,7 +1,8 @@
+from motor.motor_asyncio import AsyncIOMotorDatabase
+
 from domain.errors import Forbidden
 from domain.repositories.solution.repo import ISolutionRepository
 from domain.repositories.version.repo import IVersionRepository
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
 
 async def delete_solution(

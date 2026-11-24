@@ -1,27 +1,26 @@
 import contextlib
-from datetime import datetime, timezone
-import time
 import logging
+import time
+from datetime import UTC, datetime
 
-from pydantic import BaseModel
-from fastapi import FastAPI, status, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import _rate_limit_exceeded_handler
+from pydantic import BaseModel
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from infra.presentation.routers.auth import router as auth_router
-from infra.presentation.routers.user import router as user_router
-from infra.presentation.routers.admin import router as admin_router
-from infra.presentation.routers.query import router as queries_router
-from infra.presentation.routers.version import router as versions_router
-from infra.presentation.routers.solution import router as solutions_router
-from config.settings import settings, TypeDB
 from config.rate_limiter import limiter
-from infra.presentation.handle_errors import handle_common_errors
+from config.settings import TypeDB, settings
 from infra.persistence.audit import log_rate_limit_exceeded
 from infra.persistence.jwt import decode_access_token
+from infra.presentation.handle_errors import handle_common_errors
+from infra.presentation.routers.admin import router as admin_router
+from infra.presentation.routers.auth import router as auth_router
+from infra.presentation.routers.query import router as queries_router
+from infra.presentation.routers.solution import router as solutions_router
+from infra.presentation.routers.user import router as user_router
+from infra.presentation.routers.version import router as versions_router
 
 # Configure logging
 logging.basicConfig(
@@ -300,7 +299,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     except Exception as fallback_exc:
         # Último recurso: registrar y retornar error genérico
         logger.error(
-            f"Critical error in exception handler: {str(fallback_exc)}",
+            f"Critical error in exception handler: {fallback_exc!s}",
             exc_info=True
         )
         return JSONResponse(
@@ -324,7 +323,7 @@ async def health_check():
     """
     health_status = {
         "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "service": "qolqa-api",
         "environment": settings.environment,
         "database": {

@@ -1,8 +1,8 @@
-from bson import ObjectId, errors
-from fastapi import HTTPException, status
 import re
 
-from domain.errors import Format
+from bson import ObjectId, errors
+from fastapi import HTTPException, status
+
 
 async def get_object_id(id) -> ObjectId:
     """
@@ -54,7 +54,7 @@ async def get_object_id(id) -> ObjectId:
         # Si aún falla, es un formato inválido
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid ObjectId format: {str(e)}"
+            detail=f"Invalid ObjectId format: {e!s}"
         )
 
 

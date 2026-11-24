@@ -4,8 +4,21 @@ Tests Pydantic model validation for versions, submodels, nodes, and edges
 """
 import pytest
 from pydantic import ValidationError
-from application.dtos.version.VersionRequest import VersionCreateRequest as VersionCreate, VersionPartialUpdateRequest as VersionPartialUpdate
-from domain.entities.VersionEntity import Submodel, Node, Edge, Column, NestedNode, Position
+
+from application.dtos.version.VersionRequest import (
+    VersionCreateRequest as VersionCreate,
+)
+from application.dtos.version.VersionRequest import (
+    VersionPartialUpdateRequest as VersionPartialUpdate,
+)
+from domain.entities.VersionEntity import (
+    Column,
+    Edge,
+    NestedNode,
+    Node,
+    Position,
+    Submodel,
+)
 
 
 @pytest.mark.validation

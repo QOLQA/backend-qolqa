@@ -1,7 +1,7 @@
 from enum import Enum
 
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, SecretStr, field_validator, ValidationError
 
 # Default development secret key — MUST be replaced before running in production.
 DEFAULT_DEV_SECRET_KEY = "dev-secret-key-CHANGE-THIS-IN-PRODUCTION-min-32-characters"

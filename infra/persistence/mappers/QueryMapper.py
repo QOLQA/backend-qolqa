@@ -1,8 +1,9 @@
 from bson import ObjectId
 
+from domain.entities.QueryEntity import QueryEntity
 from infra.presentation.dtos.query.request import QueryCreateRequest
 from infra.presentation.dtos.query.response import QueryResponse
-from domain.entities.QueryEntity import QueryEntity
+
 from ..documents.QueryDocument import QueryDocument
 
 

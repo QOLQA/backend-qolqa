@@ -1,9 +1,9 @@
 """
 Tests de rate limiting usando SlowAPI
 """
-import pytest
-from httpx import AsyncClient, ASGITransport
 import asyncio
+
+import pytest
 
 from main import app
 
@@ -14,7 +14,6 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_login_rate_limit(self, async_client):
         """Test que login tiene rate limit de 5 requests por minuto"""
-        import asyncio
         # Usar async_client fixture que mockea la DB
         for i in range(3):
             response = await async_client.post(
@@ -29,7 +28,6 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_register_rate_limit(self, async_client):
         """Test que register tiene rate limit de 3 requests por hora"""
-        import asyncio
         # Usar async_client fixture que mockea la DB
         response = await async_client.post(
             "/auth/register",

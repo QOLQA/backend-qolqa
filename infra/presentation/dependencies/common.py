@@ -3,9 +3,8 @@ Database dependency factory
 The get_database dependency function decides at CALL TIME which backend to use,
 based on settings.type_db. No import-time branching.
 """
-from typing import AsyncGenerator
 
-from config.settings import settings, TypeDB
+from config.settings import TypeDB, settings
 
 
 async def get_database():

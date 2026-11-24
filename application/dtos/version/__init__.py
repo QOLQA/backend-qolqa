@@ -1,12 +1,11 @@
 from application.dtos.version.commands import (
     CreateVersionCommand,
-    UpdateVersionCommand,
     DeleteVersionCommand,
+    UpdateVersionCommand,
 )
-
 from application.dtos.version.queries import (
-    GetVersionQuery,
     GetAllVersionsQuery,
+    GetVersionQuery,
     GetVersionsBySolutionQuery,
 )
 

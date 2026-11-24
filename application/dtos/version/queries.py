@@ -2,9 +2,6 @@
 Version Queries - Frozen dataclasses for application use cases.
 """
 from dataclasses import dataclass
-from typing import List, Optional
-
-from domain.entities.VersionEntity import VersionEntity
 
 
 @dataclass(frozen=True)

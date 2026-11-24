@@ -4,17 +4,16 @@ Google Login use case.
 Orchestrates: verify → resolve → create/link → return entity.
 Lives in application/ — depends on domain interfaces only.
 """
-import re
 import logging
+import re
 
 from domain.entities.auth.UserEntity import UserEntity
 from domain.errors import (
     Duplicate,
     GoogleLoginNotConfigured,
-    InvalidGoogleToken,
 )
 from domain.repositories.user.repo import IUserRepository
-from domain.services.google_auth import IGoogleAuthService, GoogleAuthInfo
+from domain.services.google_auth import GoogleAuthInfo, IGoogleAuthService
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ async def google_login(
     base = _sanitize_username(prefix)
 
     # Try base, then base+1, base+2, ... up to base+100
-    for attempt in range(0, 101):
+    for attempt in range(101):
         username = base if attempt == 0 else f"{base}{attempt}"
 
         try:
@@ -93,7 +92,7 @@ async def google_login(
                 google_id=sub,
                 profile_picture_url=picture,
             )
-        except Duplicate as exc:
+        except Duplicate:
             # Race condition: someone else created with this username
             race_existing = await repository.get_by_google_id(sub)
             if race_existing:

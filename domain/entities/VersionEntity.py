@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 
 @dataclass
@@ -25,8 +24,8 @@ class NestedNode:
 
     id: str
     name: str
-    cols: List[Column]
-    nested_nodes: Optional[List['NestedNode']] = None
+    cols: list[Column]
+    nested_nodes: list['NestedNode'] | None = None
     cardinality: str = "1 ... 1"
 
 
@@ -38,8 +37,8 @@ class Node:
     name: str
     type: str
     position: Position
-    cols: List[Column]
-    nested_nodes: Optional[List[NestedNode]] = None
+    cols: list[Column]
+    nested_nodes: list[NestedNode] | None = None
 
 
 @dataclass
@@ -56,8 +55,8 @@ class Edge:
 class Submodel:
     """Value object: a logical subgroup of nodes and edges."""
 
-    nodes: List[Node] = field(default_factory=list)
-    edges: List[Edge] = field(default_factory=list)
+    nodes: list[Node] = field(default_factory=list)
+    edges: list[Edge] = field(default_factory=list)
 
 
 @dataclass
@@ -65,7 +64,7 @@ class VersionEntity:
     """Pure domain entity for a Version. No infrastructure dependencies."""
 
     id: str
-    submodels: List[Submodel]
+    submodels: list[Submodel]
     description: str
     solution_id: str
 
@@ -77,7 +76,7 @@ class VersionEntity:
     def create(
         cls,
         id: str,
-        submodels: List[Submodel],
+        submodels: list[Submodel],
         description: str,
         solution_id: str,
     ) -> "VersionEntity":
@@ -108,7 +107,7 @@ class VersionEntity:
             raise ValueError("Description cannot be empty")
         self.description = description.strip()
 
-    def update_submodels(self, submodels: List[Submodel]) -> None:
+    def update_submodels(self, submodels: list[Submodel]) -> None:
         """Replace all submodels."""
         if submodels is None:
             raise ValueError("Submodels list is required")

@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
 
 from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.enums.RoleEnum import RoleEnum
@@ -14,13 +13,13 @@ class UserEntity:
     id: str
     username: str
     email: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.utcnow)
-    profile_picture_url: Optional[str] = None
-    roles: List[RoleEnum] = field(default_factory=lambda: [RoleEnum.user])
+    profile_picture_url: str | None = None
+    roles: list[RoleEnum] = field(default_factory=lambda: [RoleEnum.user])
     token_version: int = 0
-    google_id: Optional[str] = None
+    google_id: str | None = None
     auth_provider: AuthProviderEnum = AuthProviderEnum.local
 
     # ------------------------------------------------------------------ #
@@ -33,7 +32,7 @@ class UserEntity:
         id: str,
         username: str,
         email: str,
-        full_name: Optional[str] = None,
+        full_name: str | None = None,
     ) -> "UserEntity":
         """Create a new local (email/password) user."""
         if not username or not username.strip():
@@ -59,9 +58,9 @@ class UserEntity:
         id: str,
         username: str,
         email: str,
-        full_name: Optional[str] = None,
+        full_name: str | None = None,
         google_id: str = "",
-        profile_picture_url: Optional[str] = None,
+        profile_picture_url: str | None = None,
     ) -> "UserEntity":
         """Create a new Google-authenticated user."""
         if not username or not username.strip():
@@ -91,9 +90,9 @@ class UserEntity:
 
     def update_profile(
         self,
-        username: Optional[str] = None,
-        email: Optional[str] = None,
-        full_name: Optional[str] = None,
+        username: str | None = None,
+        email: str | None = None,
+        full_name: str | None = None,
     ) -> None:
         """Update user profile fields."""
         if username is not None:
@@ -113,7 +112,7 @@ class UserEntity:
         """Mark password as changed — increments token_version to invalidate existing tokens."""
         self.token_version += 1
 
-    def link_google(self, google_id: str, profile_picture_url: Optional[str] = None) -> None:
+    def link_google(self, google_id: str, profile_picture_url: str | None = None) -> None:
         """Link a Google account to this user."""
         if not google_id:
             raise ValueError("Google ID cannot be empty")

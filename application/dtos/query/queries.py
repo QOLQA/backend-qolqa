@@ -2,7 +2,6 @@
 Query Queries - Frozen dataclasses for application use cases.
 """
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass(frozen=True)

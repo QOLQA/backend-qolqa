@@ -1,4 +1,3 @@
-from typing import List
 
 from pydantic import Field
 
@@ -13,6 +12,6 @@ class QueryDocument(MongoBaseModel):
     """
 
     full_query: str
-    collections: List[str] = Field(default=[])
-    highlighted_words: List[str] = Field(default=[])
+    collections: list[str] = Field(default=[])
+    highlighted_words: list[str] = Field(default=[])
     solution_id: PyObjectId = Field(alias="solution_id")

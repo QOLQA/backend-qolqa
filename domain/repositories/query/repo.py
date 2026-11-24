@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional
+from typing import Generic, TypeVar
 
 from domain.entities.QueryEntity import QueryEntity
 
@@ -10,12 +10,12 @@ class IQueryRepository(ABC, Generic[Entity]):
     """Query repository port (interface)."""
 
     @abstractmethod
-    async def get_by_id(self, id: str) -> Optional[Entity]:
+    async def get_by_id(self, id: str) -> Entity | None:
         """Retrieve a query by ID."""
         ...
 
     @abstractmethod
-    async def get_all(self) -> List[Entity]:
+    async def get_all(self) -> list[Entity]:
         """Retrieve all queries."""
         ...
 
@@ -30,12 +30,12 @@ class IQueryRepository(ABC, Generic[Entity]):
         ...
 
     @abstractmethod
-    async def get_by_solution_id(self, solution_id: str) -> List[Entity]:
+    async def get_by_solution_id(self, solution_id: str) -> list[Entity]:
         """Retrieve all queries associated with a solution."""
         ...
 
     @abstractmethod
-    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[Entity]:
+    async def get_by_solution_ids(self, solution_ids: list[str]) -> list[Entity]:
         """Retrieve all queries belonging to any of the given solutions."""
         ...
 

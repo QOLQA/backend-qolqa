@@ -1,5 +1,3 @@
-from datetime import datetime
-from typing import List
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -7,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.errors import Missing
 from domain.repositories.solution.repo import ISolutionRepository
+
 from ..mappers import SolutionMapper
 
 
@@ -38,13 +37,13 @@ class SolutionRepositoryImpl(ISolutionRepository[SolutionEntity]):
 
         return SolutionMapper.to_entity(raw)
 
-    async def get_all(self) -> List[SolutionEntity]:
+    async def get_all(self) -> list[SolutionEntity]:
         """Retrieve all solutions (without versions)."""
         cursor = self.collection.find()
         raws = await cursor.to_list(length=None)
         return [SolutionMapper.to_entity(raw) for raw in raws]
 
-    async def get_all_for_user(self, user_id: str) -> List[SolutionEntity]:
+    async def get_all_for_user(self, user_id: str) -> list[SolutionEntity]:
         """Retrieve all solutions owned by a specific user.
 
         CRITICAL: filtering happens at DB level — NOT in Python.

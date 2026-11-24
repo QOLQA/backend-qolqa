@@ -2,7 +2,6 @@
 Solution Commands - Frozen dataclasses for application use cases.
 """
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -17,9 +16,9 @@ class CreateSolutionCommand:
 @dataclass(frozen=True)
 class UpdateSolutionCommand:
     """Command to partially update a solution."""
-    name: Optional[str] = None
-    last_version_saved: Optional[str] = None
-    src_img: Optional[str] = None
+    name: str | None = None
+    last_version_saved: str | None = None
+    src_img: str | None = None
 
 
 @dataclass(frozen=True)

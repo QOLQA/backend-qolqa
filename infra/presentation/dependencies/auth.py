@@ -3,7 +3,7 @@ Authentication and authorization dependencies for presentation layer.
 """
 from fastapi import Depends, HTTPException, status
 
-from infra.presentation.handle_errors import handle_common_errors
+from application.use_cases.auth.GetUserById import get_user_by_id
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
 from domain.errors import InvalidToken
@@ -12,8 +12,8 @@ from infra.persistence.jwt import decode_access_token, oauth2_scheme
 from infra.persistence.repositories import UserRepositoryImpl
 from infra.persistence.security import BcryptHasher
 from infra.persistence.services.google_auth import GoogleAuthService
-from application.use_cases.auth.GetUserById import get_user_by_id
 from infra.presentation.dependencies.common import get_database
+from infra.presentation.handle_errors import handle_common_errors
 
 
 def get_token_data(token: str = Depends(oauth2_scheme)) -> dict:

@@ -1,21 +1,24 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, status
 
-from infra.presentation.dtos.version.request import VersionCreateRequest, VersionPartialUpdateRequest
 from application.dtos.version.commands import CreateVersionCommand, UpdateVersionCommand
-from infra.presentation.dtos.version.response import VersionResponse
+from application.use_cases.version.CreateVersion import create_version
+from application.use_cases.version.DeleteVersion import delete_version
 from application.use_cases.version.GetAllVersions import get_all_versions
 from application.use_cases.version.GetVersionById import get_version_by_id
-from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.UpdateVersion import update_version
-from application.use_cases.version.DeleteVersion import delete_version
-from infra.persistence.mappers import VersionMapper
-from infra.persistence.repositories import VersionRepositoryImpl, SolutionRepositoryImpl
-from domain.entities.auth.UserEntity import UserEntity as User
-from infra.presentation.dependencies.auth import get_current_user
-from infra.presentation.handle_errors import handle_common_errors
-from infra.persistence.db_factory import get_database
-from infra.persistence.audit import log_resource_operation
 from config.rate_limiter import limiter
+from domain.entities.auth.UserEntity import UserEntity as User
+from infra.persistence.audit import log_resource_operation
+from infra.persistence.db_factory import get_database
+from infra.persistence.mappers import VersionMapper
+from infra.persistence.repositories import SolutionRepositoryImpl, VersionRepositoryImpl
+from infra.presentation.dependencies.auth import get_current_user
+from infra.presentation.dtos.version.request import (
+    VersionCreateRequest,
+    VersionPartialUpdateRequest,
+)
+from infra.presentation.dtos.version.response import VersionResponse
+from infra.presentation.handle_errors import handle_common_errors
 
 router = APIRouter()
 
@@ -181,6 +184,6 @@ async def delete_version_endpoint(
             ip_address=request.client.host if request.client else None,
         )
 
-        return None
+        return
     except Exception as e:
         await handle_common_errors(e, request)

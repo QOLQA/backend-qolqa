@@ -1,4 +1,3 @@
-from typing import List
 
 from domain.entities.QueryEntity import QueryEntity
 from domain.repositories.query.repo import IQueryRepository
@@ -10,7 +9,7 @@ async def get_queries_by_solution(
     solution_repository: ISolutionRepository,
     solution_id: str,
     current_user_id: str,
-) -> List[QueryEntity]:
+) -> list[QueryEntity]:
     """Return all queries associated with the given solution id.
 
     OWNERSHIP CHECK: raises Forbidden (mapped to 403) when the solution is not

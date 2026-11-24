@@ -1,5 +1,5 @@
-from typing import List, Optional
 from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 from infra.presentation.dtos.version.response import VersionResponse
@@ -13,8 +13,8 @@ class SolutionResponse(BaseModel):
     user_id: str
     last_version_saved: str
     src_img: str
-    last_updated_at: Optional[datetime] = None
-    versions: List[VersionResponse] = []
+    last_updated_at: datetime | None = None
+    versions: list[VersionResponse] = []
 
     class Config:
         populate_by_name = True

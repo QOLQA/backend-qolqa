@@ -1,23 +1,28 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, status
 
-from infra.presentation.dtos.query.request import QueryCreateRequest, QueryPartialUpdateRequest
 from application.dtos.query.commands import CreateQueryCommand, UpdateQueryCommand
-from infra.presentation.dtos.query.response import QueryResponse
-from application.use_cases.query.GetAllQueries import get_all_queries
-from application.use_cases.query.GetQueryById import get_query_by_id
-from application.use_cases.query.GetQueriesBySolution import get_queries_by_solution
 from application.use_cases.query.CreateQuery import create_query
-from application.use_cases.query.UpdateQuery import update_query
+from application.use_cases.query.DeleteQueriesBySolution import (
+    delete_queries_by_solution,
+)
 from application.use_cases.query.DeleteQuery import delete_query
-from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
+from application.use_cases.query.GetAllQueries import get_all_queries
+from application.use_cases.query.GetQueriesBySolution import get_queries_by_solution
+from application.use_cases.query.GetQueryById import get_query_by_id
+from application.use_cases.query.UpdateQuery import update_query
+from config.rate_limiter import limiter
+from domain.entities.auth.UserEntity import UserEntity as User
+from infra.persistence.audit import log_resource_operation
+from infra.persistence.db_factory import get_database
 from infra.persistence.mappers import QueryMapper
 from infra.persistence.repositories import QueryRepositoryImpl, SolutionRepositoryImpl
-from domain.entities.auth.UserEntity import UserEntity as User
 from infra.presentation.dependencies.auth import get_current_user
+from infra.presentation.dtos.query.request import (
+    QueryCreateRequest,
+    QueryPartialUpdateRequest,
+)
+from infra.presentation.dtos.query.response import QueryResponse
 from infra.presentation.handle_errors import handle_common_errors
-from infra.persistence.db_factory import get_database
-from infra.persistence.audit import log_resource_operation
-from config.rate_limiter import limiter
 
 router = APIRouter()
 
@@ -211,7 +216,7 @@ async def delete_query_endpoint(
             ip_address=request.client.host if request.client else None,
         )
 
-        return None
+        return
     except Exception as e:
         await handle_common_errors(e, request)
 
@@ -240,6 +245,6 @@ async def delete_queries_by_solution_endpoint(
             ip_address=request.client.host if request.client else None,
         )
 
-        return None
+        return
     except Exception as e:
         await handle_common_errors(e, request)

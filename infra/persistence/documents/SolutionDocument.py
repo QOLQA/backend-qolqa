@@ -1,9 +1,9 @@
-from typing import List, Optional
 from datetime import datetime
 
 from pydantic import Field
 
 from domain.entities.VersionEntity import Submodel
+
 from ..base import MongoBaseModel
 
 
@@ -13,7 +13,7 @@ class EmbeddedVersion(MongoBaseModel):
     Mirrors the version collection schema but embedded inside a solution document.
     """
 
-    submodels: List[Submodel] = Field(default=[])
+    submodels: list[Submodel] = Field(default=[])
     description: str
     solution_id: str
 
@@ -29,5 +29,5 @@ class SolutionDocument(MongoBaseModel):
     user_id: str
     last_version_saved: str = Field(default="unknown", max_length=100)
     src_img: str = Field(default="http://unknown.es", max_length=500)
-    last_updated_at: Optional[datetime] = None
-    versions: List[EmbeddedVersion] = Field(default=[])
+    last_updated_at: datetime | None = None
+    versions: list[EmbeddedVersion] = Field(default=[])

@@ -2,7 +2,6 @@
 Version Commands - Frozen dataclasses for application use cases.
 """
 from dataclasses import dataclass
-from typing import List, Optional
 
 from domain.entities.VersionEntity import Submodel
 
@@ -10,7 +9,7 @@ from domain.entities.VersionEntity import Submodel
 @dataclass(frozen=True)
 class CreateVersionCommand:
     """Command to create a new version."""
-    submodels: List[Submodel]
+    submodels: list[Submodel]
     description: str
     solution_id: str
     current_user_id: str
@@ -19,9 +18,9 @@ class CreateVersionCommand:
 @dataclass(frozen=True)
 class UpdateVersionCommand:
     """Command to partially update a version."""
-    submodels: Optional[List[Submodel]] = None
-    description: Optional[str] = None
-    solution_id: Optional[str] = None
+    submodels: list[Submodel] | None = None
+    description: str | None = None
+    solution_id: str | None = None
 
 
 @dataclass(frozen=True)

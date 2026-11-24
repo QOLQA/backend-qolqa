@@ -1,4 +1,3 @@
-from typing import List
 
 from domain.entities.QueryEntity import QueryEntity
 from domain.repositories.query.repo import IQueryRepository
@@ -9,7 +8,7 @@ async def get_all_queries(
     repository: IQueryRepository,
     solution_repository: ISolutionRepository,
     user_id: str,
-) -> List[QueryEntity]:
+) -> list[QueryEntity]:
     """Return all queries owned by the given user.
 
     Ownership filtering happens at DB level: the user's own solutions are

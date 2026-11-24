@@ -1,8 +1,10 @@
-from typing import Any, Annotated, Callable, ClassVar
+from collections.abc import Callable
+from typing import Annotated, Any
 
 from bson import ObjectId
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic_core import core_schema
+
 
 class _ObjectIdPydanticAnnotation:
 

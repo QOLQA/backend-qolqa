@@ -1,16 +1,15 @@
 from application.dtos.auth.commands import (
-    CreateUserCommand,
-    UpdateUserCommand,
     AdminUpdateUserCommand,
-    RegisterCommand,
     AuthenticateCommand,
+    CreateUserCommand,
     GoogleLoginCommand,
+    RegisterCommand,
+    UpdateUserCommand,
 )
-
 from application.dtos.auth.queries import (
-    GetUserQuery,
-    GetUserByUsernameQuery,
     GetUserByEmailQuery,
+    GetUserByUsernameQuery,
+    GetUserQuery,
 )
 
 __all__ = [

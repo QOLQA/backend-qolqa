@@ -1,19 +1,20 @@
-from fastapi import HTTPException, status, Request
 import logging
 
-from domain.errors import (
-    Format,
-    Missing,
-    Duplicate,
-    NotFoundError,
-    Forbidden,
-    InvalidCredentials,
-    InvalidToken,
-    PasswordRequiredForLocalLogin,
-    InvalidGoogleToken,
-    GoogleLoginNotConfigured,
-)
+from fastapi import HTTPException, Request, status
+
 from config.settings import settings
+from domain.errors import (
+    Duplicate,
+    Forbidden,
+    Format,
+    GoogleLoginNotConfigured,
+    InvalidCredentials,
+    InvalidGoogleToken,
+    InvalidToken,
+    Missing,
+    NotFoundError,
+    PasswordRequiredForLocalLogin,
+)
 
 # Logger for unhandled errors
 logger = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ async def handle_common_errors(exc: Exception, request: Request | None = None) -
     # Unexpected errors:
     # 1. Log full details including stack trace for internal observability
     logger.error(
-        f"Unhandled error: {type(exc).__name__}: {str(exc)}",
+        f"Unhandled error: {type(exc).__name__}: {exc!s}",
         exc_info=True,  # Includes full stack trace in logs
         extra={
             "path": request.url.path if request else "unknown",
@@ -93,7 +94,7 @@ async def handle_common_errors(exc: Exception, request: Request | None = None) -
         # In development with debug=True, show error details
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {type(exc).__name__}: {str(exc)}"
+            detail=f"Internal server error: {type(exc).__name__}: {exc!s}"
         )
     else:
         # In production, return a generic message

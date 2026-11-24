@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional
+from typing import Generic, TypeVar
 
 from domain.entities.SolutionEntity import SolutionEntity
 
@@ -10,12 +10,12 @@ class ISolutionRepository(ABC, Generic[Entity]):
     """Solution repository port (interface)."""
 
     @abstractmethod
-    async def get_by_id(self, id: str) -> Optional[Entity]:
+    async def get_by_id(self, id: str) -> Entity | None:
         """Retrieve a solution by ID."""
         ...
 
     @abstractmethod
-    async def get_all(self) -> List[Entity]:
+    async def get_all(self) -> list[Entity]:
         """Retrieve all solutions."""
         ...
 
@@ -30,6 +30,6 @@ class ISolutionRepository(ABC, Generic[Entity]):
         ...
 
     @abstractmethod
-    async def get_all_for_user(self, user_id: str) -> List[Entity]:
+    async def get_all_for_user(self, user_id: str) -> list[Entity]:
         """Retrieve all solutions owned by a user."""
         ...

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
 
 
 @dataclass
@@ -9,7 +8,7 @@ class TokenEntity:
 
     access_token: str
     token_type: str = "bearer"
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
     # ------------------------------------------------------------------ #
     # Factory Methods
@@ -36,7 +35,7 @@ class TokenEntity:
             return False
         return datetime.utcnow() >= self.expires_at
 
-    def time_until_expiry(self) -> Optional[timedelta]:
+    def time_until_expiry(self) -> timedelta | None:
         """Return time remaining until expiry, or None if no expiry set."""
         if self.expires_at is None:
             return None

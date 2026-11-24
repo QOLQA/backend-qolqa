@@ -1,14 +1,13 @@
 from application.dtos.query.commands import (
     CreateQueryCommand,
-    UpdateQueryCommand,
-    DeleteQueryCommand,
     DeleteQueriesBySolutionCommand,
+    DeleteQueryCommand,
+    UpdateQueryCommand,
 )
-
 from application.dtos.query.queries import (
-    GetQueryQuery,
     GetAllQueriesQuery,
     GetQueriesBySolutionQuery,
+    GetQueryQuery,
 )
 
 __all__ = [

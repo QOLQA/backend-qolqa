@@ -1,10 +1,11 @@
-from typing import List
+
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from domain.entities.QueryEntity import QueryEntity
 from domain.errors import Missing
 from domain.repositories.query.repo import IQueryRepository
+
 from ..mappers import QueryMapper
 
 
@@ -35,13 +36,13 @@ class QueryRepositoryImpl(IQueryRepository[QueryEntity]):
 
         return QueryMapper.to_entity_from_dict(raw)
 
-    async def get_all(self) -> List[QueryEntity]:
+    async def get_all(self) -> list[QueryEntity]:
         """Retrieve all queries."""
         cursor = self.collection.find()
         raws = await cursor.to_list(length=None)
         return [QueryMapper.to_entity_from_dict(raw) for raw in raws]
 
-    async def get_by_solution_id(self, solution_id: str) -> List[QueryEntity]:
+    async def get_by_solution_id(self, solution_id: str) -> list[QueryEntity]:
         """Retrieve all queries for a given solution."""
         if not ObjectId.is_valid(solution_id):
             raise Missing(msg=f'Invalid solution id format: {solution_id}')
@@ -50,7 +51,7 @@ class QueryRepositoryImpl(IQueryRepository[QueryEntity]):
         raws = await cursor.to_list(length=None)
         return [QueryMapper.to_entity_from_dict(raw) for raw in raws]
 
-    async def get_by_solution_ids(self, solution_ids: List[str]) -> List[QueryEntity]:
+    async def get_by_solution_ids(self, solution_ids: list[str]) -> list[QueryEntity]:
         """Retrieve all queries belonging to any of the given solutions.
 
         `queries.solution_id` is stored as an ObjectId, so every id is converted

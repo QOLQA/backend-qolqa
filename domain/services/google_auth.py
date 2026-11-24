@@ -6,7 +6,6 @@ Implementation lives in infrastructure/services/.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 from domain.errors import InvalidGoogleToken as BaseInvalidGoogleToken
 
@@ -17,8 +16,8 @@ class GoogleAuthInfo:
     sub: str                    # Google user ID
     email: str
     email_verified: bool
-    name: Optional[str] = None
-    picture: Optional[str] = None
+    name: str | None = None
+    picture: str | None = None
 
 
 class IGoogleAuthService(ABC):
@@ -44,9 +43,7 @@ class IGoogleAuthService(ABC):
 
 class InvalidGoogleToken(BaseInvalidGoogleToken):
     """Raised when Google token verification fails."""
-    pass
 
 
 class GoogleLoginNotConfigured(Exception):
     """Raised when Google OAuth is not configured (missing client_id)."""
-    pass

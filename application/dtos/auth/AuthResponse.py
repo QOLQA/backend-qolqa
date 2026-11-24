@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -12,11 +11,11 @@ class UserResponse(BaseModel):
     id: str
     username: str
     email: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     is_active: bool
     created_at: datetime
-    profile_picture_url: Optional[str] = None
-    roles: List[RoleEnum] = []
+    profile_picture_url: str | None = None
+    roles: list[RoleEnum] = []
 
 
 class TokenResponse(BaseModel):

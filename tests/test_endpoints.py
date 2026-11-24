@@ -2,9 +2,10 @@
 Integration tests for Solutions endpoints
 Tests API endpoints for CRUD operations on solutions
 """
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi import status
-from unittest.mock import AsyncMock, patch
 
 
 @pytest.mark.integration
@@ -25,8 +26,9 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_all_solutions_with_data(self, authenticated_client, mock_user, mock_solution_data, auth_headers):
         """Test getting all solutions with data"""
-        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
+
+        from domain.entities.SolutionEntity import SolutionEntity
         
         # Create modified solution data for second solution
         solution_data_2 = {**mock_solution_data, "name": "Second Solution"}
@@ -48,9 +50,10 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_create_solution_success(self, authenticated_client, mock_user, mock_solution_data, auth_headers):
         """Test successful solution creation"""
+        from bson import ObjectId
+
         from domain.entities.SolutionEntity import SolutionEntity
         from domain.entities.VersionEntity import VersionEntity
-        from bson import ObjectId
         
         solution_id = str(ObjectId())
         version_id = str(ObjectId())
@@ -109,8 +112,9 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_get_solution_by_id_success(self, authenticated_client, mock_user, mock_solution_data, auth_headers):
         """Test getting a solution by ID"""
-        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
+
+        from domain.entities.SolutionEntity import SolutionEntity
         
         solution_id = str(ObjectId())
         expected_solution = SolutionEntity(
@@ -148,8 +152,9 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_success(self, authenticated_client, mock_user, mock_partial_update_data, auth_headers):
         """Test successful solution update"""
-        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
+
+        from domain.entities.SolutionEntity import SolutionEntity
         
         solution_id = str(ObjectId())
         updated_solution = SolutionEntity(
@@ -176,8 +181,9 @@ class TestSolutionsEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_partial_fields(self, authenticated_client, mock_user, auth_headers):
         """Test updating only specific fields"""
-        from domain.entities.SolutionEntity import SolutionEntity
         from bson import ObjectId
+
+        from domain.entities.SolutionEntity import SolutionEntity
         
         solution_id = str(ObjectId())
         update_data = {"last_version_saved": "version_456"}
@@ -228,9 +234,10 @@ class TestVersionEndpoints:
     @pytest.mark.asyncio
     async def test_update_solution_version_success(self, authenticated_client, mock_user, auth_headers):
         """Test successful version update"""
+        from bson import ObjectId
+
         from domain.entities.SolutionEntity import SolutionEntity
         from domain.entities.VersionEntity import VersionEntity
-        from bson import ObjectId
         
         solution_id = str(ObjectId())
         version_id = str(ObjectId())

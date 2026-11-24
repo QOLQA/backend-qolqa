@@ -1,5 +1,4 @@
 from domain.entities.auth.UserEntity import UserEntity
-from domain.errors import InvalidCredentials, PasswordRequiredForLocalLogin
 from domain.repositories.user.repo import IUserRepository
 
 

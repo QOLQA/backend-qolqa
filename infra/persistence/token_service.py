@@ -7,9 +7,10 @@ and config.settings — both infrastructure concerns.
 """
 from datetime import timedelta
 
-from infra.presentation.dtos.auth.response import TokenResponse
 from config.settings import settings
 from domain.entities.auth.UserEntity import UserEntity
+from infra.presentation.dtos.auth.response import TokenResponse
+
 from .jwt import create_access_token
 
 

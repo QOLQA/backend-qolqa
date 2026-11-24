@@ -1,4 +1,3 @@
-from typing import List
 
 from domain.entities.VersionEntity import VersionEntity
 from domain.repositories.solution.repo import ISolutionRepository
@@ -9,7 +8,7 @@ async def get_all_versions(
     repository: IVersionRepository,
     solution_repository: ISolutionRepository,
     user_id: str,
-) -> List[VersionEntity]:
+) -> list[VersionEntity]:
     """Return all versions owned by the given user.
 
     Ownership filtering happens at DB level: the user's own solutions are

@@ -1,8 +1,9 @@
+from bson import ObjectId
+
 from application.dtos.version.commands import CreateVersionCommand
 from domain.entities.VersionEntity import VersionEntity
 from domain.repositories.solution.repo import ISolutionRepository
 from domain.repositories.version.repo import IVersionRepository
-from bson import ObjectId
 
 
 async def create_version(

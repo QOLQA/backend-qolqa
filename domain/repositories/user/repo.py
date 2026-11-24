@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, List, Optional
+from typing import Generic, TypeVar
 
 from domain.entities.auth.UserEntity import UserEntity
-from domain.errors import InvalidCredentials, PasswordRequiredForLocalLogin
-from domain.enums.AuthProviderEnum import AuthProviderEnum
-
 
 Entity = TypeVar('Entity', bound=UserEntity)
 
@@ -13,12 +10,12 @@ class IUserRepository(ABC, Generic[Entity]):
     """User repository port (interface)."""
 
     @abstractmethod
-    async def get_by_id(self, id: str) -> Optional[Entity]:
+    async def get_by_id(self, id: str) -> Entity | None:
         """Retrieve a user by ID."""
         ...
 
     @abstractmethod
-    async def get_all(self) -> List[Entity]:
+    async def get_all(self) -> list[Entity]:
         """Retrieve all users."""
         ...
 
@@ -33,17 +30,17 @@ class IUserRepository(ABC, Generic[Entity]):
         ...
 
     @abstractmethod
-    async def get_by_username(self, username: str) -> Optional[Entity]:
+    async def get_by_username(self, username: str) -> Entity | None:
         """Retrieve a user by username."""
         ...
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> Optional[Entity]:
+    async def get_by_email(self, email: str) -> Entity | None:
         """Retrieve a user by email."""
         ...
 
     @abstractmethod
-    async def get_by_google_id(self, google_id: str) -> Optional[Entity]:
+    async def get_by_google_id(self, google_id: str) -> Entity | None:
         """Retrieve a user by Google ID."""
         ...
 
@@ -57,9 +54,9 @@ class IUserRepository(ABC, Generic[Entity]):
         self,
         username: str,
         email: str,
-        full_name: Optional[str],
+        full_name: str | None,
         google_id: str,
-        profile_picture_url: Optional[str],
+        profile_picture_url: str | None,
     ) -> Entity:
         """Create a new Google-authenticated user (no password)."""
         ...

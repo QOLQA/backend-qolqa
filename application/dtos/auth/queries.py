@@ -3,7 +3,6 @@ Auth Queries - Frozen dataclasses for application use cases.
 These are agnostic of HTTP/Pydantic and used by use cases.
 """
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)

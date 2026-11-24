@@ -1,6 +1,10 @@
+from domain.entities.VersionEntity import (
+    NestedNode,
+    Submodel,
+    VersionEntity,
+)
 from infra.presentation.dtos.version.request import VersionCreateRequest
 from infra.presentation.dtos.version.response import VersionResponse
-from domain.entities.VersionEntity import VersionEntity, Submodel, Node, Position, Column, Edge, NestedNode
 
 
 class VersionMapper:

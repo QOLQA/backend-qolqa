@@ -4,7 +4,6 @@ Solution, Version, Query use cases and repository dependencies.
 from fastapi import Depends
 
 from infra.presentation.dependencies.common import get_database
-from infra.presentation.dependencies.auth import get_user_repository
 
 
 # Repository dependencies
@@ -69,7 +68,9 @@ def get_get_solution_by_id_use_case(
 def get_get_all_solutions_for_user_use_case(
     repository=Depends(get_solution_repository),
 ):
-    from application.use_cases.solution.GetAllSolutionsForUser import get_all_solutions_for_user
+    from application.use_cases.solution.GetAllSolutionsForUser import (
+        get_all_solutions_for_user,
+    )
     return get_all_solutions_for_user
 
 
@@ -143,7 +144,9 @@ def get_delete_queries_by_solution_use_case(
     repository=Depends(get_query_repository),
     solution_repository=Depends(get_solution_repository),
 ):
-    from application.use_cases.query.DeleteQueriesBySolution import delete_queries_by_solution
+    from application.use_cases.query.DeleteQueriesBySolution import (
+        delete_queries_by_solution,
+    )
     return delete_queries_by_solution
 
 

@@ -1,8 +1,9 @@
+from bson import ObjectId
+
 from application.dtos.query.commands import CreateQueryCommand
 from domain.entities.QueryEntity import QueryEntity
 from domain.repositories.query.repo import IQueryRepository
 from domain.repositories.solution.repo import ISolutionRepository
-from bson import ObjectId
 
 
 async def create_query(
