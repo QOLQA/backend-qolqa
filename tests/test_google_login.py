@@ -286,9 +286,11 @@ class TestVerifyGoogleToken:
         from domain.errors import InvalidGoogleToken
         from infra.persistence.services.google_auth import verify_google_token
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Bad token")):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('bad-credential', 'test-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Bad token")),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('bad-credential', 'test-client-id')
 
     @pytest.mark.asyncio
     async def test_verify_google_token_wrong_audience(self):
@@ -518,7 +520,6 @@ class TestUserRepoImplGoogleMethods:
         mock_collection.insert_one = AsyncMock(return_value=MagicMock(inserted_id=new_id))
 
         # After insert, find_one returns the new user
-        original_find_one = mock_collection.find_one
         call_count = 0
 
         async def side_effect(*args, **kwargs):
@@ -683,14 +684,6 @@ class TestGoogleLoginUseCase:
         new_user.id = "new-id"
         new_user.username = "johndoe"
         mock_repo.add_google_user = AsyncMock(return_value=new_user)
-
-        mock_info = {
-            'sub': 'google-sub-123',
-            'email': 'john@gmail.com',
-            'email_verified': True,
-            'name': 'John Doe',
-            'picture': 'https://example.com/pic.jpg',
-        }
 
         mock_google_auth = AsyncMock()
         mock_google_auth.verify_token = AsyncMock(return_value=GoogleAuthInfo(

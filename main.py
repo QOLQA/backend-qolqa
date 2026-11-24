@@ -354,7 +354,7 @@ async def health_check():
         health_status["status"] = "unhealthy"
         health_status["database"]["status"] = "disconnected"
         # Log internally — do not expose raw error details in the response
-        logger.error("Health check database error: %s", type(e).__name__, exc_info=True)
+        logger.exception("Health check database error: %s", type(e).__name__)
         
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

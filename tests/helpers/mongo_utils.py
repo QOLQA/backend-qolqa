@@ -81,10 +81,9 @@ def sanitize_query_filters(filters: dict, allowed_fields: list) -> dict:
         # Rechazar objetos complejos (posibles operadores MongoDB)
         if isinstance(value, (str, int, bool, type(None))):
             safe_filters[key] = value
-        elif isinstance(value, list):
+        elif isinstance(value, list) and all(isinstance(v, (str, int, bool, type(None))) for v in value):
             # Permitir listas solo si todos los elementos son tipos simples
-            if all(isinstance(v, (str, int, bool, type(None))) for v in value):
-                safe_filters[key] = {'$in': value}
+            safe_filters[key] = {'$in': value}
         # Rechazar cualquier otro tipo (dict, objetos, etc.)
     
     return safe_filters
