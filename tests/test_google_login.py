@@ -3,10 +3,11 @@ Tests for Google Login integration.
 Flat file matching project convention (tests/test_auth.py).
 Strict TDD: tests written FIRST, implementation follows.
 """
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from domain.services.google_auth import GoogleAuthInfo
 
+import pytest
+
+from domain.services.google_auth import GoogleAuthInfo
 
 # ============================================================
 # WU1: Domain Layer Tests
@@ -50,31 +51,33 @@ class TestUserEntityGoogleFields:
     """UserEntity gains google_id and auth_provider fields."""
 
     def test_user_entity_defaults(self):
+        from datetime import datetime
+
         from domain.entities.auth.UserEntity import UserEntity
         from domain.enums.AuthProviderEnum import AuthProviderEnum
-        from datetime import datetime
 
         entity = UserEntity(
             id="507f1f77bcf86cd799439011",
             username="testuser",
             email="test@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         assert entity.google_id is None
         assert entity.auth_provider == AuthProviderEnum.local
 
     def test_user_entity_google_fields(self):
+        from datetime import datetime
+
         from domain.entities.auth.UserEntity import UserEntity
         from domain.enums.AuthProviderEnum import AuthProviderEnum
-        from datetime import datetime
 
         entity = UserEntity(
             id="507f1f77bcf86cd799439011",
             username="googler",
             email="user@gmail.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             google_id="google-sub-123",
             auth_provider=AuthProviderEnum.google,
         )
@@ -94,8 +97,9 @@ class TestUserRepositoryGoogleMethods:
         assert hasattr(IUserRepository, 'add_google_user')
 
     def test_user_repository_google_method_signatures(self):
-        from domain.repositories.user.repo import IUserRepository
         import inspect
+
+        from domain.repositories.user.repo import IUserRepository
 
         # get_by_google_id
         sig = inspect.signature(IUserRepository.get_by_google_id)
@@ -124,10 +128,12 @@ class TestUserDocumentNullableFields:
     """UserDocument accepts optional hashed_password and google fields."""
 
     def test_user_document_nullable_fields(self):
-        from infra.persistence.documents import UserDocument
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from datetime import datetime
+
         from bson import ObjectId
+
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from infra.persistence.documents import UserDocument
 
         doc = UserDocument(
             _id=ObjectId(),
@@ -135,8 +141,8 @@ class TestUserDocumentNullableFields:
             email="test@example.com",
             is_active=True,
             hashed_password=None,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
             google_id=None,
             auth_provider=AuthProviderEnum.local,
         )
@@ -145,10 +151,12 @@ class TestUserDocumentNullableFields:
         assert doc.auth_provider == AuthProviderEnum.local
 
     def test_user_document_google_values(self):
-        from infra.persistence.documents import UserDocument
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from datetime import datetime
+
         from bson import ObjectId
+
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from infra.persistence.documents import UserDocument
 
         doc = UserDocument(
             _id=ObjectId(),
@@ -156,8 +164,8 @@ class TestUserDocumentNullableFields:
             email="user@gmail.com",
             is_active=True,
             hashed_password=None,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
             google_id="google-sub-abc",
             auth_provider=AuthProviderEnum.google,
         )
@@ -169,17 +177,19 @@ class TestUserMapperExtensions:
     """UserMapper handles google_id, auth_provider, and from_google_request."""
 
     def test_mapper_to_entity_google_fields(self):
-        from infra.persistence.mappers import UserMapper
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from datetime import datetime
+
         from bson import ObjectId
+
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from infra.persistence.mappers import UserMapper
 
         raw = {
             '_id': ObjectId(),
             'username': 'testuser',
             'email': 'test@example.com',
             'is_active': True,
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
             'roles': ['user'],
             'token_version': 0,
             'google_id': 'google-sub-123',
@@ -190,17 +200,19 @@ class TestUserMapperExtensions:
         assert entity.auth_provider == AuthProviderEnum.google
 
     def test_mapper_to_entity_defaults(self):
-        from infra.persistence.mappers import UserMapper
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from datetime import datetime
+
         from bson import ObjectId
+
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from infra.persistence.mappers import UserMapper
 
         raw = {
             '_id': ObjectId(),
             'username': 'testuser',
             'email': 'test@example.com',
             'is_active': True,
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
             'roles': ['user'],
             'token_version': 0,
         }
@@ -209,8 +221,8 @@ class TestUserMapperExtensions:
         assert entity.auth_provider == AuthProviderEnum.local
 
     def test_mapper_from_create_request_google_fields(self):
-        from infra.persistence.mappers import UserMapper
         from application.dtos.auth.AuthRequest import UserCreateRequest
+        from infra.persistence.mappers import UserMapper
 
         request = UserCreateRequest(
             username="testuser",
@@ -247,8 +259,9 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_success(self):
+        from unittest.mock import patch
+
         from infra.persistence.services.google_auth import verify_google_token
-        from unittest.mock import patch, MagicMock
 
         mock_payload = {
             'sub': 'google-sub-123',
@@ -268,9 +281,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_bad_signature(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Bad token")):
             with pytest.raises(InvalidGoogleToken):
@@ -278,9 +292,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_wrong_audience(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Wrong audience")):
             with pytest.raises(InvalidGoogleToken):
@@ -288,9 +303,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_expired(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Token expired")):
             with pytest.raises(InvalidGoogleToken):
@@ -298,9 +314,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_malformed(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Malformed token")):
             with pytest.raises(InvalidGoogleToken):
@@ -308,9 +325,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_email_not_verified(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         mock_payload = {
             'sub': 'google-sub-123',
@@ -325,9 +343,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_missing_sub(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         mock_payload = {
             'email': 'user@gmail.com',
@@ -341,9 +360,10 @@ class TestVerifyGoogleToken:
 
     @pytest.mark.asyncio
     async def test_verify_google_token_missing_email(self):
-        from infra.persistence.services.google_auth import verify_google_token
-        from domain.errors import InvalidGoogleToken
         from unittest.mock import patch
+
+        from domain.errors import InvalidGoogleToken
+        from infra.persistence.services.google_auth import verify_google_token
 
         mock_payload = {
             'sub': 'google-sub-123',
@@ -361,9 +381,11 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_get_by_google_id_found(self):
-        from infra.persistence.repositories import UserRepositoryImpl
         from datetime import datetime
+
         from bson import ObjectId
+
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -375,7 +397,7 @@ class TestUserRepoImplGoogleMethods:
             'username': 'testuser',
             'email': 'test@example.com',
             'is_active': True,
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
             'roles': ['user'],
             'token_version': 0,
             'google_id': 'google-sub-123',
@@ -391,9 +413,9 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_get_by_google_id_none(self):
+
+
         from infra.persistence.repositories import UserRepositoryImpl
-        from datetime import datetime
-        from bson import ObjectId
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -408,9 +430,11 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_link_google_account_success(self):
-        from infra.persistence.repositories import UserRepositoryImpl
         from datetime import datetime
+
         from bson import ObjectId
+
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -422,7 +446,7 @@ class TestUserRepoImplGoogleMethods:
             'username': 'testuser',
             'email': 'test@example.com',
             'is_active': True,
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
             'roles': ['user'],
             'token_version': 0,
         })
@@ -436,8 +460,8 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_link_google_account_bad_object_id(self):
-        from infra.persistence.repositories import UserRepositoryImpl
         from domain.errors import Missing
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -449,11 +473,13 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_link_google_account_duplicate_key(self):
-        from infra.persistence.repositories import UserRepositoryImpl
-        from domain.errors import Duplicate
         from datetime import datetime
+
         from bson import ObjectId
         from pymongo.errors import DuplicateKeyError
+
+        from domain.errors import Duplicate
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -465,7 +491,7 @@ class TestUserRepoImplGoogleMethods:
             'username': 'testuser',
             'email': 'test@example.com',
             'is_active': True,
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
             'roles': ['user'],
             'token_version': 0,
         })
@@ -477,9 +503,11 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_add_google_user_success(self):
-        from infra.persistence.repositories import UserRepositoryImpl
         from datetime import datetime
+
         from bson import ObjectId
+
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -503,7 +531,7 @@ class TestUserRepoImplGoogleMethods:
                 'username': 'johndoe',
                 'email': 'john@gmail.com',
                 'is_active': True,
-                'created_at': datetime.utcnow(),
+                'created_at': datetime.now(UTC),
                 'roles': ['user'],
                 'token_version': 0,
                 'google_id': 'google-sub-456',
@@ -527,10 +555,12 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_add_google_user_duplicate_username(self):
-        from infra.persistence.repositories import UserRepositoryImpl
-        from domain.errors import Duplicate
         from datetime import datetime
+
         from bson import ObjectId
+
+        from domain.errors import Duplicate
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -541,7 +571,7 @@ class TestUserRepoImplGoogleMethods:
             'username': 'johndoe',
             'email': 'other@example.com',
             'is_active': True,
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
             'roles': ['user'],
             'token_version': 0,
         })
@@ -558,10 +588,12 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_add_google_user_duplicate_email(self):
-        from infra.persistence.repositories import UserRepositoryImpl
-        from domain.errors import Duplicate
         from datetime import datetime
+
         from bson import ObjectId
+
+        from domain.errors import Duplicate
+        from infra.persistence.repositories import UserRepositoryImpl
 
         mock_db = MagicMock()
         mock_collection = AsyncMock()
@@ -575,7 +607,7 @@ class TestUserRepoImplGoogleMethods:
                 'username': 'otheruser',
                 'email': 'john@gmail.com',
                 'is_active': True,
-                'created_at': datetime.utcnow(),
+                'created_at': datetime.now(UTC),
                 'roles': ['user'],
                 'token_version': 0,
             },
@@ -606,15 +638,16 @@ class TestGoogleLoginRequestResponseDTOs:
         assert dto.credential == "valid-credential-string"
 
     def test_google_login_response_dto_no_password(self):
-        from application.dtos.auth.AuthResponse import GoogleLoginResponse, UserResponse
         from datetime import datetime
+
+        from application.dtos.auth.AuthResponse import GoogleLoginResponse, UserResponse
 
         user = UserResponse(
             id="507f1f77bcf86cd799439011",
             username="testuser",
             email="test@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         response = GoogleLoginResponse(
             access_token="test-token",
@@ -637,9 +670,9 @@ class TestGoogleLoginUseCase:
 
     @pytest.mark.asyncio
     async def test_google_login_new_user(self):
+        from unittest.mock import AsyncMock, MagicMock
+
         from application.use_cases.auth.GoogleLogin import google_login
-        from unittest.mock import AsyncMock, MagicMock, patch
-        from datetime import datetime
 
         mock_repo = AsyncMock()
         mock_repo.get_by_google_id = AsyncMock(return_value=None)
@@ -675,8 +708,9 @@ class TestGoogleLoginUseCase:
 
     @pytest.mark.asyncio
     async def test_google_login_existing_google_id(self):
-        from application.use_cases.auth.GoogleLogin import google_login
         from unittest.mock import AsyncMock, MagicMock
+
+        from application.use_cases.auth.GoogleLogin import google_login
         from domain.services.google_auth import GoogleAuthInfo
 
         mock_repo = AsyncMock()
@@ -699,8 +733,9 @@ class TestGoogleLoginUseCase:
 
     @pytest.mark.asyncio
     async def test_google_login_email_link(self):
-        from application.use_cases.auth.GoogleLogin import google_login
         from unittest.mock import AsyncMock, MagicMock
+
+        from application.use_cases.auth.GoogleLogin import google_login
         from domain.services.google_auth import GoogleAuthInfo
 
         mock_repo = AsyncMock()
@@ -727,8 +762,9 @@ class TestGoogleLoginUseCase:
 
     @pytest.mark.asyncio
     async def test_google_login_username_collision(self):
-        from application.use_cases.auth.GoogleLogin import google_login
         from unittest.mock import AsyncMock, MagicMock
+
+        from application.use_cases.auth.GoogleLogin import google_login
         from domain.errors import Duplicate
         from domain.services.google_auth import GoogleAuthInfo
 
@@ -762,9 +798,10 @@ class TestGoogleLoginUseCase:
 
     @pytest.mark.asyncio
     async def test_google_login_503_when_client_id_none(self):
+        from unittest.mock import AsyncMock
+
         from application.use_cases.auth.GoogleLogin import google_login
         from domain.errors import GoogleLoginNotConfigured
-        from unittest.mock import AsyncMock
 
         mock_repo = AsyncMock()
         mock_google_auth = AsyncMock()
@@ -778,10 +815,11 @@ class TestAuthenticateUserGuard:
 
     @pytest.mark.asyncio
     async def test_authenticate_guard_google_only_user(self):
-        from application.use_cases.auth.AuthenticateUser import authenticate_user
-        from domain.errors import PasswordRequiredForLocalLogin
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from unittest.mock import AsyncMock, MagicMock
+
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from domain.errors import PasswordRequiredForLocalLogin
 
         mock_repo = AsyncMock()
         user_entity = MagicMock()
@@ -796,9 +834,10 @@ class TestAuthenticateUserGuard:
 
     @pytest.mark.asyncio
     async def test_authenticate_guard_hybrid_user(self):
+        from unittest.mock import AsyncMock, MagicMock
+
         from application.use_cases.auth.AuthenticateUser import authenticate_user
         from domain.enums.AuthProviderEnum import AuthProviderEnum
-        from unittest.mock import AsyncMock, MagicMock
 
         mock_repo = AsyncMock()
         user_entity = MagicMock()
@@ -815,10 +854,11 @@ class TestAuthenticateUserGuard:
 
     @pytest.mark.asyncio
     async def test_authenticate_guard_inactive_google_user(self):
-        from application.use_cases.auth.AuthenticateUser import authenticate_user
-        from domain.errors import InvalidCredentials
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from unittest.mock import AsyncMock, MagicMock
+
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from domain.errors import InvalidCredentials
 
         mock_repo = AsyncMock()
         user_entity = MagicMock()
@@ -834,10 +874,11 @@ class TestAuthenticateUserGuard:
     @pytest.mark.asyncio
     async def test_authenticate_guard_inactive_hybrid_user(self):
         """Inactive hybrid user (has password, is_active=False) gets InvalidCredentials."""
-        from application.use_cases.auth.AuthenticateUser import authenticate_user
-        from domain.errors import InvalidCredentials
-        from domain.enums.AuthProviderEnum import AuthProviderEnum
         from unittest.mock import AsyncMock, MagicMock
+
+        from application.use_cases.auth.AuthenticateUser import authenticate_user
+        from domain.enums.AuthProviderEnum import AuthProviderEnum
+        from domain.errors import InvalidCredentials
 
         mock_repo = AsyncMock()
         user_entity = MagicMock()
@@ -860,9 +901,10 @@ class TestHandleErrorsGoogleExceptions:
 
     @pytest.mark.asyncio
     async def test_handle_errors_password_required_403(self):
-        from infra.presentation.handle_errors import handle_common_errors
-        from domain.errors import PasswordRequiredForLocalLogin
         from fastapi import HTTPException
+
+        from domain.errors import PasswordRequiredForLocalLogin
+        from infra.presentation.handle_errors import handle_common_errors
 
         with pytest.raises(HTTPException) as exc_info:
             await handle_common_errors(PasswordRequiredForLocalLogin())
@@ -872,9 +914,10 @@ class TestHandleErrorsGoogleExceptions:
 
     @pytest.mark.asyncio
     async def test_handle_errors_invalid_google_token_401(self):
-        from infra.presentation.handle_errors import handle_common_errors
-        from domain.errors import InvalidGoogleToken
         from fastapi import HTTPException
+
+        from domain.errors import InvalidGoogleToken
+        from infra.presentation.handle_errors import handle_common_errors
 
         with pytest.raises(HTTPException) as exc_info:
             await handle_common_errors(InvalidGoogleToken())
@@ -885,9 +928,10 @@ class TestHandleErrorsGoogleExceptions:
 
     @pytest.mark.asyncio
     async def test_handle_errors_google_not_configured_503(self):
-        from infra.presentation.handle_errors import handle_common_errors
-        from domain.errors import GoogleLoginNotConfigured
         from fastapi import HTTPException
+
+        from domain.errors import GoogleLoginNotConfigured
+        from infra.presentation.handle_errors import handle_common_errors
 
         with pytest.raises(HTTPException) as exc_info:
             await handle_common_errors(GoogleLoginNotConfigured())
@@ -902,7 +946,9 @@ class TestPostGoogleAuthEndpoint:
     @pytest.mark.asyncio
     async def test_post_google_auth_happy_new_user(self, async_client):
         from datetime import datetime
+
         from bson import ObjectId
+
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
 
@@ -911,7 +957,7 @@ class TestPostGoogleAuthEndpoint:
             username="newgoogleuser",
             email="new@gmail.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )
@@ -936,8 +982,9 @@ class TestPostGoogleAuthEndpoint:
 
     @pytest.mark.asyncio
     async def test_post_google_auth_invalid_token_401(self, async_client):
+        from unittest.mock import AsyncMock, patch
+
         from domain.errors import InvalidGoogleToken
-        from unittest.mock import patch, AsyncMock
 
         with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
             mock_google_login.side_effect = InvalidGoogleToken()
@@ -949,8 +996,9 @@ class TestPostGoogleAuthEndpoint:
 
     @pytest.mark.asyncio
     async def test_post_google_auth_unset_client_id_503(self, async_client):
+        from unittest.mock import AsyncMock, patch
+
         from domain.errors import GoogleLoginNotConfigured
-        from unittest.mock import patch, AsyncMock
 
         with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
             mock_google_login.side_effect = GoogleLoginNotConfigured()
@@ -963,17 +1011,19 @@ class TestPostGoogleAuthEndpoint:
     @pytest.mark.asyncio
     async def test_post_google_auth_existing_google_id(self, async_client):
         from datetime import datetime
+        from unittest.mock import AsyncMock, patch
+
         from bson import ObjectId
+
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
-        from unittest.mock import patch, AsyncMock
 
         existing_user = UserEntity(
             id=str(ObjectId()),
             username="existinggoogle",
             email="existing@gmail.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )
@@ -992,8 +1042,9 @@ class TestPostGoogleAuthEndpoint:
     @pytest.mark.asyncio
     async def test_post_google_auth_failure_logs_email_from_exception(self, async_client):
         """Failed google login audit log uses email from exception, not hardcoded string."""
+        from unittest.mock import AsyncMock, patch
+
         from domain.errors import InvalidGoogleToken
-        from unittest.mock import patch, AsyncMock
 
         exc = InvalidGoogleToken()
         exc.email = "user@example.com"
@@ -1014,8 +1065,9 @@ class TestPostGoogleAuthEndpoint:
     @pytest.mark.asyncio
     async def test_post_google_auth_failure_logs_unknown_when_no_email(self, async_client):
         """Failed google login audit log uses 'google-unknown' when exception has no email."""
+        from unittest.mock import AsyncMock, patch
+
         from domain.errors import InvalidGoogleToken
-        from unittest.mock import patch, AsyncMock
 
         with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login, \
              patch('infra.presentation.routers.auth.log_auth_attempt') as mock_log:
@@ -1045,17 +1097,19 @@ class TestGoogleLoginIntegration:
     async def test_integration_google_login_new_user_full_flow(self, async_client):
         """Full flow: valid token → new user created → returns user + token."""
         from datetime import datetime
+        from unittest.mock import AsyncMock, patch
+
         from bson import ObjectId
+
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
-        from unittest.mock import patch, AsyncMock
 
         mock_user = UserEntity(
             id=str(ObjectId()),
             username="integrationuser",
             email="integration@gmail.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )
@@ -1085,17 +1139,19 @@ class TestGoogleLoginIntegration:
     async def test_integration_google_login_existing_full_flow(self, async_client):
         """Full flow: existing google_id → returns existing user + new token."""
         from datetime import datetime
+        from unittest.mock import AsyncMock, patch
+
         from bson import ObjectId
+
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
-        from unittest.mock import patch, AsyncMock
 
         existing_user = UserEntity(
             id=str(ObjectId()),
             username="existinguser",
             email="existing@gmail.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )
@@ -1117,8 +1173,9 @@ class TestGoogleLoginIntegration:
     @pytest.mark.asyncio
     async def test_integration_invalid_token_returns_401(self, async_client):
         """Invalid Google token returns 401."""
+        from unittest.mock import AsyncMock, patch
+
         from domain.errors import InvalidGoogleToken
-        from unittest.mock import patch, AsyncMock
 
         with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
             mock_google_login.side_effect = InvalidGoogleToken()
@@ -1134,8 +1191,9 @@ class TestGoogleLoginIntegration:
     @pytest.mark.asyncio
     async def test_integration_unset_client_id_returns_503(self, async_client):
         """Unset GOOGLE_CLIENT_ID returns 503."""
+        from unittest.mock import AsyncMock, patch
+
         from domain.errors import GoogleLoginNotConfigured
-        from unittest.mock import patch, AsyncMock
 
         with patch('application.use_cases.auth.GoogleLogin.google_login', new_callable=AsyncMock) as mock_google_login:
             mock_google_login.side_effect = GoogleLoginNotConfigured()
@@ -1154,9 +1212,11 @@ class TestGoogleLoginIntegration:
         # The async_client fixture already provides a mocked database
         # Just verify the endpoint accepts valid input and returns 201
         from datetime import datetime
-        from bson import ObjectId
-        from domain.entities.auth.UserEntity import UserEntity
         from unittest.mock import AsyncMock, patch
+
+        from bson import ObjectId
+
+        from domain.entities.auth.UserEntity import UserEntity
 
         # Configure the mock database to return a user on save
         # The async_client fixture's mock database needs to be configured
@@ -1167,7 +1227,7 @@ class TestGoogleLoginIntegration:
                 username="newuser",
                 email="new@example.com",
                 is_active=True,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
                 roles=[],
                 token_version=0,
             )
@@ -1188,17 +1248,19 @@ class TestGoogleLoginIntegration:
     async def test_integration_login_unaffected(self, async_client):
         """POST /login still works (regression test)."""
         from datetime import datetime
+        from unittest.mock import AsyncMock, patch
+
         from bson import ObjectId
+
         from domain.entities.auth.UserEntity import UserEntity
         from infra.presentation.dtos.auth.response import TokenResponse
-        from unittest.mock import patch, AsyncMock
 
         mock_user = UserEntity(
             id=str(ObjectId()),
             username="testuser",
             email="test@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             roles=[],
             token_version=0,
         )

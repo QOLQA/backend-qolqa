@@ -1,18 +1,17 @@
-from datetime import datetime
-from typing import List, Optional
+from datetime import UTC, datetime
 
 from application.dtos.solution.SolutionRequest import SolutionCreateRequest
-from infra.presentation.dtos.solution.response import SolutionResponse
-from infra.presentation.dtos.version.response import VersionResponse
 from domain.entities.SolutionEntity import SolutionEntity
 from domain.entities.VersionEntity import VersionEntity
+from infra.presentation.dtos.solution.response import SolutionResponse
+from infra.presentation.dtos.version.response import VersionResponse
 
 
 class SolutionMapper:
     """Stateless mapper between raw MongoDB dicts, SolutionEntity, and DTOs."""
 
     @staticmethod
-    def to_entity(raw: dict, versions: List[VersionEntity] = None) -> SolutionEntity:
+    def to_entity(raw: dict, versions: list[VersionEntity] = None) -> SolutionEntity:
         """Convert a raw MongoDB dict to a domain SolutionEntity.
 
         Used when Motor returns a plain dict (e.g. from find_one / cursor).
@@ -36,7 +35,7 @@ class SolutionMapper:
             'last_version_saved': request.last_version_saved,
             'src_img': request.src_img,
             'user_id': user_id,
-            'last_updated_at': datetime.utcnow(),
+            'last_updated_at': datetime.now(UTC),
         }
 
     @staticmethod
@@ -69,5 +68,5 @@ class SolutionMapper:
             'user_id': entity.user_id,
             'last_version_saved': entity.last_version_saved,
             'src_img': entity.src_img,
-            'last_updated_at': datetime.utcnow(),
+            'last_updated_at': datetime.now(UTC),
         }

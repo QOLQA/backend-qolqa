@@ -1,9 +1,10 @@
 """
 Authentication tests for JWT implementation
 """
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi import status
-from unittest.mock import AsyncMock, patch
 
 
 @pytest.mark.auth
@@ -17,16 +18,17 @@ class TestJWTAuthentication:
         with patch('application.use_cases.auth.AuthenticateUser.authenticate_user', new_callable=AsyncMock) as mock_auth, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             
+            from datetime import datetime
+
             from domain.entities.auth.UserEntity import UserEntity
             from infra.presentation.dtos.auth.response import TokenResponse
-            from datetime import datetime
             
             mock_entity = UserEntity(
                 id="507f1f77bcf86cd799439011",
                 username="testuser",
                 email="test@example.com",
                 is_active=True,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
                 roles=[],
                 token_version=0,
             )
@@ -73,10 +75,12 @@ class TestJWTAuthentication:
     async def test_access_protected_endpoint_with_valid_token(self, async_client):
         """Test accessing protected endpoint with valid token"""
         from datetime import datetime
+
         from bson import ObjectId
-        from main import app as fastapi_app
-        from infra.presentation.dependencies.auth import get_current_user
+
         from domain.entities.auth.UserEntity import UserEntity
+        from infra.presentation.dependencies.auth import get_current_user
+        from main import app as fastapi_app
 
         user_id = str(ObjectId())
 
@@ -85,7 +89,7 @@ class TestJWTAuthentication:
             username="testuser",
             email="test@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )
@@ -130,8 +134,10 @@ class TestJWTAuthentication:
     async def test_token_expiration(self, async_client):
         """Test that expired tokens are rejected"""
         # Test with expired token
-        from jose import jwt
         from datetime import datetime, timedelta
+
+        from jose import jwt
+
         from config.settings import settings
         
         expired_token = jwt.encode(
@@ -140,7 +146,7 @@ class TestJWTAuthentication:
                 "user_id": "123",
                 "roles": [],
                 "token_version": 0,
-                "exp": datetime.utcnow() - timedelta(minutes=30)
+                "exp": datetime.now(UTC) - timedelta(minutes=30)
             },
             settings.secret_key.get_secret_value(),
             algorithm=settings.algorithm
@@ -174,15 +180,16 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_new_user_success(self, async_client):
         """Test successful user registration"""
-        from domain.entities.auth.UserEntity import UserEntity
         from datetime import datetime
+
+        from domain.entities.auth.UserEntity import UserEntity
         with patch('application.use_cases.auth.RegisterUser.register_user', new_callable=AsyncMock) as mock_register:
             mock_register.return_value = UserEntity(
                 id="507f1f77bcf86cd799439011",
                 username="newuser",
                 email="newuser@example.com",
                 is_active=True,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
                 roles=[],
                 token_version=0,
             )
@@ -273,8 +280,8 @@ class TestJWTUtilities:
     
     def test_decode_token_invalid(self):
         """Test decoding invalid JWT token raises domain error (not HTTPException)"""
-        from infra.persistence.jwt import decode_access_token
         from domain.errors import InvalidToken
+        from infra.persistence.jwt import decode_access_token
 
         with pytest.raises(InvalidToken):
             decode_access_token("invalid.token.here")
@@ -335,18 +342,20 @@ class TestAuthorizationRoles:
     async def test_admin_can_access_admin_endpoint(self, async_client):
         """Test admin user can access admin endpoints — receives 200, not 403"""
         from datetime import datetime
+
         from bson import ObjectId
-        from main import app as fastapi_app
-        from infra.presentation.dependencies.auth import get_current_user, require_admin
+
         from domain.entities.auth.UserEntity import UserEntity
         from domain.enums.RoleEnum import RoleEnum
+        from infra.presentation.dependencies.auth import get_current_user, require_admin
+        from main import app as fastapi_app
 
         admin_user = UserEntity(
             id=str(ObjectId()),
             username="adminuser",
             email="admin@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[RoleEnum.admin],
         )
@@ -374,18 +383,20 @@ class TestAuthorizationRoles:
     async def test_regular_user_denied_admin_endpoint(self, async_client):
         """Test regular user (no admin role) receives 403 on admin endpoints"""
         from datetime import datetime
+
         from bson import ObjectId
-        from main import app as fastapi_app
-        from infra.presentation.dependencies.auth import get_current_user
+
         from domain.entities.auth.UserEntity import UserEntity
         from infra.persistence.jwt import create_access_token
+        from infra.presentation.dependencies.auth import get_current_user
+        from main import app as fastapi_app
 
         regular_user = UserEntity(
             id=str(ObjectId()),
             username="regularuser",
             email="regular@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )
@@ -416,10 +427,12 @@ class TestAuthorizationRoles:
     async def test_user_can_only_modify_own_solutions(self, async_client):
         """Test users can only modify their own solutions"""
         from datetime import datetime
+
         from bson import ObjectId
-        from main import app as fastapi_app
-        from infra.presentation.dependencies.auth import get_current_user
+
         from domain.entities.auth.UserEntity import UserEntity
+        from infra.presentation.dependencies.auth import get_current_user
+        from main import app as fastapi_app
 
         user1_id = str(ObjectId())
 
@@ -428,7 +441,7 @@ class TestAuthorizationRoles:
             username="user1",
             email="user1@example.com",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             token_version=0,
             roles=[],
         )

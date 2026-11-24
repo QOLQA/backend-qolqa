@@ -1,20 +1,21 @@
 """
 Test configuration and fixtures
 """
+import os
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
-import os
-from typing import AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock
 
 # Set test environment variables
 os.environ['DATABASE_URL'] = 'mongodb://localhost:27017/test_db'
 os.environ['TYPE_DB'] = 'mongo'
 
-from main import app
-from infra.persistence.db_factory import get_database
 from config.rate_limiter import limiter
+from infra.persistence.db_factory import get_database
+from main import app
 
 
 def get_mock_database() -> MagicMock:
@@ -169,12 +170,14 @@ def mock_partial_update_data():
 
 import types as _types
 
+
 # JWT Authentication fixtures
 @pytest.fixture
 def mock_user() -> _types.SimpleNamespace:
     """Mock authenticated user"""
     import types
     from datetime import datetime
+
     from bson import ObjectId
 
     user = types.SimpleNamespace(
@@ -185,8 +188,8 @@ def mock_user() -> _types.SimpleNamespace:
         is_active=True,
         roles=[],
         token_version=0,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC)
     )
     return user
 

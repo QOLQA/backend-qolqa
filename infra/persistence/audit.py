@@ -2,12 +2,12 @@
 Audit logging system for tracking critical operations
 Follows Python logging best practices and FastAPI patterns
 """
-import logging
 import json
-from datetime import datetime
-from typing import Optional, Dict, Any
-from pathlib import Path
+import logging
+from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any
 
 # Create logs directory if it doesn't exist
 LOGS_DIR = Path(__file__).parent.parent / "logs"
@@ -34,7 +34,7 @@ class JSONFormatter(logging.Formatter):
     
     def format(self, record: logging.LogRecord) -> str:
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
         }
@@ -61,14 +61,14 @@ audit_logger.addHandler(console_handler)
 
 def log_audit(
     action: str,
-    user_id: Optional[str] = None,
-    username: Optional[str] = None,
-    resource_type: Optional[str] = None,
-    resource_id: Optional[str] = None,
+    user_id: str | None = None,
+    username: str | None = None,
+    resource_type: str | None = None,
+    resource_id: str | None = None,
     status: str = "success",
-    details: Optional[Dict[str, Any]] = None,
-    ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None,
+    details: dict[str, Any] | None = None,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
 ) -> None:
     """
     Log an audit event with structured data
@@ -124,9 +124,9 @@ def log_audit(
 def log_auth_attempt(
     username: str,
     success: bool,
-    ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None,
-    reason: Optional[str] = None
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+    reason: str | None = None
 ) -> None:
     """
     Log authentication attempt (login/register)
@@ -156,8 +156,8 @@ def log_registration(
     user_id: str,
     username: str,
     email: str,
-    ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None
+    ip_address: str | None = None,
+    user_agent: str | None = None
 ) -> None:
     """
     Log user registration
@@ -187,9 +187,9 @@ def log_resource_operation(
     user_id: str,
     resource_type: str,
     resource_id: str,
-    resource_name: Optional[str] = None,
+    resource_name: str | None = None,
     status: str = "success",
-    ip_address: Optional[str] = None,
+    ip_address: str | None = None,
 ) -> None:
     """
     Log resource operation (create, update, delete)
@@ -222,7 +222,7 @@ def log_access_denied(
     resource_type: str,
     resource_id: str,
     reason: str,
-    ip_address: Optional[str] = None,
+    ip_address: str | None = None,
 ) -> None:
     """
     Log access denied events
@@ -250,9 +250,9 @@ def log_rate_limit_exceeded(
     path: str,
     method: str,
     limit: str,
-    ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None,
-    user_id: Optional[str] = None,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+    user_id: str | None = None,
 ) -> None:
     """
     Log rate limit exceeded events

@@ -11,18 +11,18 @@ La capa de datos se mockea sobrescribiendo get_user_repository para devolver
 un UserRepositoryImpl simulado. require_admin y get_current_user se dejan
 reales para probar la autorización verdadera con tokens JWT.
 """
-import pytest
-from bson import ObjectId
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
+import pytest
+from bson import ObjectId
 from fastapi import status
-from infra.persistence.jwt import create_access_token
+
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
+from infra.persistence.jwt import create_access_token
 from infra.presentation.dependencies.auth import get_user_repository
 from main import app
-
 
 ADMIN_ID = str(ObjectId())
 TARGET_ID = str(ObjectId())
@@ -48,7 +48,7 @@ def make_user(user_id: str, username: str, roles: list, token_version: int = 0) 
         username=username,
         email=f"{username}@test.com",
         is_active=True,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
         roles=roles,
         token_version=token_version,
     )

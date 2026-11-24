@@ -2,12 +2,10 @@
 JWT token creation and decoding utilities.
 Infrastructure-only: no HTTPException here — that belongs in api/.
 """
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
-from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 
 from config.settings import settings
 from domain.errors import InvalidToken
@@ -16,7 +14,7 @@ from domain.errors import InvalidToken
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """
     Create a JWT access token.
 
@@ -30,13 +28,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({
         "exp": expire,
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(UTC),
         "type": "access"
     })
 

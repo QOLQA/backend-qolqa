@@ -1,11 +1,10 @@
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
 
-from infra.presentation.dtos.auth.request import UserCreateRequest
-from infra.presentation.dtos.auth.response import UserResponse
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.enums.RoleEnum import RoleEnum
+from infra.presentation.dtos.auth.request import UserCreateRequest
+from infra.presentation.dtos.auth.response import UserResponse
 
 
 class UserMapper:
@@ -20,7 +19,7 @@ class UserMapper:
             email=raw['email'],
             full_name=raw.get('full_name'),
             is_active=raw.get('is_active', True),
-            created_at=raw.get('created_at', datetime.utcnow()),
+            created_at=raw.get('created_at', datetime.now(UTC)),
             profile_picture_url=raw.get('profile_picture_url'),
             roles=[RoleEnum(r) for r in raw.get('roles', [])] or [RoleEnum.user],
             token_version=raw.get('token_version', 0),
@@ -37,8 +36,8 @@ class UserMapper:
             'full_name': request.full_name,
             'is_active': True,
             'hashed_password': hashed_password,
-            'created_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
+            'updated_at': datetime.now(UTC),
             'profile_picture_url': None,
             'roles': [RoleEnum.user.value],
             'token_version': 0,
@@ -61,8 +60,8 @@ class UserMapper:
             'full_name': full_name,
             'is_active': True,
             'hashed_password': None,
-            'created_at': datetime.utcnow(),
-            'updated_at': datetime.utcnow(),
+            'created_at': datetime.now(UTC),
+            'updated_at': datetime.now(UTC),
             'profile_picture_url': profile_picture_url,
             'roles': [RoleEnum.user.value],
             'token_version': 0,
@@ -93,7 +92,7 @@ class UserMapper:
             'full_name': entity.full_name,
             'is_active': entity.is_active,
             'created_at': entity.created_at,
-            'updated_at': datetime.utcnow(),
+            'updated_at': datetime.now(UTC),
             'profile_picture_url': entity.profile_picture_url,
             'roles': [r.value for r in entity.roles],
             'token_version': entity.token_version,

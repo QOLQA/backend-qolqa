@@ -1,32 +1,47 @@
 import logging
 import pprint
-from datetime import datetime
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, status
 
-from infra.presentation.dtos.solution.request import SolutionCreateRequest, SolutionPartialUpdateRequest
-from application.dtos.solution.commands import CreateSolutionCommand, UpdateSolutionCommand
-from infra.presentation.dtos.solution.response import SolutionResponse
-from infra.presentation.dtos.version.request import VersionCreateRequest, VersionPartialUpdateRequest
+from application.dtos.solution.commands import (
+    CreateSolutionCommand,
+    UpdateSolutionCommand,
+)
 from application.dtos.version.commands import CreateVersionCommand
-from infra.presentation.dtos.version.response import VersionResponse
-from application.use_cases.solution.GetAllSolutionsForUser import get_all_solutions_for_user
-from application.use_cases.solution.GetSolutionById import get_solution_by_id
 from application.use_cases.solution.CreateSolution import create_solution
-from application.use_cases.solution.UpdateSolution import update_solution
 from application.use_cases.solution.DeleteSolution import delete_solution
+from application.use_cases.solution.GetAllSolutionsForUser import (
+    get_all_solutions_for_user,
+)
+from application.use_cases.solution.GetSolutionById import get_solution_by_id
+from application.use_cases.solution.UpdateSolution import update_solution
 from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.UpdateVersion import update_version
-from infra.persistence.mappers import SolutionMapper, VersionMapper
-from infra.persistence.repositories import SolutionRepositoryImpl, VersionRepositoryImpl, QueryRepositoryImpl
-from domain.entities.auth.UserEntity import UserEntity as User
-from infra.presentation.dtos.version.request import default_version_descriptions
-from infra.presentation.dependencies.auth import get_current_user
-from infra.presentation.handle_errors import handle_common_errors
-from domain.errors import Forbidden
-from infra.persistence.db_factory import get_database
-from infra.persistence.audit import log_resource_operation, log_access_denied
 from config.rate_limiter import limiter
+from domain.entities.auth.UserEntity import UserEntity as User
+from domain.errors import Forbidden
+from infra.persistence.audit import log_access_denied, log_resource_operation
+from infra.persistence.db_factory import get_database
+from infra.persistence.mappers import SolutionMapper, VersionMapper
+from infra.persistence.repositories import (
+    QueryRepositoryImpl,
+    SolutionRepositoryImpl,
+    VersionRepositoryImpl,
+)
+from infra.presentation.dependencies.auth import get_current_user
+from infra.presentation.dtos.solution.request import (
+    SolutionCreateRequest,
+    SolutionPartialUpdateRequest,
+)
+from infra.presentation.dtos.solution.response import SolutionResponse
+from infra.presentation.dtos.version.request import (
+    VersionCreateRequest,
+    VersionPartialUpdateRequest,
+    default_version_descriptions,
+)
+from infra.presentation.dtos.version.response import VersionResponse
+from infra.presentation.handle_errors import handle_common_errors
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +121,7 @@ async def create_solution_endpoint(
 
         # 3. Update last_version_saved on the solution
         entity.last_version_saved = version_entity.id
-        entity.last_updated_at = datetime.utcnow()
+        entity.last_updated_at = datetime.now(UTC)
         updated_entity = await solution_repository.save(entity)
 
         logger.info("=" * 60)
@@ -276,7 +291,7 @@ async def update_solution_version_endpoint(
 
         # Update last_version_saved field in the solution
         solution_entity.last_version_saved = version_id
-        solution_entity.last_updated_at = datetime.utcnow()
+        solution_entity.last_updated_at = datetime.now(UTC)
         await solution_repository.save(solution_entity)
 
         # Update the version
@@ -334,6 +349,6 @@ async def delete_solution_endpoint(
             ip_address=request.client.host if request.client else None,
         )
 
-        return None
+        return
     except Exception as exc:
         await handle_common_errors(exc, request)
