@@ -51,7 +51,7 @@ class TestUserEntityGoogleFields:
     """UserEntity gains google_id and auth_provider fields."""
 
     def test_user_entity_defaults(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from domain.entities.auth.UserEntity import UserEntity
         from domain.enums.AuthProviderEnum import AuthProviderEnum
@@ -67,7 +67,7 @@ class TestUserEntityGoogleFields:
         assert entity.auth_provider == AuthProviderEnum.local
 
     def test_user_entity_google_fields(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from domain.entities.auth.UserEntity import UserEntity
         from domain.enums.AuthProviderEnum import AuthProviderEnum
@@ -128,7 +128,7 @@ class TestUserDocumentNullableFields:
     """UserDocument accepts optional hashed_password and google fields."""
 
     def test_user_document_nullable_fields(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -151,7 +151,7 @@ class TestUserDocumentNullableFields:
         assert doc.auth_provider == AuthProviderEnum.local
 
     def test_user_document_google_values(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -177,7 +177,7 @@ class TestUserMapperExtensions:
     """UserMapper handles google_id, auth_provider, and from_google_request."""
 
     def test_mapper_to_entity_google_fields(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -200,7 +200,7 @@ class TestUserMapperExtensions:
         assert entity.auth_provider == AuthProviderEnum.google
 
     def test_mapper_to_entity_defaults(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -299,9 +299,11 @@ class TestVerifyGoogleToken:
         from domain.errors import InvalidGoogleToken
         from infra.persistence.services.google_auth import verify_google_token
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Wrong audience")):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('credential', 'wrong-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Wrong audience")),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('credential', 'wrong-client-id')
 
     @pytest.mark.asyncio
     async def test_verify_google_token_expired(self):
@@ -310,9 +312,11 @@ class TestVerifyGoogleToken:
         from domain.errors import InvalidGoogleToken
         from infra.persistence.services.google_auth import verify_google_token
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Token expired")):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('expired-credential', 'test-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Token expired")),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('expired-credential', 'test-client-id')
 
     @pytest.mark.asyncio
     async def test_verify_google_token_malformed(self):
@@ -321,9 +325,11 @@ class TestVerifyGoogleToken:
         from domain.errors import InvalidGoogleToken
         from infra.persistence.services.google_auth import verify_google_token
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Malformed token")):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('malformed', 'test-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', side_effect=ValueError("Malformed token")),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('malformed', 'test-client-id')
 
     @pytest.mark.asyncio
     async def test_verify_google_token_email_not_verified(self):
@@ -339,9 +345,11 @@ class TestVerifyGoogleToken:
             'name': 'Test User',
         }
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('credential', 'test-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('credential', 'test-client-id')
 
     @pytest.mark.asyncio
     async def test_verify_google_token_missing_sub(self):
@@ -356,9 +364,11 @@ class TestVerifyGoogleToken:
             'name': 'Test User',
         }
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('credential', 'test-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('credential', 'test-client-id')
 
     @pytest.mark.asyncio
     async def test_verify_google_token_missing_email(self):
@@ -373,9 +383,11 @@ class TestVerifyGoogleToken:
             'name': 'Test User',
         }
 
-        with patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload):
-            with pytest.raises(InvalidGoogleToken):
-                await verify_google_token('credential', 'test-client-id')
+        with (
+            patch('infra.persistence.services.google_auth.id_token.verify_oauth2_token', return_value=mock_payload),
+            pytest.raises(InvalidGoogleToken),
+        ):
+            await verify_google_token('credential', 'test-client-id')
 
 
 class TestUserRepoImplGoogleMethods:
@@ -383,7 +395,7 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_get_by_google_id_found(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -432,7 +444,7 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_link_google_account_success(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -475,7 +487,7 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_link_google_account_duplicate_key(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
         from pymongo.errors import DuplicateKeyError
@@ -505,7 +517,7 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_add_google_user_success(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -556,7 +568,7 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_add_google_user_duplicate_username(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -589,7 +601,7 @@ class TestUserRepoImplGoogleMethods:
 
     @pytest.mark.asyncio
     async def test_add_google_user_duplicate_email(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -639,7 +651,7 @@ class TestGoogleLoginRequestResponseDTOs:
         assert dto.credential == "valid-credential-string"
 
     def test_google_login_response_dto_no_password(self):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from application.dtos.auth.AuthResponse import GoogleLoginResponse, UserResponse
 
@@ -938,7 +950,7 @@ class TestPostGoogleAuthEndpoint:
 
     @pytest.mark.asyncio
     async def test_post_google_auth_happy_new_user(self, async_client):
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -1003,7 +1015,7 @@ class TestPostGoogleAuthEndpoint:
 
     @pytest.mark.asyncio
     async def test_post_google_auth_existing_google_id(self, async_client):
-        from datetime import datetime
+        from datetime import UTC, datetime
         from unittest.mock import AsyncMock, patch
 
         from bson import ObjectId
@@ -1089,7 +1101,7 @@ class TestGoogleLoginIntegration:
     @pytest.mark.asyncio
     async def test_integration_google_login_new_user_full_flow(self, async_client):
         """Full flow: valid token → new user created → returns user + token."""
-        from datetime import datetime
+        from datetime import UTC, datetime
         from unittest.mock import AsyncMock, patch
 
         from bson import ObjectId
@@ -1131,7 +1143,7 @@ class TestGoogleLoginIntegration:
     @pytest.mark.asyncio
     async def test_integration_google_login_existing_full_flow(self, async_client):
         """Full flow: existing google_id → returns existing user + new token."""
-        from datetime import datetime
+        from datetime import UTC, datetime
         from unittest.mock import AsyncMock, patch
 
         from bson import ObjectId
@@ -1204,7 +1216,7 @@ class TestGoogleLoginIntegration:
         """POST /register still works (regression test)."""
         # The async_client fixture already provides a mocked database
         # Just verify the endpoint accepts valid input and returns 201
-        from datetime import datetime
+        from datetime import UTC, datetime
         from unittest.mock import AsyncMock, patch
 
         from bson import ObjectId
@@ -1240,7 +1252,7 @@ class TestGoogleLoginIntegration:
     @pytest.mark.asyncio
     async def test_integration_login_unaffected(self, async_client):
         """POST /login still works (regression test)."""
-        from datetime import datetime
+        from datetime import UTC, datetime
         from unittest.mock import AsyncMock, patch
 
         from bson import ObjectId

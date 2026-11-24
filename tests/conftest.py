@@ -176,7 +176,7 @@ import types as _types
 def mock_user() -> _types.SimpleNamespace:
     """Mock authenticated user"""
     import types
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     from bson import ObjectId
 

@@ -18,7 +18,7 @@ class TestJWTAuthentication:
         with patch('application.use_cases.auth.AuthenticateUser.authenticate_user', new_callable=AsyncMock) as mock_auth, \
              patch('infra.presentation.routers.auth.create_user_token', new_callable=AsyncMock) as mock_token:
             
-            from datetime import datetime
+            from datetime import UTC, datetime
 
             from domain.entities.auth.UserEntity import UserEntity
             from infra.presentation.dtos.auth.response import TokenResponse
@@ -74,7 +74,7 @@ class TestJWTAuthentication:
     @pytest.mark.asyncio
     async def test_access_protected_endpoint_with_valid_token(self, async_client):
         """Test accessing protected endpoint with valid token"""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -134,7 +134,7 @@ class TestJWTAuthentication:
     async def test_token_expiration(self, async_client):
         """Test that expired tokens are rejected"""
         # Test with expired token
-        from datetime import datetime, timedelta
+        from datetime import UTC, datetime, timedelta
 
         from jose import jwt
 
@@ -180,7 +180,7 @@ class TestUserRegistration:
     @pytest.mark.asyncio
     async def test_register_new_user_success(self, async_client):
         """Test successful user registration"""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from domain.entities.auth.UserEntity import UserEntity
         with patch('application.use_cases.auth.RegisterUser.register_user', new_callable=AsyncMock) as mock_register:
@@ -341,7 +341,7 @@ class TestAuthorizationRoles:
     @pytest.mark.asyncio
     async def test_admin_can_access_admin_endpoint(self, async_client):
         """Test admin user can access admin endpoints — receives 200, not 403"""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -382,7 +382,7 @@ class TestAuthorizationRoles:
     @pytest.mark.asyncio
     async def test_regular_user_denied_admin_endpoint(self, async_client):
         """Test regular user (no admin role) receives 403 on admin endpoints"""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 
@@ -426,7 +426,7 @@ class TestAuthorizationRoles:
     @pytest.mark.asyncio
     async def test_user_can_only_modify_own_solutions(self, async_client):
         """Test users can only modify their own solutions"""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from bson import ObjectId
 

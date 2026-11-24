@@ -296,11 +296,9 @@ async def global_exception_handler(request: Request, exc: Exception):
             status_code=http_exc.status_code,
             content={"detail": http_exc.detail}
         )
-    except Exception as fallback_exc:
+    except Exception:
         # Último recurso: registrar y retornar error genérico
-        logger.exception(
-            f"Critical error in exception handler: {fallback_exc!s}"
-        )
+        logger.exception("Critical error in exception handler")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "Internal server error"}
