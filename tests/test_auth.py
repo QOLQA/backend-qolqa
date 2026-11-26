@@ -370,7 +370,7 @@ class TestAuthorizationRoles:
         fastapi_app.dependency_overrides[require_admin] = override_require_admin
 
         try:
-            with patch('infra.presentation.routers.admin.UserRepositoryImpl.get_all', new_callable=AsyncMock) as mock_get_all:
+            with patch('infra.persistence.repositories.UserRepositoryImpl.get_all', new_callable=AsyncMock) as mock_get_all:
                 mock_get_all.return_value = []
                 response = await async_client.get("/admin/users")
         finally:

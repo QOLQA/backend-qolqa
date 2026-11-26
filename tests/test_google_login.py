@@ -902,47 +902,53 @@ class TestAuthenticateUserGuard:
 # ============================================================
 
 class TestHandleErrorsGoogleExceptions:
-    """handle_common_errors mappings for Google-specific exceptions."""
+    """Registered exception handlers map Google-specific exceptions to HTTP responses."""
 
-    @pytest.mark.asyncio
-    async def test_handle_errors_password_required_403(self):
-        from fastapi import HTTPException
+    def _client_for(self, exc: Exception):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
 
+        from infra.presentation.exception_handlers import register_exception_handlers
+
+        app = FastAPI()
+        register_exception_handlers(app)
+
+        @app.get("/boom")
+        async def boom():
+            raise exc
+
+        return TestClient(app, raise_server_exceptions=False)
+
+    def test_exception_handler_password_required_403(self):
         from domain.errors import PasswordRequiredForLocalLogin
-        from infra.presentation.handle_errors import handle_common_errors
 
-        with pytest.raises(HTTPException) as exc_info:
-            await handle_common_errors(PasswordRequiredForLocalLogin())
+        response = self._client_for(PasswordRequiredForLocalLogin()).get("/boom")
 
-        assert exc_info.value.status_code == 403
-        assert exc_info.value.detail == "This account uses Google login. Set a password or continue with Google."
+        assert response.status_code == 403
+        assert response.json() == {"detail": "This account uses Google login. Set a password or continue with Google."}
 
-    @pytest.mark.asyncio
-    async def test_handle_errors_invalid_google_token_401(self):
-        from fastapi import HTTPException
-
+    def test_exception_handler_invalid_google_token_401(self):
         from domain.errors import InvalidGoogleToken
-        from infra.presentation.handle_errors import handle_common_errors
 
-        with pytest.raises(HTTPException) as exc_info:
-            await handle_common_errors(InvalidGoogleToken())
+        response = self._client_for(InvalidGoogleToken()).get("/boom")
 
-        assert exc_info.value.status_code == 401
-        assert exc_info.value.detail == "Invalid Google token"
-        assert exc_info.value.headers.get("WWW-Authenticate") == "Bearer"
+        assert response.status_code == 401
+        assert response.json() == {"detail": "Invalid Google token"}
+        assert response.headers.get("WWW-Authenticate") == "Bearer"
 
-    @pytest.mark.asyncio
-    async def test_handle_errors_google_not_configured_503(self):
-        from fastapi import HTTPException
-
+    def test_exception_handler_google_not_configured_503(self):
         from domain.errors import GoogleLoginNotConfigured
-        from infra.presentation.handle_errors import handle_common_errors
 
-        with pytest.raises(HTTPException) as exc_info:
-            await handle_common_errors(GoogleLoginNotConfigured())
+        response = self._client_for(GoogleLoginNotConfigured()).get("/boom")
 
-        assert exc_info.value.status_code == 503
-        assert exc_info.value.detail == "Google login is not configured"
+        assert response.status_code == 503
+        assert response.json() == {"detail": "Google login is not configured"}
+
+    def test_exception_handler_unexpected_error_500(self):
+        response = self._client_for(RuntimeError("boom")).get("/boom")
+
+        assert response.status_code == 500
+        assert "Internal server error" in response.json()["detail"]
 
 
 class TestPostGoogleAuthEndpoint:

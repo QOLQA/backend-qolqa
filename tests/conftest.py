@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 # Set test environment variables
 os.environ['DATABASE_URL'] = 'mongodb://localhost:27017/test_db'
@@ -62,9 +62,15 @@ def client():
 
 @pytest.fixture
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
-    """Asynchronous test client with mocked DB"""
+    """Asynchronous test client with mocked DB.
+
+    ``raise_app_exceptions=False`` mirrors a real HTTP client: unexpected
+    app errors are answered by the global exception handler with a 500
+    response instead of surfacing as in-process exceptions.
+    """
     app.dependency_overrides[get_database] = override_get_database
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
 
@@ -94,7 +100,8 @@ async def authenticated_client(mock_user) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_database] = override_get_database
     app.dependency_overrides[get_current_user] = override_get_current_user
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
 
