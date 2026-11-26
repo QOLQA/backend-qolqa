@@ -67,6 +67,7 @@ scripts/         ← Standalone maintenance/migration scripts.
 
 ## Naming conventions
 
+- PascalCase module names (files named after the class they expose) are this project's deliberate convention; ruff rule N999 (snake_case module names) is suppressed for those layers in `ruff.toml` — keep new files consistent with their neighbors.
 - Routers: `infra/presentation/routers/<domain>.py` (e.g. `user.py`, `admin.py`, `auth.py`)
 - Repositories: `infra/persistence/repositories/<Domain>RepoImpl.py`
 - Mappers: `infra/persistence/mappers/<Domain>Mapper.py`
