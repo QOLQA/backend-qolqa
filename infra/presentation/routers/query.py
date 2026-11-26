@@ -23,7 +23,6 @@ from infra.presentation.dtos.query.request import (
     QueryPartialUpdateRequest,
 )
 from infra.presentation.dtos.query.response import QueryResponse
-from infra.presentation.handle_errors import handle_common_errors
 
 router = APIRouter()
 
@@ -37,21 +36,18 @@ async def get_all_queries_endpoint(
     solution_repository: SolutionRepoDep,
 ) -> list[QueryResponse]:
     """Get all queries owned by the current user."""
-    try:
-        entities = await get_all_queries(repository, solution_repository, str(current_user.id))
+    entities = await get_all_queries(repository, solution_repository, str(current_user.id))
 
-        log_resource_operation(
-            action="query.list",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id="all",
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
+    log_resource_operation(
+        action="query.list",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id="all",
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
-        return [QueryMapper.to_response(e) for e in entities]
-    except Exception as e:
-        await handle_common_errors(e, request)
+    return [QueryMapper.to_response(e) for e in entities]
 
 
 @router.get('/solution/{solution_id}', response_model=list[QueryResponse])
@@ -64,23 +60,20 @@ async def get_queries_by_solution_endpoint(
     solution_repository: SolutionRepoDep,
 ) -> list[QueryResponse]:
     """Get all queries for a specific solution owned by the current user."""
-    try:
-        entities = await get_queries_by_solution(
-            repository, solution_repository, solution_id, str(current_user.id)
-        )
+    entities = await get_queries_by_solution(
+        repository, solution_repository, solution_id, str(current_user.id)
+    )
 
-        log_resource_operation(
-            action="query.list_by_solution",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id=solution_id,
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
+    log_resource_operation(
+        action="query.list_by_solution",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id=solution_id,
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
-        return [QueryMapper.to_response(e) for e in entities]
-    except Exception as e:
-        await handle_common_errors(e, request)
+    return [QueryMapper.to_response(e) for e in entities]
 
 
 @router.get('/{query_id}', response_model=QueryResponse)
@@ -93,23 +86,20 @@ async def get_query_endpoint(
     solution_repository: SolutionRepoDep,
 ) -> QueryResponse:
     """Get a specific query by id — only if owned by the current user."""
-    try:
-        entity = await get_query_by_id(
-            repository, solution_repository, query_id, str(current_user.id)
-        )
+    entity = await get_query_by_id(
+        repository, solution_repository, query_id, str(current_user.id)
+    )
 
-        log_resource_operation(
-            action="query.read",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id=query_id,
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
+    log_resource_operation(
+        action="query.read",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id=query_id,
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
-        return QueryMapper.to_response(entity)
-    except Exception as e:
-        await handle_common_errors(e, request)
+    return QueryMapper.to_response(entity)
 
 
 @router.post('', response_model=QueryResponse, status_code=status.HTTP_201_CREATED)
@@ -122,30 +112,27 @@ async def create_query_endpoint(
     solution_repository: SolutionRepoDep,
 ) -> QueryResponse:
     """Create a new query on a solution owned by the current user."""
-    try:
-        command = CreateQueryCommand(
-            full_query=query_create.full_query,
-            collections=query_create.collections,
-            highlighted_words=query_create.highlighted_words,
-            solution_id=query_create.solution_id,
-            current_user_id=str(current_user.id),
-        )
-        entity = await create_query(
-            repository, solution_repository, command
-        )
+    command = CreateQueryCommand(
+        full_query=query_create.full_query,
+        collections=query_create.collections,
+        highlighted_words=query_create.highlighted_words,
+        solution_id=query_create.solution_id,
+        current_user_id=str(current_user.id),
+    )
+    entity = await create_query(
+        repository, solution_repository, command
+    )
 
-        log_resource_operation(
-            action="query.create",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id=entity.id,
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
+    log_resource_operation(
+        action="query.create",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id=entity.id,
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
-        return QueryMapper.to_response(entity)
-    except Exception as e:
-        await handle_common_errors(e, request)
+    return QueryMapper.to_response(entity)
 
 
 @router.patch('/{query_id}', response_model=QueryResponse)
@@ -159,28 +146,25 @@ async def update_query_endpoint(
     solution_repository: SolutionRepoDep,
 ) -> QueryResponse:
     """Update an existing query — only if owned by the current user."""
-    try:
-        command = UpdateQueryCommand(
-            full_query=query_update.full_query,
-            collections=query_update.collections,
-            highlighted_words=query_update.highlighted_words,
-        )
-        entity = await update_query(
-            repository, solution_repository, query_id, command, str(current_user.id)
-        )
+    command = UpdateQueryCommand(
+        full_query=query_update.full_query,
+        collections=query_update.collections,
+        highlighted_words=query_update.highlighted_words,
+    )
+    entity = await update_query(
+        repository, solution_repository, query_id, command, str(current_user.id)
+    )
 
-        log_resource_operation(
-            action="query.update",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id=query_id,
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
+    log_resource_operation(
+        action="query.update",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id=query_id,
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
-        return QueryMapper.to_response(entity)
-    except Exception as e:
-        await handle_common_errors(e, request)
+    return QueryMapper.to_response(entity)
 
 
 @router.delete('/{query_id}', status_code=status.HTTP_204_NO_CONTENT)
@@ -193,23 +177,18 @@ async def delete_query_endpoint(
     solution_repository: SolutionRepoDep,
 ):
     """Delete a query — only if owned by the current user."""
-    try:
-        await delete_query(
-            repository, solution_repository, query_id, str(current_user.id)
-        )
+    await delete_query(
+        repository, solution_repository, query_id, str(current_user.id)
+    )
 
-        log_resource_operation(
-            action="query.delete",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id=query_id,
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
-
-        return
-    except Exception as e:
-        await handle_common_errors(e, request)
+    log_resource_operation(
+        action="query.delete",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id=query_id,
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
 
 @router.delete('/solution/{solution_id}', status_code=status.HTTP_204_NO_CONTENT)
@@ -222,20 +201,16 @@ async def delete_queries_by_solution_endpoint(
     solution_repository: SolutionRepoDep,
 ):
     """Delete all queries for a specific solution owned by the current user."""
-    try:
-        await delete_queries_by_solution(
-            repository, solution_repository, solution_id, str(current_user.id)
-        )
+    await delete_queries_by_solution(
+        repository, solution_repository, solution_id, str(current_user.id)
+    )
 
-        log_resource_operation(
-            action="query.delete_by_solution",
-            user_id=str(current_user.id),
-            resource_type="query",
-            resource_id=solution_id,
-            status="success",
-            ip_address=request.client.host if request.client else None,
-        )
+    log_resource_operation(
+        action="query.delete_by_solution",
+        user_id=str(current_user.id),
+        resource_type="query",
+        resource_id=solution_id,
+        status="success",
+        ip_address=request.client.host if request.client else None,
+    )
 
-        return
-    except Exception as e:
-        await handle_common_errors(e, request)
