@@ -9,7 +9,8 @@ B008 satisfied.
 from collections.abc import Callable
 from typing import Annotated
 
-from fastapi import Depends, OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from domain.entities.auth.UserEntity import UserEntity
@@ -212,7 +213,7 @@ RegisterUserUseCaseDep = Annotated[Callable, Depends(get_register_user_use_case)
 def get_authenticate_user_use_case(repository: UserRepoDep) -> Callable:
     from application.use_cases.auth.AuthenticateUser import authenticate_user
 
-    return lambda command: authenticate_user(repository, command)
+    return lambda command: authenticate_user(repository, command.username, command.password)
 
 
 AuthenticateUserUseCaseDep = Annotated[Callable, Depends(get_authenticate_user_use_case)]
@@ -224,9 +225,7 @@ def get_google_login_use_case(
 ) -> Callable:
     from application.use_cases.auth.GoogleLogin import google_login
 
-    return lambda repository=None, command=None: google_login(
-        repository, google_auth, command.credential, command.client_id
-    )
+    return lambda command: google_login(repository, google_auth, command.credential, command.client_id)
 
 
 GoogleLoginUseCaseDep = Annotated[Callable, Depends(get_google_login_use_case)]
