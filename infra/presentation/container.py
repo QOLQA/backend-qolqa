@@ -133,7 +133,6 @@ async def get_current_user(
     from application.use_cases.auth.GetUserById import get_user_by_id
     from domain.enums.RoleEnum import RoleEnum  # noqa: F401  (used in require_admin)
     from domain.errors import InvalidToken  # noqa: F401
-    from infra.presentation.handle_errors import handle_common_errors
 
     username: str = token_data.get("sub")
     user_id: str = token_data.get("user_id")
@@ -145,29 +144,23 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    try:
-        entity = await get_user_by_id(repository, user_id)
+    entity = await get_user_by_id(repository, user_id)
 
-        if not entity.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Inactive user",
-            )
+    if not entity.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
 
-        token_version = token_data.get("token_version")
-        if token_version is None or token_version != entity.token_version:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been invalidated. Please log in again.",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    token_version = token_data.get("token_version")
+    if token_version is None or token_version != entity.token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been invalidated. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-        return entity
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        await handle_common_errors(exc)
+    return entity
 
 
 CurrentUserDep = Annotated[UserEntity, Depends(get_current_user)]

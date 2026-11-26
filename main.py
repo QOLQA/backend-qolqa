@@ -3,7 +3,7 @@ import logging
 import time
 from datetime import UTC, datetime
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -12,9 +12,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from config.rate_limiter import limiter
 from config.settings import TypeDB, settings
+from domain.errors import InvalidToken
 from infra.persistence.audit import log_rate_limit_exceeded
 from infra.persistence.jwt import decode_access_token
-from infra.presentation.handle_errors import handle_common_errors
+from infra.presentation.exception_handlers import register_exception_handlers
 from infra.presentation.routers.admin import router as admin_router
 from infra.presentation.routers.auth import router as auth_router
 from infra.presentation.routers.query import router as queries_router
@@ -55,18 +56,15 @@ async def custom_rate_limit_handler(request: Request, exc: RateLimitExceeded) ->
     
     # Try to get user info if authenticated
     user_id = None
-    try:
-        # Check if there's an Authorization header
-        auth_header = request.headers.get("authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.replace("Bearer ", "")
-            try:
-                payload = decode_access_token(token)
-                user_id = payload.get("user_id")
-            except Exception as token_exc:
-                logger.debug("Token decode failed in rate-limit handler: %s", type(token_exc).__name__)
-    except Exception as auth_exc:
-        logger.debug("Auth header parse failed in rate-limit handler: %s", type(auth_exc).__name__)
+    # Check if there's an Authorization header
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "")
+        try:
+            payload = decode_access_token(token)
+            user_id = payload.get("user_id")
+        except InvalidToken:
+            logger.debug("Token decode failed in rate-limit handler")
     
     # Log to audit system
     log_rate_limit_exceeded(
@@ -163,6 +161,9 @@ else:
 # Configurar rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
+
+# Domain error -> HTTP response mapping (plus the global fallback)
+register_exception_handlers(app)
 
 # Agregar middleware de límite de tamaño de request
 app.add_middleware(
@@ -281,30 +282,6 @@ app.add_middleware(
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
-# Exception handler global para capturar errores no manejados
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """
-    Handler global para todas las excepciones no manejadas
-    Evita que se expongan stack traces al cliente
-    """
-    try:
-        await handle_common_errors(exc, request)
-    except HTTPException as http_exc:
-        # Si handle_common_errors lanza HTTPException, retornarla
-        return JSONResponse(
-            status_code=http_exc.status_code,
-            content={"detail": http_exc.detail}
-        )
-    except Exception:
-        # Último recurso: registrar y retornar error genérico
-        logger.exception("Critical error in exception handler")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error"}
-        )
-
-
 app.include_router(auth_router, prefix='/auth', tags=['Authentication'])
 app.include_router(user_router, prefix='/users', tags=['Users'])
 app.include_router(admin_router, prefix='/admin', tags=['Admin'])
@@ -347,7 +324,7 @@ async def health_check():
             content=health_status
         )
     
-    except Exception as e:
+    except Exception as e:  # intentional: any DB failure must yield "unhealthy", never crash the health endpoint
         health_status["status"] = "unhealthy"
         health_status["database"]["status"] = "disconnected"
         # Log internally — do not expose raw error details in the response
