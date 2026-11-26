@@ -125,7 +125,7 @@ Los tests en `test_google_login.py` cubren:
 - DTOs GoogleLoginRequest/Response
 - Caso de uso GoogleLogin (nuevo usuario, google_id existente, linking por email, colisión username, client_id no configurado)
 - Guard AuthenticateUser (usuario solo Google, híbrido, inactivos)
-- handle_common_errors para excepciones Google (403, 401, 503)
+- Exception handlers registrados para excepciones Google (403, 401, 503) en infra/presentation/exception_handlers.py
 - Endpoint POST /auth/google (happy path, token inválido, client_id no configurado, usuario existente)
 - Tests de integración full flow
 

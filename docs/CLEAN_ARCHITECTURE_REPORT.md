@@ -106,7 +106,7 @@ backend-qolqa/
 │       ├── routers/{auth,user,admin,query,version,solution}.py
 │       ├── dependencies/{auth,common,use_cases}.py   # Wiring de FastAPI Depends
 │       ├── dtos/{auth,query,solution,version}/       # Schemas de petición/respuesta HTTP
-│       └── handle_errors.py
+│       └── exception_handlers.py
 ├── tests/
 ├── openspec/
 ├── scripts/

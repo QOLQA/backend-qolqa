@@ -83,7 +83,7 @@ infra/
     ├── routers/      → Route handlers (auth, user, admin, solution, version, query)
     ├── dtos/         → Request/Response schemas (Pydantic with HTTP validation)
     ├── dependencies/ → FastAPI Depends (DI for use cases, auth, repositories)
-    └── handle_errors.py → Centralized error handling (domain errors → HTTP)
+    └── exception_handlers.py → Global exception handlers (domain errors → HTTP)
 
 config/               → Settings, environment, database connection
 scripts/              → Standalone maintenance/migration scripts
@@ -260,7 +260,7 @@ backend-qolqa/
 │       ├── routers/        # Route handlers (auth, user, admin, solution, version, query)
 │       ├── dtos/           # Request/Response schemas (Pydantic + HTTP validation)
 │       ├── dependencies/   # FastAPI Depends (DI for use cases, auth, repositories)
-│       └── handle_errors.py # Centralized error handling
+│       └── exception_handlers.py # Global exception handlers
 ├── config/                 # Settings and configuration
 │   ├── settings.py         # Pydantic Settings (env-driven)
 │   ├── mongo.py            # AsyncIOMotorClient singleton

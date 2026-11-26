@@ -38,7 +38,8 @@ scripts/         ← Standalone maintenance/migration scripts.
 - Use `response_model=` on every endpoint — no untyped responses.
 - Use `status.HTTP_*` constants — never hardcode status codes as integers.
 - Rate limiting with `slowapi` must be applied to auth endpoints (`/register`, `/login`).
-- All endpoints must delegate errors to `handle_common_errors` — no raw `raise HTTPException` for domain errors.
+- Domain errors must propagate uncaught: they are mapped to HTTP responses by the global handlers registered in `infra/presentation/exception_handlers.py` (wired via `register_exception_handlers(app)` in `main.py`). No raw `raise HTTPException` for domain errors, and no per-endpoint `try/except` dispatch.
+- `except Exception` (blind catch, ruff BLE001) is forbidden. Catch concrete domain exceptions instead; the only allowed broad catches are boundary translations (e.g. the Google token adapter) or the health check, each with a written justification. Auth endpoints may catch `AuthException` (plus `Duplicate`/`Format` on register) solely for audit logging, then re-raise.
 
 ## Pydantic
 
