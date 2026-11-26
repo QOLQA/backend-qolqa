@@ -43,26 +43,22 @@ from infra.presentation.dtos.version.response import (
 )
 
 __all__ = [
-    # Auth
-    "UserCreateRequest",
-    "UserLoginRequest",
-    "UserUpdateRequest",
     "AdminUserUpdateRequest",
     "GoogleLoginRequest",
-    "UserResponse",
-    "TokenResponse",
     "GoogleLoginResponse",
-    # Solution
-    "SolutionCreateRequest",
-    "SolutionPartialUpdateRequest",
-    "SolutionResponse",
-    # Version
-    "VersionCreateRequest",
-    "VersionPartialUpdateRequest",
-    "default_version_descriptions",
-    "VersionResponse",
-    # Query
     "QueryCreateRequest",
     "QueryPartialUpdateRequest",
     "QueryResponse",
+    "SolutionCreateRequest",
+    "SolutionPartialUpdateRequest",
+    "SolutionResponse",
+    "TokenResponse",
+    "UserCreateRequest",
+    "UserLoginRequest",
+    "UserResponse",
+    "UserUpdateRequest",
+    "VersionCreateRequest",
+    "VersionPartialUpdateRequest",
+    "VersionResponse",
+    "default_version_descriptions",
 ]
