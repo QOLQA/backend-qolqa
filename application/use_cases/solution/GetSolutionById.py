@@ -7,7 +7,7 @@ from domain.repositories.solution.repo import ISolutionRepository
 async def get_solution_by_id(
     repository: ISolutionRepository,
     solution_id: str,
-    versions: list[VersionEntity] = None,
+    versions: list[VersionEntity] | None = None,
 ) -> SolutionEntity:
     """Retrieve a solution by id.
 

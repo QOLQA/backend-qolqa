@@ -87,10 +87,15 @@ class Settings(BaseSettings):
         if isinstance(v, SecretStr):
             v = v.get_secret_value()
 
-        if not isinstance(v, str):
-            raise ValueError(
-                "🔒 SECURITY ERROR: secret_key must be a string."
-            )
+        # mode='before' Pydantic validator: ValueError surfaces as a clean 422;
+        # TypeError would escape the validation machinery as a 500.
+        match v:
+            case str():
+                pass
+            case _:
+                raise ValueError(
+                    "🔒 SECURITY ERROR: secret_key must be a string."
+                )
 
         if len(v) < 32:
             raise ValueError(

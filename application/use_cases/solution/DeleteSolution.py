@@ -32,15 +32,14 @@ async def delete_solution(
     # If database is provided (MongoDB), run cascade in a transaction
     if database is not None:
         client = database.client
-        async with await client.start_session() as session:
-            async with session.start_transaction():
-                if query_repository is not None:
-                    await query_repository.delete_by_solution_id(solution_id)
+        async with await client.start_session() as session, session.start_transaction():
+            if query_repository is not None:
+                await query_repository.delete_by_solution_id(solution_id)
 
-                if version_repository is not None:
-                    await version_repository.delete_by_solution_id(solution_id)
+            if version_repository is not None:
+                await version_repository.delete_by_solution_id(solution_id)
 
-                await solution_repository.delete(solution_id)
+            await solution_repository.delete(solution_id)
     else:
         # No transaction (e.g., tests with mocks)
         if query_repository is not None:

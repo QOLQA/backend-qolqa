@@ -131,8 +131,6 @@ async def get_current_user(
     from fastapi import HTTPException, status
 
     from application.use_cases.auth.GetUserById import get_user_by_id
-    from domain.enums.RoleEnum import RoleEnum  # noqa: F401  (used in require_admin)
-    from domain.errors import InvalidToken  # noqa: F401
 
     username: str = token_data.get("sub")
     user_id: str = token_data.get("user_id")
