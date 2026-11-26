@@ -48,7 +48,7 @@ class GoogleAuthService(IGoogleAuthService):
                 google_requests.Request(),
                 client_id,
             )
-        except (ValueError, Exception) as exc:
+        except Exception as exc:  # noqa: BLE001 — third-party Google client may raise arbitrary validation/transport errors; the adapter must translate all of them into InvalidGoogleToken
             logger.warning(f"Google token verification failed: {type(exc).__name__}")
             raise InvalidGoogleToken()
 
