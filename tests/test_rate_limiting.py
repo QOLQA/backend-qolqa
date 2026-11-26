@@ -103,8 +103,9 @@ class TestHealthEndpoint:
     @pytest.mark.asyncio
     async def test_health_endpoint_db_down_returns_503(self, async_client):
         """Test que un fallo de base de datos responde 503 unhealthy sin crashear"""
-        from pymongo.errors import ServerSelectionTimeoutError
         from unittest.mock import AsyncMock, MagicMock, patch
+
+        from pymongo.errors import ServerSelectionTimeoutError
 
         mock_motor = MagicMock()
         mock_motor.admin.command = AsyncMock(
