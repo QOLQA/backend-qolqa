@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 from domain.entities.VersionEntity import VersionEntity
 from domain.errors import Forbidden
@@ -46,7 +46,7 @@ class SolutionEntity:
             user_id=user_id,
             last_version_saved=last_version_saved[:100],
             src_img=src_img[:500],
-            last_updated_at=datetime.utcnow(),
+            last_updated_at=datetime.now(UTC),
             versions=[],
         )
 
@@ -61,7 +61,7 @@ class SolutionEntity:
         if len(name) > 200:
             raise ValueError("Solution name cannot exceed 200 characters")
         self.name = name.strip()
-        self.last_updated_at = datetime.utcnow()
+        self.last_updated_at = datetime.now(UTC)
 
     def update_image(self, src_img: str) -> None:
         """Update solution image URL."""
@@ -70,14 +70,14 @@ class SolutionEntity:
         if len(src_img) > 500:
             raise ValueError("Image URL cannot exceed 500 characters")
         self.src_img = src_img
-        self.last_updated_at = datetime.utcnow()
+        self.last_updated_at = datetime.now(UTC)
 
     def update_last_version(self, version_name: str) -> None:
         """Update the last saved version name."""
         if not version_name:
             raise ValueError("Version name cannot be empty")
         self.last_version_saved = version_name[:100]
-        self.last_updated_at = datetime.utcnow()
+        self.last_updated_at = datetime.now(UTC)
 
     def add_version(self, version: VersionEntity) -> None:
         """Add a version to this solution."""
@@ -86,14 +86,14 @@ class SolutionEntity:
         if version.solution_id != self.id:
             raise ValueError("Version solution_id must match this solution's ID")
         self.versions.append(version)
-        self.last_updated_at = datetime.utcnow()
+        self.last_updated_at = datetime.now(UTC)
 
     def remove_version(self, version_id: str) -> bool:
         """Remove a version by ID. Returns True if removed."""
         for i, v in enumerate(self.versions):
             if v.id == version_id:
                 self.versions.pop(i)
-                self.last_updated_at = datetime.utcnow()
+                self.last_updated_at = datetime.now(UTC)
                 return True
         return False
 
