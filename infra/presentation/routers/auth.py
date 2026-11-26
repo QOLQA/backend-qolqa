@@ -2,8 +2,7 @@
 Authentication router (Clean Architecture)
 Handles login, registration, and user profile endpoints.
 """
-from fastapi import APIRouter, Depends, Request, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Request, status
 
 from application.dtos.auth.commands import (
     AuthenticateCommand,
@@ -12,15 +11,15 @@ from application.dtos.auth.commands import (
 )
 from config.rate_limiter import limiter
 from config.settings import settings
-from domain.entities.auth.UserEntity import UserEntity as User
 from infra.persistence.audit import log_auth_attempt, log_registration
 from infra.persistence.mappers import UserMapper
 from infra.persistence.token_service import create_user_token
 from infra.presentation.dependencies import (
-    get_authenticate_user_use_case,
-    get_current_user,
-    get_google_login_use_case,
-    get_register_user_use_case,
+    AuthenticateUserUseCaseDep,
+    CurrentUserDep,
+    GoogleLoginUseCaseDep,
+    OAuth2FormDep,
+    RegisterUserUseCaseDep,
 )
 from infra.presentation.dtos.auth.request import GoogleLoginRequest, UserCreateRequest
 from infra.presentation.dtos.auth.response import (
@@ -38,7 +37,7 @@ router = APIRouter()
 async def register(
     request: Request,
     user_create: UserCreateRequest,
-    register_use_case=Depends(get_register_user_use_case),
+    register_use_case: RegisterUserUseCaseDep,
 ) -> UserResponse:
     """Register a new user."""
     try:
@@ -76,8 +75,8 @@ async def register(
 @limiter.limit("5/minute")
 async def login(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    auth_use_case=Depends(get_authenticate_user_use_case),
+    form_data: OAuth2FormDep,
+    auth_use_case: AuthenticateUserUseCaseDep,
 ) -> TokenResponse:
     """Login endpoint — OAuth2 compatible."""
     try:
@@ -110,7 +109,7 @@ async def login(
 
 @router.get('/me', response_model=UserResponse)
 async def get_current_user_profile(
-    current_user: User = Depends(get_current_user),
+    current_user: CurrentUserDep,
 ) -> UserResponse:
     """Get current user profile."""
     return UserMapper.to_response(current_user)
@@ -121,7 +120,7 @@ async def get_current_user_profile(
 async def google_login_endpoint(
     request: Request,
     login_request: GoogleLoginRequest,
-    google_use_case=Depends(get_google_login_use_case),
+    google_use_case: GoogleLoginUseCaseDep,
 ) -> GoogleLoginResponse:
     """Google OAuth login endpoint."""
     try:

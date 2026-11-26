@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request, status
 
 from application.dtos.version.commands import CreateVersionCommand, UpdateVersionCommand
 from application.use_cases.version.CreateVersion import create_version
@@ -7,12 +7,13 @@ from application.use_cases.version.GetAllVersions import get_all_versions
 from application.use_cases.version.GetVersionById import get_version_by_id
 from application.use_cases.version.UpdateVersion import update_version
 from config.rate_limiter import limiter
-from domain.entities.auth.UserEntity import UserEntity as User
 from infra.persistence.audit import log_resource_operation
-from infra.persistence.db_factory import get_database
 from infra.persistence.mappers import VersionMapper
-from infra.persistence.repositories import SolutionRepositoryImpl, VersionRepositoryImpl
-from infra.presentation.dependencies.auth import get_current_user
+from infra.presentation.dependencies import (
+    CurrentUserDep,
+    SolutionRepoDep,
+    VersionRepoDep,
+)
 from infra.presentation.dtos.version.request import (
     VersionCreateRequest,
     VersionPartialUpdateRequest,
@@ -23,23 +24,13 @@ from infra.presentation.handle_errors import handle_common_errors
 router = APIRouter()
 
 
-def get_version_repository(database=Depends(get_database)) -> VersionRepositoryImpl:
-    """Dependency: always returns the MongoDB implementation."""
-    return VersionRepositoryImpl(database)
-
-
-def get_solution_repository(database=Depends(get_database)) -> SolutionRepositoryImpl:
-    """Dependency: always returns the MongoDB solution implementation."""
-    return SolutionRepositoryImpl(database)
-
-
 @router.get('', response_model=list[VersionResponse])
 @limiter.limit("100/minute")
 async def get_all_versions_endpoint(
     request: Request,
-    current_user: User = Depends(get_current_user),
-    repository: VersionRepositoryImpl = Depends(get_version_repository),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    repository: VersionRepoDep,
+    solution_repository: SolutionRepoDep,
 ) -> list[VersionResponse]:
     """Get all versions owned by the current user."""
     try:
@@ -66,9 +57,9 @@ async def get_all_versions_endpoint(
 async def get_version_endpoint(
     version_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    repository: VersionRepositoryImpl = Depends(get_version_repository),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    repository: VersionRepoDep,
+    solution_repository: SolutionRepoDep,
 ) -> VersionResponse:
     """Get a specific version by id — only if owned by the current user."""
     try:
@@ -95,9 +86,9 @@ async def get_version_endpoint(
 async def create_version_endpoint(
     request: Request,
     version_create: VersionCreateRequest,
-    current_user: User = Depends(get_current_user),
-    repository: VersionRepositoryImpl = Depends(get_version_repository),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    repository: VersionRepoDep,
+    solution_repository: SolutionRepoDep,
 ) -> VersionResponse:
     """Create a new version on a solution owned by the current user."""
     try:
@@ -131,9 +122,9 @@ async def update_version_endpoint(
     version_id: str,
     request: Request,
     version_update: VersionPartialUpdateRequest,
-    current_user: User = Depends(get_current_user),
-    repository: VersionRepositoryImpl = Depends(get_version_repository),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    repository: VersionRepoDep,
+    solution_repository: SolutionRepoDep,
 ) -> VersionResponse:
     """Update an existing version — only if owned by the current user."""
     try:
@@ -165,9 +156,9 @@ async def update_version_endpoint(
 async def delete_version_endpoint(
     version_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    repository: VersionRepositoryImpl = Depends(get_version_repository),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    repository: VersionRepoDep,
+    solution_repository: SolutionRepoDep,
 ):
     """Delete a version — only if owned by the current user."""
     try:

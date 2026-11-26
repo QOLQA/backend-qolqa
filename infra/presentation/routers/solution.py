@@ -2,7 +2,7 @@ import logging
 import pprint
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request, status
 
 from application.dtos.solution.commands import (
     CreateSolutionCommand,
@@ -19,17 +19,16 @@ from application.use_cases.solution.UpdateSolution import update_solution
 from application.use_cases.version.CreateVersion import create_version
 from application.use_cases.version.UpdateVersion import update_version
 from config.rate_limiter import limiter
-from domain.entities.auth.UserEntity import UserEntity as User
 from domain.errors import Forbidden
 from infra.persistence.audit import log_access_denied, log_resource_operation
-from infra.persistence.db_factory import get_database
 from infra.persistence.mappers import SolutionMapper, VersionMapper
-from infra.persistence.repositories import (
-    QueryRepositoryImpl,
-    SolutionRepositoryImpl,
-    VersionRepositoryImpl,
+from infra.presentation.dependencies import (
+    CurrentUserDep,
+    DatabaseDep,
+    QueryRepoDep,
+    SolutionRepoDep,
+    VersionRepoDep,
 )
-from infra.presentation.dependencies.auth import get_current_user
 from infra.presentation.dtos.solution.request import (
     SolutionCreateRequest,
     SolutionPartialUpdateRequest,
@@ -48,27 +47,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def get_solution_repository(database=Depends(get_database)) -> SolutionRepositoryImpl:
-    """Dependency: always returns the MongoDB solution implementation."""
-    return SolutionRepositoryImpl(database)
-
-
-def get_version_repository(database=Depends(get_database)) -> VersionRepositoryImpl:
-    """Dependency: always returns the MongoDB version implementation."""
-    return VersionRepositoryImpl(database)
-
-
-def get_query_repository(database=Depends(get_database)) -> QueryRepositoryImpl:
-    """Dependency: always returns the MongoDB query implementation."""
-    return QueryRepositoryImpl(database)
-
-
 @router.get('', response_model=list[SolutionResponse])
 @limiter.limit("100/minute")
 async def get_all_solutions_endpoint(
     request: Request,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
 ) -> list[SolutionResponse]:
     """Get all solutions owned by the current user."""
     try:
@@ -93,9 +77,9 @@ async def get_all_solutions_endpoint(
 async def create_solution_endpoint(
     request: Request,
     solution_create: SolutionCreateRequest,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
-    version_repository: VersionRepositoryImpl = Depends(get_version_repository),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
+    version_repository: VersionRepoDep,
 ) -> SolutionResponse:
     """Create a new solution with an initial version for the current user."""
     try:
@@ -149,9 +133,9 @@ async def create_solution_endpoint(
 async def get_solution_endpoint(
     request: Request,
     id: str,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
-    version_repository: VersionRepositoryImpl = Depends(get_version_repository),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
+    version_repository: VersionRepoDep,
 ) -> SolutionResponse:
     """Get a solution by ID — only if owned by the current user."""
     try:
@@ -195,8 +179,8 @@ async def update_solution_endpoint(
     request: Request,
     id: str,
     solution_update: SolutionPartialUpdateRequest,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
 ) -> SolutionResponse:
     """Update a solution — only if owned by the current user."""
     try:
@@ -233,9 +217,9 @@ async def create_version_for_solution_endpoint(
     request: Request,
     solution_id: str,
     version_create: VersionCreateRequest,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
-    version_repository: VersionRepositoryImpl = Depends(get_version_repository),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
+    version_repository: VersionRepoDep,
 ) -> VersionResponse:
     """Create a new version for a solution — only if the solution is owned by the current user."""
     try:
@@ -278,9 +262,9 @@ async def update_solution_version_endpoint(
     solution_id: str,
     version_id: str,
     version_update: VersionPartialUpdateRequest,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
-    version_repository: VersionRepositoryImpl = Depends(get_version_repository),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
+    version_repository: VersionRepoDep,
 ) -> VersionResponse:
     """Update a specific version of a solution — only if the solution is owned by the current user."""
     try:
@@ -319,11 +303,11 @@ async def update_solution_version_endpoint(
 async def delete_solution_endpoint(
     request: Request,
     id: str,
-    current_user: User = Depends(get_current_user),
-    solution_repository: SolutionRepositoryImpl = Depends(get_solution_repository),
-    version_repository: VersionRepositoryImpl = Depends(get_version_repository),
-    query_repository: QueryRepositoryImpl = Depends(get_query_repository),
-    database=Depends(get_database),
+    current_user: CurrentUserDep,
+    solution_repository: SolutionRepoDep,
+    version_repository: VersionRepoDep,
+    query_repository: QueryRepoDep,
+    database: DatabaseDep,
 ) -> None:
     """Delete a solution and all associated versions and queries — only if owned by the current user."""
     try:

@@ -2,12 +2,10 @@
 User self-service controller.
 Handles profile update and account deletion for the authenticated user.
 """
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from domain.entities.auth.UserEntity import UserEntity
 from infra.persistence.mappers import UserMapper
-from infra.persistence.repositories import UserRepositoryImpl
-from infra.presentation.dependencies.auth import get_current_user, get_user_repository
+from infra.presentation.dependencies import CurrentUserDep, UserRepoDep
 from infra.presentation.dtos.auth.request import UserUpdateRequest
 from infra.presentation.dtos.auth.response import UserResponse
 from infra.presentation.handle_errors import handle_common_errors
@@ -18,8 +16,8 @@ router = APIRouter()
 @router.patch('/me', response_model=UserResponse)
 async def update_current_user(
     user_update: UserUpdateRequest,
-    current_user: UserEntity = Depends(get_current_user),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    current_user: CurrentUserDep,
+    repository: UserRepoDep,
 ) -> UserResponse:
     """Update the authenticated user's own profile."""
     try:
@@ -31,8 +29,8 @@ async def update_current_user(
 
 @router.delete('/me', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_current_user(
-    current_user: UserEntity = Depends(get_current_user),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    current_user: CurrentUserDep,
+    repository: UserRepoDep,
 ) -> None:
     """Delete the authenticated user's own account."""
     try:

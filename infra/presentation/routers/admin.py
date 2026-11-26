@@ -4,13 +4,11 @@ Handles user management operations restricted to admin role.
 """
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.RoleEnum import RoleEnum
 from infra.persistence.mappers import UserMapper
-from infra.persistence.repositories import UserRepositoryImpl
-from infra.presentation.dependencies.auth import get_user_repository, require_admin
+from infra.presentation.dependencies import AdminUserDep, UserRepoDep
 from infra.presentation.dtos.auth.request import AdminUserUpdateRequest
 from infra.presentation.dtos.auth.response import UserResponse
 from infra.presentation.handle_errors import handle_common_errors
@@ -20,8 +18,8 @@ router = APIRouter()
 
 @router.get('/users', response_model=list[UserResponse])
 async def list_users(
-    _: UserEntity = Depends(require_admin),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    _: AdminUserDep,
+    repository: UserRepoDep,
 ) -> list[UserResponse]:
     """List all users. Admin only."""
     try:
@@ -34,8 +32,8 @@ async def list_users(
 @router.get('/users/{user_id}', response_model=UserResponse)
 async def get_user(
     user_id: str,
-    _: UserEntity = Depends(require_admin),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    _: AdminUserDep,
+    repository: UserRepoDep,
 ) -> UserResponse:
     """Get a user by ID. Admin only."""
     try:
@@ -49,8 +47,8 @@ async def get_user(
 async def update_user(
     user_id: str,
     user_update: AdminUserUpdateRequest,
-    _: UserEntity = Depends(require_admin),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    _: AdminUserDep,
+    repository: UserRepoDep,
 ) -> UserResponse:
     """Update any user. Admin only. Changing roles invalidates existing tokens."""
     try:
@@ -71,8 +69,8 @@ async def update_user(
 @router.delete('/users/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: str,
-    _: UserEntity = Depends(require_admin),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    _: AdminUserDep,
+    repository: UserRepoDep,
 ) -> None:
     """Hard delete a user. Admin only."""
     try:
@@ -84,8 +82,8 @@ async def delete_user(
 @router.post('/users/{user_id}/promote', response_model=UserResponse)
 async def promote_user_to_admin(
     user_id: str,
-    _: UserEntity = Depends(require_admin),
-    repository: UserRepositoryImpl = Depends(get_user_repository),
+    _: AdminUserDep,
+    repository: UserRepoDep,
 ) -> UserResponse:
     """
     Promote a user to admin role.
