@@ -48,7 +48,9 @@ class GoogleAuthService(IGoogleAuthService):
                 google_requests.Request(),
                 client_id,
             )
-        except (ValueError, Exception) as exc:
+        # The third-party Google client may raise arbitrary validation/transport
+        # errors; this boundary adapter must translate all of them into InvalidGoogleToken.
+        except Exception as exc:  # noqa: BLE001
             logger.warning(f"Google token verification failed: {type(exc).__name__}")
             raise InvalidGoogleToken()
 

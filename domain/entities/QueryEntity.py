@@ -21,8 +21,8 @@ class QueryEntity:
         id: str,
         full_query: str,
         solution_id: str,
-        collections: list[str] = None,
-        highlighted_words: list[str] = None,
+        collections: list[str] | None = None,
+        highlighted_words: list[str] | None = None,
     ) -> "QueryEntity":
         """Create a new query."""
         if not full_query or not full_query.strip():

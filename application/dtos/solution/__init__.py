@@ -10,12 +10,10 @@ from application.dtos.solution.queries import (
 )
 
 __all__ = [
-    # Commands
     "CreateSolutionCommand",
-    "UpdateSolutionCommand",
     "DeleteSolutionCommand",
-    # Queries
-    "GetSolutionQuery",
     "GetAllSolutionsQuery",
+    "GetSolutionQuery",
     "GetSolutionWithVersionsQuery",
+    "UpdateSolutionCommand",
 ]

@@ -54,40 +54,32 @@ from application.dtos.version.queries import (
 )
 
 __all__ = [
-    # Auth Commands
-    "CreateUserCommand",
-    "UpdateUserCommand",
     "AdminUpdateUserCommand",
-    "RegisterCommand",
     "AuthenticateCommand",
-    "GoogleLoginCommand",
-    # Auth Queries
-    "GetUserQuery",
-    "GetUserByUsernameQuery",
-    "GetUserByEmailQuery",
-    # Solution Commands
-    "CreateSolutionCommand",
-    "UpdateSolutionCommand",
-    "DeleteSolutionCommand",
-    # Solution Queries
-    "GetSolutionQuery",
-    "GetAllSolutionsQuery",
-    "GetSolutionWithVersionsQuery",
-    # Version Commands
-    "CreateVersionCommand",
-    "UpdateVersionCommand",
-    "DeleteVersionCommand",
-    # Version Queries
-    "GetVersionQuery",
-    "GetAllVersionsQuery",
-    "GetVersionsBySolutionQuery",
-    # Query Commands
     "CreateQueryCommand",
-    "UpdateQueryCommand",
-    "DeleteQueryCommand",
+    "CreateSolutionCommand",
+    "CreateUserCommand",
+    "CreateVersionCommand",
     "DeleteQueriesBySolutionCommand",
-    # Query Queries
-    "GetQueryQuery",
+    "DeleteQueryCommand",
+    "DeleteSolutionCommand",
+    "DeleteVersionCommand",
     "GetAllQueriesQuery",
+    "GetAllSolutionsQuery",
+    "GetAllVersionsQuery",
     "GetQueriesBySolutionQuery",
+    "GetQueryQuery",
+    "GetSolutionQuery",
+    "GetSolutionWithVersionsQuery",
+    "GetUserByEmailQuery",
+    "GetUserByUsernameQuery",
+    "GetUserQuery",
+    "GetVersionQuery",
+    "GetVersionsBySolutionQuery",
+    "GoogleLoginCommand",
+    "RegisterCommand",
+    "UpdateQueryCommand",
+    "UpdateSolutionCommand",
+    "UpdateUserCommand",
+    "UpdateVersionCommand",
 ]

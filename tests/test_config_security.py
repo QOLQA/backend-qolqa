@@ -47,8 +47,12 @@ class TestSecretKeyProductionGuard:
         with pytest.raises(ValidationError):
             build_settings(environment="production", secret_key=weak_key)
 
-    def test_production_rejects_default_secret_key_when_not_provided(self):
+    def test_production_rejects_default_secret_key_when_not_provided(self, monkeypatch):
         """Even the implicit default is rejected in production."""
+        # CI jobs may export SECRET_KEY for the app to import; this test
+        # asserts the no-key path, so the ambient variable must not leak in.
+        monkeypatch.delenv("SECRET_KEY", raising=False)
+
         with pytest.raises(ValidationError):
             build_settings(environment="production")
 
@@ -67,8 +71,12 @@ class TestSecretKeyProductionGuard:
 
         assert settings.secret_key.get_secret_value() == STRONG_SECRET_KEY
 
-    def test_development_accepts_default_secret_key(self):
+    def test_development_accepts_default_secret_key(self, monkeypatch):
         """The default development key is still valid outside production."""
+        # CI jobs may export SECRET_KEY for the app to import; this test
+        # asserts the built-in default, so the ambient variable must not win.
+        monkeypatch.delenv("SECRET_KEY", raising=False)
+
         settings = build_settings(environment="development")
 
         assert settings.environment == "development"

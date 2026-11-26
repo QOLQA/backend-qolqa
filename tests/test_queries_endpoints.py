@@ -55,10 +55,10 @@ class TestQueriesEndpoints:
         created_query = make_query()
 
         with patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution, patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.save",
+            "infra.persistence.repositories.QueryRepositoryImpl.save",
             new_callable=AsyncMock,
         ) as mock_save:
 
@@ -101,7 +101,7 @@ class TestQueriesEndpoints:
     async def test_create_query_nonexistent_solution(self, authenticated_client, mock_user, auth_headers):
         """POST /queries con solution_id inexistente retorna 404."""
         with patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution:
             mock_get_solution.side_effect = NotFoundError("Solution not found")
@@ -126,10 +126,10 @@ class TestQueriesEndpoints:
         queries = [make_query(), make_query(query_id=str(ObjectId()))]
 
         with patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution, patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_solution_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_solution_id",
             new_callable=AsyncMock,
         ) as mock_get_queries:
 
@@ -153,10 +153,10 @@ class TestQueriesEndpoints:
         solution = make_solution(user_id=str(mock_user.id))
 
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query, patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution:
 
@@ -176,7 +176,7 @@ class TestQueriesEndpoints:
     async def test_get_query_by_id_not_found(self, authenticated_client, auth_headers):
         """GET /queries/{id} con id inexistente retorna 404."""
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query:
             mock_get_query.side_effect = NotFoundError("Query not found")
@@ -196,13 +196,13 @@ class TestQueriesEndpoints:
         solution = make_solution(user_id=str(mock_user.id))
 
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query, patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution, patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.save",
+            "infra.persistence.repositories.QueryRepositoryImpl.save",
             new_callable=AsyncMock,
         ) as mock_save:
 
@@ -229,13 +229,13 @@ class TestQueriesEndpoints:
         # Un solo mock de get_by_id con side_effect: primero devuelve la query (para el DELETE),
         # luego lanza NotFoundError (para el GET posterior).
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query, patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution, patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.delete",
+            "infra.persistence.repositories.QueryRepositoryImpl.delete",
             new_callable=AsyncMock,
         ) as mock_delete:
 
@@ -264,10 +264,10 @@ class TestQueriesEndpoints:
         solution = make_solution(user_id=str(mock_user.id))
 
         with patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution, patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.delete_by_solution_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.delete_by_solution_id",
             new_callable=AsyncMock,
         ) as mock_delete_by_solution:
 
@@ -289,10 +289,10 @@ class TestQueriesEndpoints:
         solution_other = make_solution(user_id=OTHER_USER_ID)
 
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query, patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution:
 
@@ -313,10 +313,10 @@ class TestQueriesEndpoints:
         solution_other = make_solution(user_id=OTHER_USER_ID)
 
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query, patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution:
 
@@ -338,10 +338,10 @@ class TestQueriesEndpoints:
         solution_other = make_solution(user_id=OTHER_USER_ID)
 
         with patch(
-            "infra.presentation.routers.query.QueryRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.QueryRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_query, patch(
-            "infra.presentation.routers.query.SolutionRepositoryImpl.get_by_id",
+            "infra.persistence.repositories.SolutionRepositoryImpl.get_by_id",
             new_callable=AsyncMock,
         ) as mock_get_solution:
 

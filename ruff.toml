@@ -1,0 +1,18 @@
+# Ruff configuration.
+#
+# This repository documents (AGENTS.md, Naming conventions) that module files
+# are named after the single class they expose, in PascalCase — e.g.
+# `VersionRepoImpl.py` exposes `VersionRepositoryImpl`. PEP 8 / N999 demand
+# lowercase snake_case module names instead. Option A (chosen): keep the
+# documented convention and suppress N999 only in the layers that follow it.
+#
+# Everything else keeps ruff's default ruleset (BLE001, DTZ, RUF, TRY, ...).
+
+[lint.per-file-ignores]
+# Command/Query/DTO files named after the class they define.
+"application/use_cases/**" = ["N999"]
+"application/dtos/**" = ["N999"]
+# Domain entities and enums named after the class they define.
+"domain/**" = ["N999"]
+# Repository implementations, mappers and Mongo documents.
+"infra/persistence/**" = ["N999"]

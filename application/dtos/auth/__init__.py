@@ -13,15 +13,13 @@ from application.dtos.auth.queries import (
 )
 
 __all__ = [
-    # Commands
-    "CreateUserCommand",
-    "UpdateUserCommand",
     "AdminUpdateUserCommand",
-    "RegisterCommand",
     "AuthenticateCommand",
-    "GoogleLoginCommand",
-    # Queries
-    "GetUserQuery",
-    "GetUserByUsernameQuery",
+    "CreateUserCommand",
     "GetUserByEmailQuery",
+    "GetUserByUsernameQuery",
+    "GetUserQuery",
+    "GoogleLoginCommand",
+    "RegisterCommand",
+    "UpdateUserCommand",
 ]

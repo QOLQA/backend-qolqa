@@ -11,7 +11,7 @@ class SolutionMapper:
     """Stateless mapper between raw MongoDB dicts, SolutionEntity, and DTOs."""
 
     @staticmethod
-    def to_entity(raw: dict, versions: list[VersionEntity] = None) -> SolutionEntity:
+    def to_entity(raw: dict, versions: list[VersionEntity] | None = None) -> SolutionEntity:
         """Convert a raw MongoDB dict to a domain SolutionEntity.
 
         Used when Motor returns a plain dict (e.g. from find_one / cursor).

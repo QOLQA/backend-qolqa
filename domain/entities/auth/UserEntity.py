@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 from domain.enums.AuthProviderEnum import AuthProviderEnum
 from domain.enums.RoleEnum import RoleEnum
@@ -15,7 +15,7 @@ class UserEntity:
     email: str
     full_name: str | None = None
     is_active: bool = True
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     profile_picture_url: str | None = None
     roles: list[RoleEnum] = field(default_factory=lambda: [RoleEnum.user])
     token_version: int = 0
@@ -46,7 +46,7 @@ class UserEntity:
             email=email.strip().lower(),
             full_name=full_name.strip() if full_name else None,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             roles=[RoleEnum.user],
             token_version=0,
             auth_provider=AuthProviderEnum.local,
@@ -76,7 +76,7 @@ class UserEntity:
             email=email.strip().lower(),
             full_name=full_name.strip() if full_name else None,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             roles=[RoleEnum.user],
             token_version=0,
             google_id=google_id,

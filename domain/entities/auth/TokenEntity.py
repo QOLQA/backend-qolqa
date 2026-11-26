@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 
 @dataclass
@@ -22,7 +22,7 @@ class TokenEntity:
         return cls(
             access_token=access_token,
             token_type="bearer",
-            expires_at=datetime.utcnow() + timedelta(minutes=expires_in_minutes),
+            expires_at=datetime.now(UTC) + timedelta(minutes=expires_in_minutes),
         )
 
     # ------------------------------------------------------------------ #
@@ -33,13 +33,13 @@ class TokenEntity:
         """Check if token is expired."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
     def time_until_expiry(self) -> timedelta | None:
         """Return time remaining until expiry, or None if no expiry set."""
         if self.expires_at is None:
             return None
-        remaining = self.expires_at - datetime.utcnow()
+        remaining = self.expires_at - datetime.now(UTC)
         return remaining if remaining.total_seconds() > 0 else timedelta(0)
 
     def refresh(self, new_access_token: str, expires_in_minutes: int = 30) -> None:
@@ -47,4 +47,4 @@ class TokenEntity:
         if not new_access_token:
             raise ValueError("Access token cannot be empty")
         self.access_token = new_access_token
-        self.expires_at = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+        self.expires_at = datetime.now(UTC) + timedelta(minutes=expires_in_minutes)

@@ -79,13 +79,46 @@ class TestRateLimiting:
     @pytest.mark.asyncio
     async def test_health_endpoint_no_rate_limit(self, async_client):
         """Test que el endpoint de health no tiene rate limit (puede ser consultado libremente)"""
-        # Usar async_client fixture
-        # Hacer múltiples requests al health endpoint
-        for i in range(10):
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        # Mock the Mongo ping: this test asserts rate-limit behavior only.
+        # Without it, each request pays the full serverSelectionTimeoutMS (5s)
+        # against a database that is not running in the test environment.
+        mock_motor = MagicMock()
+        mock_motor.admin.command = AsyncMock(return_value={"ok": 1})
+
+        with patch("config.mongo.motor_client", mock_motor):
+            # Hacer múltiples requests al health endpoint
+            for i in range(10):
+                response = await async_client.get("/health")
+                # Debería siempre retornar 200 o 503 (nunca 429)
+                assert response.status_code in [200, 503], f"Health check no debería tener rate limit (request {i+1})"
+                assert response.status_code != 429
+
+
+@pytest.mark.unit
+class TestHealthEndpoint:
+    """Tests del endpoint /health con la base de datos mockeada."""
+
+    @pytest.mark.asyncio
+    async def test_health_endpoint_db_down_returns_503(self, async_client):
+        """Test que un fallo de base de datos responde 503 unhealthy sin crashear"""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from pymongo.errors import ServerSelectionTimeoutError
+
+        mock_motor = MagicMock()
+        mock_motor.admin.command = AsyncMock(
+            side_effect=ServerSelectionTimeoutError("no servers found")
+        )
+
+        with patch("config.mongo.motor_client", mock_motor):
             response = await async_client.get("/health")
-            # Debería siempre retornar 200 o 503 (nunca 429)
-            assert response.status_code in [200, 503], f"Health check no debería tener rate limit (request {i+1})"
-            assert response.status_code != 429
+
+        assert response.status_code == 503
+        body = response.json()
+        assert body["status"] == "unhealthy"
+        assert body["database"]["status"] == "disconnected"
 
 
 class TestRateLimitRecovery:

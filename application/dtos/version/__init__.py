@@ -10,12 +10,10 @@ from application.dtos.version.queries import (
 )
 
 __all__ = [
-    # Commands
     "CreateVersionCommand",
-    "UpdateVersionCommand",
     "DeleteVersionCommand",
-    # Queries
-    "GetVersionQuery",
     "GetAllVersionsQuery",
+    "GetVersionQuery",
     "GetVersionsBySolutionQuery",
+    "UpdateVersionCommand",
 ]

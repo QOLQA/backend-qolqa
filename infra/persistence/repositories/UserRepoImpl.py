@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
 from domain.entities.auth.UserEntity import UserEntity
 from domain.enums.AuthProviderEnum import AuthProviderEnum
@@ -194,11 +195,8 @@ class UserRepositoryImpl(IUserRepository[UserEntity]):
                 {'_id': ObjectId(str(user_id))},
                 {'$set': {'google_id': google_id}},
             )
-        except Exception as exc:
-            from pymongo.errors import DuplicateKeyError
-            if isinstance(exc, DuplicateKeyError):
-                raise Duplicate(msg='google_id already linked')
-            raise
+        except DuplicateKeyError:
+            raise Duplicate(msg='google_id already linked')
 
         if result.matched_count == 0:
             raise Missing(msg=f'User with id {user_id} not found')
@@ -228,10 +226,7 @@ class UserRepositoryImpl(IUserRepository[UserEntity]):
 
         try:
             result = await self.collection.insert_one(doc)
-        except Exception as exc:
-            from pymongo.errors import DuplicateKeyError
-            if isinstance(exc, DuplicateKeyError):
-                raise Duplicate(msg=f'Google user with google_id {google_id} already exists')
-            raise
+        except DuplicateKeyError:
+            raise Duplicate(msg=f'Google user with google_id {google_id} already exists')
 
         return await self.get_by_id(str(result.inserted_id))
