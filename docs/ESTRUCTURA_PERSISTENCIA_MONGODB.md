@@ -88,6 +88,7 @@ database = motor_client['qolqa']
 | `get_hashed_password(username)` | Proyección solo del campo `hashed_password` |
 | `verify_credentials(username, password)` | Verifica credenciales contra hash bcrypt |
 | `save(entity)` | Upsert (insert o update) con validación de duplicados |
+| `add_local_user(username, email, full_name, password)` | Registra usuario local: hashea la contraseña (IPasswordHasher) y persiste `hashed_password` |
 | `delete(id)` | Elimina usuario por `_id` |
 | `get_by_google_id(google_id)` | Busca por ID de Google |
 | `link_google_account(user_id, google_id)` | Vincula cuenta Google a usuario existente |

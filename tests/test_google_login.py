@@ -1229,10 +1229,10 @@ class TestGoogleLoginIntegration:
 
         from domain.entities.auth.UserEntity import UserEntity
 
-        # Configure the mock database to return a user on save
+        # Configure the mock database to return a user on creation
         # The async_client fixture's mock database needs to be configured
-        # We'll mock the repository's save method directly
-        with patch('infra.persistence.repositories.UserRepositoryImpl.save', new_callable=AsyncMock) as mock_save:
+        # We'll mock the repository's add_local_user method directly
+        with patch('infra.persistence.repositories.UserRepositoryImpl.add_local_user', new_callable=AsyncMock) as mock_add:
             mock_user = UserEntity(
                 id=str(ObjectId()),
                 username="newuser",
@@ -1242,7 +1242,7 @@ class TestGoogleLoginIntegration:
                 roles=[],
                 token_version=0,
             )
-            mock_save.return_value = mock_user
+            mock_add.return_value = mock_user
             
             response = await async_client.post(
                 "/auth/register",
@@ -1254,6 +1254,8 @@ class TestGoogleLoginIntegration:
             )
             assert response.status_code == 201
             assert response.json()["username"] == "newuser"
+            mock_add.assert_awaited_once()
+            assert mock_add.await_args.kwargs["password"] == "SecurePass123"
 
     @pytest.mark.asyncio
     async def test_integration_login_unaffected(self, async_client):

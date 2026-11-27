@@ -62,6 +62,23 @@ class IUserRepository(ABC, Generic[Entity]):
         ...
 
     @abstractmethod
+    async def add_local_user(
+        self,
+        username: str,
+        email: str,
+        full_name: str | None,
+        password: str,
+    ) -> Entity:
+        """Create a new local (email/password) user.
+
+        The repository hashes the password before persistence — the plain
+        password never reaches the database and never crosses back to the
+        caller.
+        """
+        ...
+
+
+    @abstractmethod
     async def verify_credentials(self, username: str, password: str) -> Entity:
         """Verify user credentials by username or email and password.
 

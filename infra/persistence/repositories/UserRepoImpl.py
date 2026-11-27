@@ -243,3 +243,40 @@ class UserRepositoryImpl(IUserRepository[UserEntity]):
             raise Duplicate(msg=f'Google user with google_id {google_id} already exists')
 
         return await self.get_by_id(str(result.inserted_id))
+
+    async def add_local_user(
+        self,
+        username: str,
+        email: str,
+        full_name: str | None,
+        password: str,
+    ) -> UserEntity:
+        """Create a new local (email/password) user.
+
+        Hashes the password via the injected IPasswordHasher before persistence.
+        The plain password is never stored and never returned.
+        """
+        # Duplicate checks (same contract as add_google_user)
+        existing_username = await self.get_by_username(username)
+        if existing_username:
+            raise Duplicate(msg=f'Username {username} already exists')
+
+        existing_email = await self.get_by_email(email)
+        if existing_email:
+            raise Duplicate(msg=f'Email {email} already exists')
+
+        # Build insertable document via mapper — hash first, persist only the hash
+        doc = UserMapper.from_local_request(
+            username,
+            email,
+            full_name,
+            self._hasher.hash(password),
+        )
+
+        try:
+            result = await self.collection.insert_one(doc)
+        except DuplicateKeyError as exc:
+            # Race: another registration won between our checks and the insert
+            raise Duplicate(msg=f'User {username} already exists') from exc
+
+        return await self.get_by_id(str(result.inserted_id))

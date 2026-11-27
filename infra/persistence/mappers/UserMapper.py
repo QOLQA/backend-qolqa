@@ -46,6 +46,29 @@ class UserMapper:
         }
 
     @staticmethod
+    def from_local_request(
+        username: str,
+        email: str,
+        full_name: str | None,
+        hashed_password: str,
+    ) -> dict:
+        """Convert local user info + hashed_password to a MongoDB-insertable dict."""
+        return {
+            'username': username.lower(),
+            'email': email.lower(),
+            'full_name': full_name,
+            'is_active': True,
+            'hashed_password': hashed_password,
+            'created_at': datetime.now(UTC),
+            'updated_at': datetime.now(UTC),
+            'profile_picture_url': None,
+            'roles': [RoleEnum.user.value],
+            'token_version': 0,
+            'google_id': None,
+            'auth_provider': 'local',
+        }
+
+    @staticmethod
     def from_google_request(
         username: str,
         email: str,
