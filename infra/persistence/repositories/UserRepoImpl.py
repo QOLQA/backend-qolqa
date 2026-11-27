@@ -147,11 +147,24 @@ class UserRepositoryImpl(IUserRepository[UserEntity]):
         doc = UserMapper.to_persistence(entity)
 
         # Use upsert to handle both create and update
-        await self.collection.update_one(
-            {'_id': ObjectId(entity.id)} if entity.id and ObjectId.is_valid(entity.id) else {'username': entity.username},
-            {'$set': doc},
-            upsert=True,
-        )
+        try:
+            await self.collection.update_one(
+                {'_id': ObjectId(entity.id)} if entity.id and ObjectId.is_valid(entity.id) else {'username': entity.username},
+                {'$set': doc},
+                upsert=True,
+            )
+        except DuplicateKeyError as exc:
+            # A unique index (username, email, or google_id) rejected the write —
+            # e.g. a second local user colliding on google_id: null. Translate
+            # to the domain Duplicate so the global handler maps it to 409
+            # with a meaningful message instead of an unhandled 500.
+            details: dict = getattr(exc, 'details', None) or {}
+            key_pattern: dict = details.get('keyPattern') or {}
+            field = next(iter(key_pattern), None)
+            raise Duplicate(
+                msg=f'User with this {field} already exists' if field else 'User already exists',
+            ) from exc
+
 
         # Re-fetch to get the generated _id if it was a new insert
         return await self.get_by_username(entity.username)
