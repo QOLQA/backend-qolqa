@@ -7,6 +7,7 @@ CreateQuery: the use case generates the id (str(ObjectId())).
 """
 
 from datetime import UTC, datetime
+from typing import ClassVar
 from unittest.mock import AsyncMock
 
 import pytest
@@ -53,7 +54,7 @@ class TestCreateSolutionUseCase:
             last_version_saved = "v1"
             src_img = "http://example.com/img.png"
             last_updated_at = marker_created_at
-            versions: list = []
+            versions: ClassVar[list] = []
 
         persisted = _Persisted()
         mock_repo = AsyncMock()
