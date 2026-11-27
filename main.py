@@ -141,10 +141,20 @@ else:
     # Create MongoDB indexes on startup
     db = motor_client['qolqa']
     
-    # Users: unique username, unique email, unique sparse google_id
+    # Users: unique username, unique email, unique google_id.
+    # google_id is a PARTIAL unique index: only real Google IDs (string values)
+    # are indexed. Local users keep google_id: null and never collide.
+    # (A sparse index would not work: the mapper always writes the field,
+    # so null counts as an indexed key.)
     await db.users.create_index("username", unique=True, name="username_1")
     await db.users.create_index("email", unique=True, name="email_1")
-    await db.users.create_index("google_id", unique=True, sparse=True, name="google_id_1")
+    await db.users.create_index(
+        "google_id",
+        unique=True,
+        name="google_id_1",
+        partialFilterExpression={"google_id": {"$type": "string"}},
+    )
+
     
     # Solutions: index on user_id for ownership queries
     await db.solutions.create_index("user_id", name="user_id_1")

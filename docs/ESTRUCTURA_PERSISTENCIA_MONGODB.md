@@ -320,7 +320,7 @@ Y crear un caso de uso en `application/use_cases/` para manejar la subida y asoc
 |-----------|-------|------|-------|
 | `users` | `username` | Único | Búsqueda por login, evitar duplicados |
 | `users` | `email` | Único | Búsqueda por email, evitar duplicados |
-| `users` | `google_id` | Único (sparse) | Auth Google, evitar duplicados |
+| `users` | `google_id` | Único (parcial: solo valores string) | Auth Google, evitar duplicados; usuarios locales (`google_id: null`) quedan fuera del índice |
 | `solutions` | `user_id` | No único | Consultas de ownership filtradas |
 | `versions` | `solution_id` | No único | Recuperar versiones de una solución |
 | `queries` | `solution_id` | No único | Recuperar queries de una solución |
