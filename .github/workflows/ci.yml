@@ -72,20 +72,32 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  trigger-dokploy-webhook:
-    name: Trigger Dokploy webhook
+  trigger-dokploy-deploy:
+    name: Trigger Dokploy deploy
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     needs: [test-and-lint, docker-build-check]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Trigger Dokploy deploy webhook
+      - name: Trigger Dokploy deploy via API
         env:
-          DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+          DOKPLOY_API_URL: ${{ secrets.DOKPLOY_API_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
         run: |
-          http_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 -X POST "$DOKPLOY_WEBHOOK_URL")
-          echo "Dokploy webhook responded with HTTP $http_code"
+          api_url="${DOKPLOY_API_URL%/}/api/application.deploy"
+          body_file=$(mktemp)
+          http_code=$(curl -sS -o "$body_file" -w "%{http_code}" --max-time 30 \
+            -X POST "$api_url" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $DOKPLOY_API_KEY" \
+            -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}")
+          echo "Dokploy deploy API responded with HTTP $http_code"
           if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-            echo "::error::Dokploy webhook failed (HTTP $http_code)"
+            echo "::error::Dokploy deploy failed (HTTP $http_code)"
+            cat "$body_file"
+            rm -f "$body_file"
             exit 1
           fi
+          rm -f "$body_file"
